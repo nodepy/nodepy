@@ -28,7 +28,8 @@ __license__ = 'MIT'
 import json
 import jsonschema
 import os
-import semver
+
+from .utils import semver
 
 
 class NotAPackageDirectory(Exception):
@@ -130,7 +131,7 @@ class PackageManifest:
       raise InvalidPackageManifest(filename, exc)
 
     try:
-      semver.parse(data['version'])
+      data['version'] = semver.Version(data['version'])
     except ValueError as exc:
       raise InvalidPackageManifest(filename, exc)
 
@@ -225,3 +226,26 @@ class Finder:
           errors.append(exc)
 
     return errors
+
+  def find_modules(self, module_name, selector):
+    """
+    Find all modules matching the specified *module_name* and the version range
+    specified by *selector*. Either and both of the parameters can be #None to
+    cause any module or version to be matched, thus using #None for both
+    parameters should yield all modules that can be found by the #Finder.
+
+    # Parameters
+    module_name (str): The name of the module(s) to find.
+    selector (semver.Selector): A selector for a version number range. Only
+      modules matching the specified version number range will be returned.
+
+    # Returns
+    A generator yielding #PackageManifest objects.
+    """
+
+    for manifest in self.cache.values():
+      if module_name and manifest.name != module_name:
+        continue
+      if selector and not selector(manifest.version):
+        continue
+      yield manifest
