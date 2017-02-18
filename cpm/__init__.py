@@ -558,7 +558,7 @@ class Loader:
     return module
 
 
-class AddDefaultNamespace(object):
+class AddVars(object):
   """
   Objects of this class can be added to #Loader.before_exec to initialize
   #Module#s with a default namespace before they are executed.
