@@ -147,6 +147,12 @@ class PackageManifest:
   arbitrary string. The JSON data of these fields will be stored in the
   #PackageManifest.specifics dictionary. The field can be used by packages that
   are used with applications that are built on top of cpm.
+
+  # Additional Members
+
+  - **is_main_package** (bool): This member can not be specified in the actual
+    manifest, but it can be set by the #Finder to indicate that the manifest
+    was read from the location where the main package is to be found.
   """
 
   schema = {
@@ -229,6 +235,7 @@ class PackageManifest:
     self.python_dependencies = {} if python_dependencies is None else python_dependencies
     self.scripts = {} if scripts is None else scripts
     self.specifics = {} if specifics is None else specifics
+    self.is_main_package = False
 
   def __repr__(self):
     return '<cpm.PackageManifest "{}">'.format(self.identifier)
@@ -245,13 +252,29 @@ class Finder:
   here's an example of what would be and what would not be detected by the
   #Finder, given that the only search directory is `cpm_modules/`:
 
+      cpm.json (detected if check_main_package=True, also accesible as #Finder.main)
       cpm_modules/cpm.json  (not detected)
       cpm_modules/some-module/cpm.json (detected)
+
+  # Members
+
+  path (list of str): A list of search directories.
+  cache (dict of (str, PackageManifest)): A dictionary that caches the manifest
+    information read in for every package directory.
+  check_main_package (bool): Parse the main package manifest from the current
+    working directory. Defaults to #True. If enabled, the main package's
+    #PackageManifest.is_main_package will be set to #True and the manifest
+    will be accessible via #Finder.main_package after #update_cache().
+  main_package (PackageManifest): If #check_main_package is #True and the
+    current working directory exposes a valid manifest, this member will hold
+    that #PackageManifest after #update_cache().
   """
 
-  def __init__(self, path=None):
+  def __init__(self, path=None, check_main_package=True):
     self.path = ['cpm_modules'] if path is None else path
     self.cache = {}
+    self.check_main_package = check_main_package
+    self.main_package = None
 
   def add_package(self, directory):
     """
@@ -282,7 +305,20 @@ class Finder:
     packages. Most of the time it will be #InvalidPackageManifest exceptions.
     """
 
+    def add(errors, subdir, is_main=False):
+      try:
+        manifest = self.add_package(subdir)
+      except NotAPackageDirectory as exc:
+        pass  # We don't mind if it is not a package directory
+      except InvalidPackageManifest as exc:
+        errors.append(exc)
+      else:
+        manifest.is_main_package = is_main
+        self.main_package = manifest
+
     errors = []
+    if self.check_main_package:
+      add(errors, '.', True)
     for directory in self.path:
       if not os.path.isdir(directory):
         continue
@@ -291,12 +327,7 @@ class Finder:
         if not os.path.isdir(subdir):
           continue
 
-        try:
-          manifest = self.add_package(subdir)
-        except NotAPackageDirectory as exc:
-          pass  # We don't mind if it is not a package directory
-        except InvalidPackageManifest as exc:
-          errors.append(exc)
+        add(errors, subdir)
 
     return errors
 
