@@ -416,10 +416,10 @@ class Loader:
   finder (Finder): An object that implements the #Finder interface. By default,
     this is a standard #Finder instance.
   allow_multiple_versions (bool): Allow loading multiple packages of different
-    versions with this loader. This behaviour is turned off by default.
+    versions with this loader. This behaviour is turned OFF by default.
   allow_unknown_dependencies (bool): Allow dependencies to be `require()`d
     that are not known from the #PackageManifest of the requiring package.
-    This behaviour is turned off by default.
+    This behaviour is turned ON by default.
   packages (dict): A dictionary that maps package names to another dictionary.
     This sub-dictionary maps #semver.Version#s to the actual #Package object.
     If #allow_multiple_versions is #False, there will only be one version for
@@ -435,7 +435,7 @@ class Loader:
   def __init__(self, finder=None):
     self.finder = Finder() if finder is None else finder
     self.allow_multiple_versions = False
-    self.allow_unknown_dependencies = False
+    self.allow_unknown_dependencies = True
     self.packages = {}
     self.before_exec = []
     self.module_stack = collections.deque()
@@ -580,11 +580,22 @@ class AddRequire(object):
   """
 
   def __init__(self, loader):
-    self.loader = loader
+    self.require = Require(loader)
 
   def __call__(self, loader, module):
     module.namespace.require = self.require
 
-  def require(self, name):
+
+class Require(object):
+  """
+  Helper class that implements the `require()` function. Use #AddRequire()
+  in #Loader.before_exec to add an instance of this class to loaded module's
+  namespaces.
+  """
+
+  def __init__(self, loader):
+    self.loader = loader
+
+  def __call__(self, name):
     module = self.loader.require(name, self.loader.module)
     return module.namespace
