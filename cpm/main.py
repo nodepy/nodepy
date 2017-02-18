@@ -79,10 +79,10 @@ def run(cpm, ref, args):
   ref = refstring.parse(ref or '')
   module = load_module(cpm, ref)
   module.exec_()
-  if ref.function:
-    function = getattr(module.namespace, ref.function, None)
+  if ref.member:
+    function = getattr(module.namespace, ref.member, None)
     if not callable(function):
       print('error: "{}" is not a function'.format(refstring.join(
-          package.name, package.version, module.name, ref.function)))
-      raise SystemExit(1)
+          package.name, package.version, module.name, ref.member)))
+      exit(1)
     function(args)

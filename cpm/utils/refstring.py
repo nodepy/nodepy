@@ -23,25 +23,25 @@ import re
 
 from . import semver
 
-Ref = collections.namedtuple('Ref', 'package version module function')
-spec = '[<package>[@<version>]][/<module>][:<function>]'
+Ref = collections.namedtuple('Ref', 'package version module member')
+spec = '[<package>[@<version>]][/<module>][:<member>]'
 regex = re.compile('''^
   (?:
     (?P<package> [A-z0-9\.\-_]+)
     (?: @(?P<version> [^/:]*))?  # Version is actually a semver.Selector
   )?
   (?: /(?P<module>   [A-z0-9\.\-_]+))?
-  (?: :(?P<function> [A-z0-9\.\-_]+))?
+  (?: :(?P<member> [A-z0-9\.\-_]+))?
   $''', re.X)
 
 
 def parse(s):
   """
   Parse a reference string and returns a #Ref which is a namedtuple consisting
-  of the members *package*, *version*, *module* and *function*. The parameter
+  of the members *package*, *version*, *module* and *member*. The parameter
   *s* must be a string of the format
 
-      [<package>[@<version>]][/<module>][:<function>]
+      [<package>[@<version>]][/<module>][:<member>]
 
   # Raises
   ValueError: If the string is invalid.
@@ -50,16 +50,16 @@ def parse(s):
   m = regex.match(s)
   if not m:
     raise ValueError('invalid refstring: "{}"'.format(s))
-  package, version, module, function = m.groups()
+  package, version, module, member = m.groups()
   if version:
     try:
       version = semver.Selector(version)
     except ValueError as exc:
       raise ValueError('invalid refstring: "{}" ({})'.format(s, exc))
-  return Ref(package, version, module, function)
+  return Ref(package, version, module, member)
 
 
-def join(package=None, version=None, module=None, function=None):
+def join(package=None, version=None, module=None, member=None):
   """
   Concatenes the components of a reference back into a string. To use this
   function with a #Ref object, simply use argument-unpacking like this:
@@ -77,7 +77,7 @@ def join(package=None, version=None, module=None, function=None):
 
   if module:
     result += '/' + module
-  if function:
-    result += ':' + function
+  if member:
+    result += ':' + member
 
   return result
