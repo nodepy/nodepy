@@ -324,6 +324,35 @@ class Finder:
       yield manifest
 
 
+class Module(object):
+  """
+  This class represents an actual Python file in a #Package.
+  """
+
+  def __init__(self, package, name, filename):
+    self.package = package
+    self.name = name
+    self.filename = filename
+    self.namespace = types.ModuleType(self.identifier)
+    self.namespace.__file__ = filename
+    self.executed = False
+
+  def __str__(self):
+    exec_info = '' if self.executed else ' (not executed)'
+    return '<cpm.Module "{}"{}>'.format(self.identifier, exec_info)
+
+  @property
+  def is_main(self):
+    return self.name == self.package.manifest.main
+
+  @property
+  def identifier(self):
+    if self.is_main:
+      return self.package.identifier
+    else:
+      return '{}/{}'.format(self.package.identifier, self.name)
+
+
 class Package:
   """
   This class represents an actual CPM package. When a package or module is
@@ -335,9 +364,10 @@ class Package:
   the actual package is `require()`d and not any of its components.
   """
 
-  def __init__(self, manifest):
+  def __init__(self, manifest, module_class=Module):
     self.manifest = manifest
     self.modules = {}
+    self.module_class = module_class
 
   def __str__(self):
     return '<cpm.Package "{}">'.format(self.identifier)
@@ -370,38 +400,9 @@ class Package:
     if not os.path.isfile(filename):
       raise NoSuchModule(self, name)
 
-    module = Module(self, name, filename)
+    module = self.module_class(self, name, filename)
     self.modules[name] = module
     return module
-
-
-class Module(object):
-  """
-  This class represents an actual Python file in a #Package.
-  """
-
-  def __init__(self, package, name, filename):
-    self.package = package
-    self.name = name
-    self.filename = filename
-    self.namespace = types.ModuleType(self.identifier)
-    self.namespace.__file__ = filename
-    self.executed = False
-
-  def __str__(self):
-    exec_info = '' if self.executed else ' (not executed)'
-    return '<cpm.Module "{}"{}>'.format(self.identifier, exec_info)
-
-  @property
-  def is_main(self):
-    return self.name == self.package.manifest.main
-
-  @property
-  def identifier(self):
-    if self.is_main:
-      return self.package.identifier
-    else:
-      return '{}/{}'.format(self.package.identifier, self.name)
 
 
 class Loader:
@@ -432,13 +433,15 @@ class Loader:
     executed using the #module property.
   """
 
-  def __init__(self, finder=None):
+  def __init__(self, finder=None, package_class=Package, module_class=Module):
     self.finder = Finder() if finder is None else finder
     self.allow_multiple_versions = False
     self.allow_unknown_dependencies = True
     self.packages = {}
     self.before_exec = []
     self.module_stack = collections.deque()
+    self.package_class = package_class
+    self.module_class = module_class
 
   @property
   def module(self):
@@ -490,7 +493,7 @@ class Loader:
 
     # And get the best match.
     manifest = selector.best_of(choices, key=lambda x: x.version)
-    package = Package(manifest)
+    package = self.package_class(manifest, self.module_class)
     self.packages[package_name] = have_versions
     have_versions[package.version] = package
     return package
