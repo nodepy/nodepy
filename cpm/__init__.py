@@ -19,6 +19,16 @@
 # THE SOFTWARE.
 """
 cpm -- a Python-ish package manager
+===================================
+
+Contents:
+
+- #PackageManifest represents a `cpm.json` manifest in memory
+- #Finder finds packages in a directory and yields #PackageManifest#s
+- #Package represents a package and its modules
+- #Module represents a Python module as part of a #Package
+- #Loader loads #Package#s and from #PackageManifest#s
+- #Cpm represents the package ecosystem and provides the `require()` function
 """
 
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
@@ -118,7 +128,7 @@ class UnknownDependency(Exception):
   is not listed in the dependencies of the #Module#s package that is currently
   executed.
 
-  Note that the exception is only thrown if #Loader.allow_unknown_dependencies
+  Note that the exception is only thrown if #Cpm.allow_unknown_dependencies
   is not enabled.
   """
 
@@ -253,7 +263,7 @@ class Finder:
   here's an example of what would be and what would not be detected by the
   #Finder, given that the only search directory is `cpm_modules/`:
 
-      cpm.json (detected if check_main_package=True, also accesible as #Finder.main)
+      cpm.json (not detected)
       cpm_modules/cpm.json  (not detected)
       cpm_modules/some-module/cpm.json (detected)
 
@@ -271,21 +281,23 @@ class Finder:
     that #PackageManifest after #update_cache().
   """
 
-  def __init__(self, path=None, check_main_package=True):
-    self.path = ['cpm_modules'] if path is None else path
+  def __init__(self, path=()):
+    self.path = list(path)
     self.cache = {}
-    self.check_main_package = check_main_package
-    self.main_package = None
 
-  def add_package(self, directory):
+  def load_package_manifest(self, directory):
     """
     Manually add a CPM package in *directory* to the #cache. This will allow
     the package to be returned by #find_package() if the criteria matches. If
     the package at *directory* is already in the cache, it will not be
     re-parsed.
 
+    # Raise
+    NotAPackageDirectory:
+    InvalidPackageManifest:
+
     # Return
-    PackageManifest
+    PackageManifest:
     """
 
     directory = os.path.normpath(os.path.abspath(directory))
@@ -308,18 +320,13 @@ class Finder:
 
     def add(errors, subdir, is_main=False):
       try:
-        manifest = self.add_package(subdir)
+        self.load_package_manifest(subdir)
       except NotAPackageDirectory as exc:
         pass  # We don't mind if it is not a package directory
       except InvalidPackageManifest as exc:
         errors.append(exc)
-      else:
-        manifest.is_main_package = is_main
-        self.main_package = manifest
 
     errors = []
-    if self.check_main_package:
-      add(errors, '.', True)
     for directory in self.path:
       if not os.path.isdir(directory):
         continue
@@ -356,7 +363,7 @@ class Finder:
       yield manifest
 
 
-class Module(object):
+class Module:
   """
   This class represents an actual Python file in a #Package.
   """
@@ -384,6 +391,32 @@ class Module(object):
     else:
       return '{}/{}'.format(self.package.identifier, self.name)
 
+  @property
+  def loader(self):
+    return self.package.loader
+
+  def exec_(self):
+    """
+    Executes the #Module object. Raises #RuntimeError if the module has already
+    been executed.
+    """
+
+    if self.executed:
+      raise RuntimeError('Module already executed')
+
+    with open(self.filename, 'r') as fp:
+      code = fp.read()
+
+    self.executed = True
+    self.loader.module_stack.append(self)
+    try:
+      for func in self.loader.before_exec:
+        func(self)
+      code = compile(code, self.filename, 'exec')
+      exec(code, vars(self.namespace))
+    finally:
+      assert self.loader.module_stack.pop() is self
+
 
 class Package:
   """
@@ -396,10 +429,10 @@ class Package:
   the actual package is `require()`d and not any of its components.
   """
 
-  def __init__(self, manifest, module_class=Module):
+  def __init__(self, manifest, loader):
     self.manifest = manifest
     self.modules = {}
-    self.module_class = module_class
+    self.loader = loader
 
   def __str__(self):
     return '<cpm.Package "{}">'.format(self.identifier)
@@ -432,27 +465,27 @@ class Package:
     if not os.path.isfile(filename):
       raise NoSuchModule(self, name)
 
-    module = self.module_class(self, name, filename)
+    module = self.loader.module_class(self, name, filename)
     self.modules[name] = module
     return module
 
 
 class Loader:
   """
-  This class loads CPM packages that are returned by one or more #Finder#s.
-  Similar to normal Python modules, the loaded packages are kept in the
-  #packages dictionary. By default, the same package can not be loaded in
-  different versions at the same time. To change this behaviour,
-  #allow_multiple_versions can be set to #True.
+  This class can load CPM packages from #PackageManifest data. Similar to
+  normal Python modules, the loaded packages are kept in a #packages
+  dictionary. By default, the same package can not be loaded in different
+  versions at the same time. To change this behaviour, #allow_multiple_versions
+  can be set to #True.
+
+  It is very common to initialize the namespace of modules that are being
+  with default members before they are executed. This can be achived by adding
+  function objects to the #before_exec list. Each of the functions in this
+  list will be called with the #Module that is about to be executed.
 
   # Members
-  finder (Finder): An object that implements the #Finder interface. By default,
-    this is a standard #Finder instance.
   allow_multiple_versions (bool): Allow loading multiple packages of different
     versions with this loader. This behaviour is turned OFF by default.
-  allow_unknown_dependencies (bool): Allow dependencies to be `require()`d
-    that are not known from the #PackageManifest of the requiring package.
-    This behaviour is turned ON by default.
   packages (dict): A dictionary that maps package names to another dictionary.
     This sub-dictionary maps #semver.Version#s to the actual #Package object.
     If #allow_multiple_versions is #False, there will only be one version for
@@ -465,30 +498,30 @@ class Loader:
     executed using the #module property.
   """
 
-  def __init__(self, finder=None, package_class=Package, module_class=Module):
-    self.finder = Finder() if finder is None else finder
+  def __init__(self, package_class=Package, module_class=Module):
     self.allow_multiple_versions = False
-    self.allow_unknown_dependencies = True
     self.packages = {}
     self.before_exec = []
     self.module_stack = collections.deque()
     self.package_class = package_class
     self.module_class = module_class
 
-  @property
-  def module(self):
+  def get_current_module(self):
     if self.module_stack:
       return self.module_stack[-1]
     return None
 
-  def update_cache(self):
+  def get_packages(self, package_name, selector):
     """
-    Wrapper for #Finder.update_cache().
+    Get a list of all packages matching the *package_name* and version
+    *selector*. The list is sorted by the most preferable package first
+    (sorted by version number).
     """
 
-    return self.finder.update_cache()
+    have_versions = self.packages.get(package_name, {})
+    return sorted(have_versions.values(), key=lambda x: x.version)
 
-  def add_package(self, manifest):
+  def load_package(self, manifest):
     """
     Adds a new #Package to the loader from a #PackageManifest. Raises
     #PackageMultiplicityNotAllowed if the #allow_multiple_versions is #False
@@ -503,9 +536,46 @@ class Loader:
       raise PackageMultiplicityNotAllowed(manifest.name, manifest.version,
           list(have_versions.keys()))
 
-    package = self.package_class(manifest, self.module_class)
+    package = self.package_class(manifest, self)
     self.packages[manifest.name] = have_versions
     have_versions[manifest.version] = package
+    return package
+
+
+class Cpm:
+  """
+  This class manages the CPM environment and the default #Loader configuration.
+  """
+
+  def __init__(self, prefix='~/.cpm', local_modules_dir='cpm_modules'):
+    self.prefix = os.path.expanduser(prefix)
+    self.loader = Loader()
+    self.main_finder = Finder()
+    self.local_finder = Finder([local_modules_dir])
+    self.global_finder = Finder([os.path.join(self.prefix, 'modules')])
+    self.main_package = None
+    self.allow_unknown_dependencies = True
+
+  @property
+  def finders(self):
+    return (self.main_finder, self.local_finder, self.global_finder)
+
+  def update_cache(self):
+    errors = []
+    for finder in self.finders:
+      errors += finder.update_cache()
+    return errors
+
+  def load_main_package(self):
+    """
+    Loads and returns the main package from the current directory. Can raise
+    any exception raised by #Loader.load_package_manifest().
+    """
+
+    if self.main_package:
+      return self.main_package
+    manifest = self.main_finder.load_package_manifest('.')
+    package = self.loader.load_package(manifest)
     return package
 
   def load_package(self, package_name, selector):
@@ -525,46 +595,25 @@ class Loader:
     if not selector:
       selector = semver.Selector('*')
 
-    # Check if we have already loaded a package that matches the criteria.
-    have_versions = self.packages.get(package_name, {})
-    if have_versions:
-      matches = sorted(filter(selector, have_versions.keys()))
-      if matches:
-        return have_versions[matches[-1]]
+    # Re-use a matching already loaded package.
+    packages = self.loader.get_packages(package_name, selector)
+    if packages:
+      return packages[0]
 
     # Find all available choices.
-    choices = list(self.finder.find_packages(package_name, selector))
-    if not choices:
+    manifest = None
+    for finder in self.finders:
+      choices = list(finder.find_packages(package_name, selector))
+      if choices:
+        manifest = selector.best_of(choices, key=lambda x: x.version)
+        break
+    else:
       raise PackageNotFound(package_name, selector)
 
     # And get the best match.
     manifest = selector.best_of(choices, key=lambda x: x.version)
     assert manifest.name == package_name
-    return self.add_package(manifest)  # Can raise DuplicatePackage
-
-  def exec_module(self, module):
-    """
-    Executes a #Module object. If the #Module was already executed, a
-    #RuntimeError is raised.
-    """
-
-    if not isinstance(module, Module):
-      raise TypeError('expected cpm.Module object')
-    if module.executed:
-      raise RuntimeError('Module already executed')
-
-    with open(module.filename, 'r') as fp:
-      code = fp.read()
-
-    module.executed = True
-    self.module_stack.append(module)
-    try:
-      for func in self.before_exec:
-        func(self, module)
-      code = compile(code, module.filename, 'exec')
-      exec(code, vars(module.namespace))
-    finally:
-      assert self.module_stack.pop() is module
+    return self.loader.load_package(manifest)  # Can raise DuplicatePackage
 
   def require(self, name, origin):
     """
@@ -601,11 +650,11 @@ class Loader:
 
     module = package.load_module(module or None)
     if not module.executed:
-      self.exec_module(module)
+      module.exec_()
     return module
 
 
-class AddVars(object):
+class AddVars:
   """
   Objects of this class can be added to #Loader.before_exec to initialize
   #Module#s with a default namespace before they are executed.
@@ -614,11 +663,11 @@ class AddVars(object):
   def __init__(self, vars=None):
     self.vars = {} if vars is None else vars
 
-  def __call__(self, loader, module):
+  def __call__(self, module):
     vars(module.namespace).update(self.vars)
 
 
-class AddRequire(object):
+class AddRequire:
   """
   Adds the default `require()` method to the namespace of a #Module before it
   is executed. An instance of this class must be added to #Loader.before_exec.
@@ -626,28 +675,23 @@ class AddRequire(object):
   added to.
   """
 
-  def __init__(self, loader, each_their_own=False):
-    self.each_their_own = bool(each_their_own)
-    self.require = None if self.each_their_own else Require(loader)
+  def __init__(self, cpm):
+    self.cpm = cpm
 
-  def __call__(self, loader, module):
-    if self.each_their_own:
-      require = Require(loader)
-    else:
-      require = self.require
-    module.namespace.require = require
+  def __call__(self, module):
+    module.namespace.require = Require(self.cpm)
 
 
-class Require(object):
+class Require:
   """
   Helper class that implements the `require()` function. Use #AddRequire()
   in #Loader.before_exec to add an instance of this class to loaded module's
   namespaces.
   """
 
-  def __init__(self, loader):
-    self.loader = loader
+  def __init__(self, cpm):
+    self.cpm = cpm
 
   def __call__(self, name):
-    module = self.loader.require(name, self.loader.module)
+    module = self.cpm.require(name, self.cpm.loader.get_current_module())
     return module.namespace
