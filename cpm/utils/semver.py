@@ -18,9 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """
-This module provides a #Version class that can parse and represent a semantic
-version number. It also provides a #Selector which can parse an
-expression to filter version numbers.
+Parse, modify and filter [SemVer] version numbers. From the specification:
+
+> Given a version number MAJOR.MINOR.PATCH, increment the:
+>
+> 1. MAJOR version when you make incompatible API changes,
+> 2. MINOR version when you add functionality in a backwards-compatible manner, and
+> 3. PATCH version when you make backwards-compatible bug fixes.
+>
+> Additional labels for pre-release and build metadata are available as
+> extensions to the MAJOR.MINOR.PATCH format.
+
+  [SemVer]: http://semver.org/
 """
 
 __all__ = ['Version', 'Selector']
@@ -32,107 +41,91 @@ import re
 @functools.total_ordering
 class Version(object):
   """
-  Represents a version number that follows the rules of the semantic
-  versioning scheme. The version number can consist of at most the
-  following elements: MAJOR . MINOR . PATCH EXTENSION
-
-  The parts of the version number are compared semantically correct
-  while the EXTENSION is compared lexically (thus, `1.0-beta10` is
-  considered a smaller version number than `1.0-beta2`). Extensions
-  are compared case-insensitive. A version number without extension is
-  always greater than the respective version number with extension.
-
-  The EXTENSION part must start with a `-` or `.` character and
-  be followed by an alphanumeric letter. Then any number of the former
-  plus digits may follow.
+  Represents a SemVer of the format `MAJOR.MINOR.PATCH-EXTENSION+BUILD`, where
+  the `EXTENSION` and `BUILD` parts are optional.
 
   # Attributes
   major (int):
-  minor(int):
-  path (int):
+  minor (int):
+  patch (int):
   extension (str):
+  build (str):
   """
 
   def __init__(self, value):
     if isinstance(value, Version):
-      self.parts = value.parts[:]
+      self.major = value.major
+      self.minor = value.minor
+      self.patch = value.patch
       self.extension = value.extension
+      self.build = value.build
     elif isinstance(value, str):
-      match = re.match(r'^(\d+(\.\d+){0,2})([\-\.][A-z][\w\.\-]*)?$', value)
+      match = re.match(r'^(\d+(\.\d+){0,2})(\-[A-z\-][A-z0-9\-]*)?(\+[A-z\-][A-z0-9\-]*)?$', value)
       if not match:
         raise ValueError("invalid version string: {0!r}".format(value))
       parts = [int(x) for x in match.group(1).split('.')]
       parts.extend(0 for __ in range(3 - len(parts)))
-      extension = match.group(3)
-      self.parts = parts
-      self.extension = extension or ''
+      self.major, self.minor, self.patch = parts
+      self.extension = match.group(3)
+      self.build = match.group(4)
+      if self.extension is not None:
+        self.extension = self.extension[1:]
+      if self.build is not None:
+        self.build = self.build[1:]
     else:
       raise TypeError("unexpected type: {0!r}".format(type(value)))
 
   def __str__(self):
-    return '.'.join(map(str, self.parts)) + self.extension
+    result = '.'.join(map(str, self.mmp))
+    if self.extension:
+      result += '-' + self.extension
+    if self.build:
+      result += '+' + self.build
+    return result
 
   def __repr__(self):
-    return '<Version %r>' % str(self)
+    return '<Version "{}">'.format(self)
 
   def __lt__(self, other):
     if isinstance(other, Version):
-      for a, b in zip(self.parts, other.parts):
+      # Check if any of the minor, major and patch differ.
+      for a, b in zip(self.mmp, other.mmp):
         if a < b:
           return True
         elif a > b:
           return False
-      # Now self can only be smaller if the parts are equal
-      # and the extension is smaller than the extension of other.
-      if self.parts == other.parts:
+      # If not, both minor, major and patch numbers must be equal.
+      assert self.mmp == other.mmp
+      # A SemVer without an extension are to be preferred over a SemVer
+      # with extension.
+      if other.extension:
         if self.extension:
-          if other.extension:
-            return self.extension < other.extension
-          else:
-            return True
+          return self.extension < other.extension
+        else:
+          return False
+      else:
+        if self.extension:
+          return True
       return False
     else:
       return NotImplemented
 
   def __eq__(self, other):
     if isinstance(other, Version):
-      return self.parts == other.parts and self.extension.lower() \
-        == other.extension.lower()
+      return self.mmpeb == other.mmpeb
     else:
       return NotImplemented
 
   def __hash__(self):
     return hash(str(self))
 
-  def __getitem__(self, index):
-    return self.parts[index]
-
-  def __setitem__(self, index, value):
-    self.parts[index] = value
+  @property
+  def mmp(self):
+    return (self.major, self.minor, self.patch)
 
   @property
-  def major(self):
-    return self.parts[0]
-
-  @major.setter
-  def major(self, value):
-    self.parts[0] = value
-
-  @property
-  def minor(self):
-    return self.parts[1]
-
-  @minor.setter
-  def minor(self, value):
-    self.parts[1] = value
-
-  @property
-  def patch(self):
-    return self.parts[2]
-
-  @patch.setter
-  def patch(self, value):
-    self.parts[2] = value
+  def mmpeb(self):
+    return (self.major, self.minor, self.patch, self.extension, self.build)
 
   def satisfies(self, selector):
     if isinstance(selector, str):
@@ -158,7 +151,7 @@ class SingleSelector(object):
   }
 
   def __init__(self, value, version=None):
-    if isinstance(value, str):
+    if isinstance(value, str) and '-x' not in value:
       try:
         value = Version(value)
       except ValueError as exc:
@@ -197,13 +190,13 @@ class SingleSelector(object):
       elif 'x' in value:
         # Placeholder version number.
         parts = value.split('.')
-        if len(parts) <= 3 and '-' in parts[-1]:
-          parts[-1:] = parts[-1].split('-', 1)
-          parts[-1] = '-' + parts[-1]
-        elif len(parts) == 4:
-          parts[-1] = '.' + parts[-1]
+        if not parts or len(parts) > 3:
+          raise ValueError('invalid version format: "{0}"'.format(value))
+        if '-' in parts[-1]:
+          parts[-1], ext = parts[-1].split('-', 1)
+          parts.append(ext)
         parts += ['x' for __ in range(3 - len(parts))]
-        if len(parts) < 4: parts.append('-x')
+        if len(parts) < 4: parts.append('x')
         try:
           if len(parts) > 4: raise ValueError
           parts[:-1] = [int(p) if p != 'x' else 'x' for p in parts[:-1]]
@@ -252,7 +245,11 @@ class SingleSelector(object):
     elif self.op == '-':
       return '{0} - {1}'.format(self.version_min, self.version)
     elif self.op == 'x':
-      return '.'.join(map(str, self.parts[:3])) + self.parts[3]
+      mmp, ext = self.parts[:3], self.parts[3:]
+      result = '.'.join(map(str, self.parts[:3]))
+      if ext:
+        result += '-' + ext[0]
+      return result
     else:
       return '{0}{1}'.format(self.op, self.version)
 
@@ -264,7 +261,7 @@ class SingleSelector(object):
     elif self.op == '-':
       return self.version_min <= version and version <= self.version
     elif self.op == 'x':
-      for pcmp, vcmp in zip(self.parts, version.parts):
+      for pcmp, vcmp in zip(self.parts, version.mmpeb):
         if pcmp != 'x' and pcmp != vcmp:
           return False
       return True
