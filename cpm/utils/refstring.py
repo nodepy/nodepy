@@ -28,7 +28,7 @@ spec = '[<package>[@<version>]][/<module>][:<function>]'
 regex = re.compile('''^
   (?:
     (?P<package> [A-z0-9\.\-_]+)
-    (?: @(?P<version> [0-9\.]+[A-z0-9\.\-\+]*))?
+    (?: @(?P<version> [^/:]*))?  # Version is actually a semver.Selector
   )?
   (?: /(?P<module>   [A-z0-9\.\-_]+))?
   (?: :(?P<function> [A-z0-9\.\-_]+))?
@@ -53,7 +53,7 @@ def parse(s):
   package, version, module, function = m.groups()
   if version:
     try:
-      version = semver.Version(version)
+      version = semver.Selector(version)
     except ValueError as exc:
       raise ValueError('invalid refstring: "{}" ({})'.format(s, exc))
   return Ref(package, version, module, function)

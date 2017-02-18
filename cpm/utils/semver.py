@@ -161,6 +161,7 @@ class SingleSelector(object):
     if isinstance(value, SingleSelector):
       self.op = value.op
       self.version = version(value.version)
+      self.version_min = None
 
     elif isinstance(value, str):
       # Split into parts to check if its a range selector.
@@ -232,6 +233,7 @@ class SingleSelector(object):
       self.version = Version(value)
       if version is None:
         self.op = '='
+        self.version_min = None
       else:
         self.op = '-'
         self.version_min = Version(version)
