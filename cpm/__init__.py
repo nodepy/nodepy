@@ -92,23 +92,24 @@ class PackageNotFound(Exception):
     return '{}@{}'.format(self.package_name, self.selector)
 
 
-class UnmatchedPackageVersion(Exception):
+class PackageMultiplicityNotAllowed(Exception):
   """
   This exception is raised when a package is supposed to be loaded with
-  #Loader.load_package() but another package of a version that does not match
-  the selector has already been loaded.
+  #Loader.load_package() or #Loader.add_package() but another package with
+  a different version has already been loaded.
   """
 
-  def __init__(self, package_name, selector, loaded_versions):
+  def __init__(self, package_name, version, loaded_versions):
     self.package_name = package_name
-    self.selector = selector or semver.Selector('*')
+    self.version = version
     self.loaded_versions = loaded_versions
 
   def __str__(self):
     version_t = 'version' if len(self.loaded_versions) == 1 else 'versions'
-    return '"{}@{}" could not be loaded, it does not match with the already '\
-        'loaded {} "{}"'.format(self.package_name, self.selector, version_t,
-        ','.join(map(str, self.loaded_versions)))
+    return 'can not load "{}@{}" load because package multiplicity is '\
+        'disabled and the package is already loaded in {} "{}"'.format(
+          self.package_name, self.selector, version_t,
+          ','.join(map(str, self.loaded_versions)))
 
 
 class UnknownDependency(Exception):
@@ -487,6 +488,26 @@ class Loader:
 
     return self.finder.update_cache()
 
+  def add_package(self, manifest):
+    """
+    Adds a new #Package to the loader from a #PackageManifest. Raises
+    #PackageMultiplicityNotAllowed if the #allow_multiple_versions is #False
+    and a #Package with the same name but different version is already present.
+    """
+
+    have_versions = self.packages.get(manifest.name, {})
+
+    # If we have at least one package with this name but we do not allow
+    # loading multiple packages of different versions, error out.
+    if have_versions and not self.allow_multiple_versions:
+      raise PackageMultiplicityNotAllowed(manifest.name, manifest.version,
+          list(have_versions.keys()))
+
+    package = self.package_class(manifest, self.module_class)
+    self.packages[manifest.name] = have_versions
+    have_versions[manifest.version] = package
+    return package
+
   def load_package(self, package_name, selector):
     """
     Uses the #finder to find the best possible match for *package_name*
@@ -494,8 +515,8 @@ class Loader:
     #PackageNotFound is raised.
 
     If a package with the specified *package_name* is already loaded but
-    does not match the specified version *selector*, an
-    #UnmatchedPackageVersion exception is raised unless
+    does not match the specified version *selector*, a
+    #PackageMultiplicityNotAllowed exception is raised unless
     #allow_multiple_versions is enabled.
     """
 
@@ -511,12 +532,6 @@ class Loader:
       if matches:
         return have_versions[matches[-1]]
 
-    # If we have at least one package with this name but we do not allow
-    # loading multiple packages of different versions, error out.
-    if have_versions and not self.allow_multiple_versions:
-      raise UnmatchedPackageVersion(package_name, selector,
-          list(have_versions.keys()))
-
     # Find all available choices.
     choices = list(self.finder.find_packages(package_name, selector))
     if not choices:
@@ -524,10 +539,8 @@ class Loader:
 
     # And get the best match.
     manifest = selector.best_of(choices, key=lambda x: x.version)
-    package = self.package_class(manifest, self.module_class)
-    self.packages[package_name] = have_versions
-    have_versions[package.version] = package
-    return package
+    assert manifest.name == package_name
+    return self.add_package(manifest)  # Can raise DuplicatePackage
 
   def exec_module(self, module):
     """
