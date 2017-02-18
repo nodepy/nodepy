@@ -27,7 +27,7 @@ from .utils.config import parse_config
 from sys import exit
 
 
-def load_module(cpm, ref, exec_=True):
+def load_module(cpm, ref):
   """
   Loads a module from a package specified by the #refstring.Ref *ref* and
   executes it. Returns the loaded module. Expected errors are handle and
@@ -49,8 +49,6 @@ def load_module(cpm, ref, exec_=True):
     print('error:', exc)
     exit(1)
 
-  if exec_:
-    module.exec_()
   return module
 
 
@@ -80,6 +78,7 @@ def cli(ctx):
 def run(cpm, ref, args):
   ref = refstring.parse(ref or '')
   module = load_module(cpm, ref)
+  module.exec_()
   if ref.function:
     function = getattr(module.namespace, ref.function, None)
     if not callable(function):
