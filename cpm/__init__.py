@@ -454,7 +454,7 @@ class Loader:
     Wrapper for #Finder.update_cache().
     """
 
-    self.finder.update_cache()
+    return self.finder.update_cache()
 
   def load_package(self, package_name, selector):
     """
