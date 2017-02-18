@@ -25,9 +25,12 @@ __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 __version__ = '0.0.1'
 __license__ = 'MIT'
 
+import collections
 import json
 import jsonschema
 import os
+import posixpath
+import types
 
 from .utils import semver
 
@@ -59,6 +62,74 @@ class InvalidPackageManifest(Exception):
     return 'In file "{}": {}'.format(self.filename, self.cause)
 
 
+class NoSuchModule(Exception):
+  """
+  This exception is raised in #Package.get_module() if the requested module
+  does not exist. If the #module_name attribute is #None, it represents the
+  main package module.
+  """
+
+  def __init__(self, package, module_name):
+    self.package = package
+    self.module_name = module_name
+
+  def __str__(self):
+    return 'No module "{}" in "{}"'.format(self.module_name,
+        self.package.identifier)
+
+
+class PackageNotFound(Exception):
+  """
+  This exception is raised if a package that matches the criteria specified
+  with #Loader.load_package() can not be found.
+  """
+
+  def __init__(self, package_name, selector):
+    self.package_name = package_name
+    self.selector = selector or semver.Selector('*')
+
+  def __str__(self):
+    return '{}@{}'.format(self.package_name, self.selector)
+
+
+class UnmatchedPackageVersion(Exception):
+  """
+  This exception is raised when a package is supposed to be loaded with
+  #Loader.load_package() but another package of a version that does not match
+  the selector has already been loaded.
+  """
+
+  def __init__(self, package_name, selector, loaded_versions):
+    self.package_name = package_name
+    self.selector = selector or semver.Selector('*')
+    self.loaded_versions = loaded_versions
+
+  def __str__(self):
+    version_t = 'version' if len(self.loaded_versions) == 1 else 'versions'
+    return '"{}@{}" could not be loaded, it does not match with the already '\
+        'loaded {} "{}"'.format(self.package_name, self.selector, version_t,
+        ','.join(map(str, self.loaded_versions)))
+
+
+class UnknownDependency(Exception):
+  """
+  This exception is raised when a #Module `require()`s another #Package that
+  is not listed in the dependencies of the #Module#s package that is currently
+  executed.
+
+  Note that the exception is only thrown if #Loader.allow_unknown_dependencies
+  is not enabled.
+  """
+
+  def __init__(self, source_package, package_name):
+    self.source_package = source_package
+    self.package_name = package_name
+
+  def __str__(self):
+    return '"{}" required "{}" which is not a known dependency'.format(
+        self.source_package.identifier, self.package_name)
+
+
 class PackageManifest:
   """
   This class describes a `cpm.json` package manifest in memory. The manifest
@@ -87,6 +158,7 @@ class PackageManifest:
       "description": {"type": "string"},
       "author": {"type": "string"},
       "license": {"type": "string"},
+      "main": {"type": "string"},
       "dependencies": {
         "type": "object",
         "additionalProperties": {"type": "string"}
@@ -143,14 +215,15 @@ class PackageManifest:
     return PackageManifest(filename, **data, specifics=specifics)
 
   def __init__(self, filename, name, version, description=None, author=None,
-      license=None, dependencies=None, python_dependencies=None, scripts=None,
-      specifics=None):
+      license=None, main='index', dependencies=None, python_dependencies=None,
+      scripts=None, specifics=None):
     self.filename = filename
     self.directory = os.path.dirname(filename)
     self.name = name
     self.version = version
     self.author = author
     self.license = license
+    self.main = main
     self.description = description
     self.dependencies = {} if dependencies is None else dependencies
     self.python_dependencies = {} if python_dependencies is None else python_dependencies
@@ -227,25 +300,291 @@ class Finder:
 
     return errors
 
-  def find_modules(self, module_name, selector):
+  def find_packages(self, package_name, selector):
     """
-    Find all modules matching the specified *module_name* and the version range
+    Find all packages matching the specified *package_name* and the version range
     specified by *selector*. Either and both of the parameters can be #None to
-    cause any module or version to be matched, thus using #None for both
-    parameters should yield all modules that can be found by the #Finder.
+    cause any package or version to be matched, thus using #None for both
+    parameters should yield all packages that can be found by the #Finder.
 
     # Parameters
-    module_name (str): The name of the module(s) to find.
+    package_name (str): The name of the package(s) to find.
     selector (semver.Selector): A selector for a version number range. Only
-      modules matching the specified version number range will be returned.
+      packages matching the specified version number range will be returned.
 
     # Returns
     A generator yielding #PackageManifest objects.
     """
 
     for manifest in self.cache.values():
-      if module_name and manifest.name != module_name:
+      if package_name and manifest.name != package_name:
         continue
       if selector and not selector(manifest.version):
         continue
       yield manifest
+
+
+class Package:
+  """
+  This class represents an actual CPM package. When a package or module is
+  loaded with #Loader.require(), the respective #Package instance is queried to
+  retrieve and return the respective #Module.
+
+  A package can consist of multiple #Module#s but there is always one main
+  module that is specified in #PackageManifest.main, which will be loaded when
+  the actual package is `require()`d and not any of its components.
+  """
+
+  def __init__(self, manifest):
+    self.manifest = manifest
+    self.modules = {}
+
+  def __str__(self):
+    return '<cpm.Package "{}">'.format(self.identifier)
+
+  @property
+  def name(self):
+    return self.manifest.name
+
+  @property
+  def version(self):
+    return self.manifest.version
+
+  @property
+  def identifier(self):
+    return self.manifest.identifier
+
+  def load_module(self, name=None):
+    """
+    Returns the #Module of this package that matches the specified *name*.
+    If *name* is #None, the main module will be returned.
+    """
+
+    if name is None:
+      name = self.manifest.main
+    if name in self.modules:
+      return self.modules[name]
+
+    filename = os.path.join(self.manifest.directory, name + '.py')
+    filename = os.path.normpath(os.path.abspath(filename))
+    if not os.path.isfile(filename):
+      raise NoSuchModule(self, name)
+
+    module = Module(self, name, filename)
+    self.modules[name] = module
+    return module
+
+
+class Module(object):
+  """
+  This class represents an actual Python file in a #Package.
+  """
+
+  def __init__(self, package, name, filename):
+    self.package = package
+    self.name = name
+    self.filename = filename
+    self.namespace = types.ModuleType(self.identifier)
+    self.namespace.__file__ = filename
+    self.executed = False
+
+  def __str__(self):
+    exec_info = '' if self.executed else ' (not executed)'
+    return '<cpm.Module "{}"{}>'.format(self.identifier, exec_info)
+
+  @property
+  def is_main(self):
+    return self.name == self.package.manifest.main
+
+  @property
+  def identifier(self):
+    if self.is_main:
+      return self.package.identifier
+    else:
+      return '{}/{}'.format(self.package.identifier, self.name)
+
+
+class Loader:
+  """
+  This class loads CPM packages that are returned by one or more #Finder#s.
+  Similar to normal Python modules, the loaded packages are kept in the
+  #packages dictionary. By default, the same package can not be loaded in
+  different versions at the same time. To change this behaviour,
+  #allow_multiple_versions can be set to #True.
+
+  # Members
+  finder (Finder): An object that implements the #Finder interface. By default,
+    this is a standard #Finder instance.
+  allow_multiple_versions (bool): Allow loading multiple packages of different
+    versions with this loader. This behaviour is turned off by default.
+  allow_unknown_dependencies (bool): Allow dependencies to be `require()`d
+    that are not known from the #PackageManifest of the requiring package.
+    This behaviour is turned off by default.
+  packages (dict): A dictionary that maps package names to another dictionary.
+    This sub-dictionary maps #semver.Version#s to the actual #Package object.
+    If #allow_multiple_versions is #False, there will only be one version for
+    every package name.
+  before_exec (function): A list of functions that will be called before a
+    #Module is executed. This function must accept the positional arguments
+    (#Loader, #Module).
+  module_stack (collections.deque): A stack of the modules that are currently
+    being executed. You can retrieve the #Module that is currently being
+    executed using the #module property.
+  """
+
+  def __init__(self, finder=None):
+    self.finder = Finder() if finder is None else finder
+    self.allow_multiple_versions = False
+    self.allow_unknown_dependencies = False
+    self.packages = {}
+    self.before_exec = []
+    self.module_stack = collections.deque()
+
+  @property
+  def module(self):
+    if self.module_stack:
+      return self.module_stack[-1]
+    return None
+
+  def update_cache(self):
+    """
+    Wrapper for #Finder.update_cache().
+    """
+
+    self.finder.update_cache()
+
+  def load_package(self, package_name, selector):
+    """
+    Uses the #finder to find the best possible match for *package_name*
+    and returns a #Package object. If no matching package could be found,
+    #PackageNotFound is raised.
+
+    If a package with the specified *package_name* is already loaded but
+    does not match the specified version *selector*, an
+    #UnmatchedPackageVersion exception is raised unless
+    #allow_multiple_versions is enabled.
+    """
+
+    if not package_name:
+      raise ValueError('empty package_name')
+    if not selector:
+      selector = semver.Selector('*')
+
+    # Check if we have already loaded a package that matches the criteria.
+    have_versions = self.packages.get(package_name, {})
+    if have_versions:
+      matches = sorted(filter(selector, have_versions.keys()))
+      if matches:
+        return have_versions[matches[-1]]
+
+    # If we have at least one package with this name but we do not allow
+    # loading multiple packages of different versions, error out.
+    if have_versions and not self.allow_multiple_versions:
+      raise UnmatchedPackageVersion(package_name, selector,
+          list(have_versions.keys()))
+
+    # Find all available choices.
+    choices = list(self.finder.find_packages(package_name, selector))
+    if not choices:
+      raise PackageNotFound(package_name, selector)
+
+    # And get the best match.
+    manifest = selector.best_of(choices, key=lambda x: x.version)
+    package = Package(manifest)
+    self.packages[package_name] = have_versions
+    have_versions[package.version] = package
+    return package
+
+  def exec_module(self, module):
+    """
+    Executes a #Module object. If the #Module was already executed, a
+    #RuntimeError is raised.
+    """
+
+    if not isinstance(module, Module):
+      raise TypeError('expected cpm.Module object')
+    if module.executed:
+      raise RuntimeError('Module already executed')
+
+    with open(module.filename, 'r') as fp:
+      code = fp.read()
+
+    module.executed = True
+    self.module_stack.append(module)
+    try:
+      for func in self.before_exec:
+        func(self, module)
+      code = compile(code, module.filename, 'exec')
+      exec(code, vars(module.namespace))
+    finally:
+      assert self.module_stack.pop() is module
+
+  def require(self, name, origin):
+    """
+    This method is a combination of #load_package(), #Package.load_module()
+    and #exec_module(). Given a package *name* and optionally the submodule
+    name encoded in the same string, it will load the #Package and module
+    and execute it (if it is not already executed). If *name* begins with a
+    curdir (`./`) or pardir (`../`), a module is loaded from the currently
+    executed package instead.
+
+    This method can only be used from inside the execution of another #Module
+    which must be specified with the *origin* parameter.
+
+    If the requested package is not listed as a dependency of the *origin*
+    #Module#s #Package#s dependencies, an #UnknownDependency exception is
+    raised.
+    """
+
+    if not isinstance(name, str):
+      raise TypeError('name must be a string')
+    if not isinstance(origin, Module):
+      raise TypeError('origin must be a cpm.Module')
+
+    if name.startswith('./') or name.startswith('../'):
+      package = origin.package
+      module = posixpath.join(posixpath.dirname(origin.name), name)
+      module = posixpath.normpath(module)
+    else:
+      package_name, module = name.partition('/')[::2]
+      selector = origin.package.manifest.dependencies.get(package_name)
+      if not self.allow_unknown_dependencies and selector is None:
+        raise UnknownDependency(origin.package, package_name)
+      package = self.load_package(package_name, selector)
+
+    module = package.load_module(module or None)
+    if not module.executed:
+      self.exec_module(module)
+    return module
+
+
+class AddDefaultNamespace(object):
+  """
+  Objects of this class can be added to #Loader.before_exec to initialize
+  #Module#s with a default namespace before they are executed.
+  """
+
+  def __init__(self, vars=None):
+    self.vars = {} if vars is None else vars
+
+  def __call__(self, loader, module):
+    vars(module.namespace).update(self.vars)
+
+
+class AddRequire(object):
+  """
+  Adds the default `require()` method to the namespace of a #Module before it
+  is executed. An instance of this class must be added to #Loader.before_exec.
+  Note that the *loader* argument must match the #Loader that this object is
+  added to.
+  """
+
+  def __init__(self, loader):
+    self.loader = loader
+
+  def __call__(self, loader, module):
+    module.namespace.require = self.require
+
+  def require(self, name):
+    module = self.loader.require(name, self.loader.module)
+    return module.namespace
