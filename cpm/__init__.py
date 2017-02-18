@@ -579,11 +579,16 @@ class AddRequire(object):
   added to.
   """
 
-  def __init__(self, loader):
-    self.require = Require(loader)
+  def __init__(self, loader, each_their_own=False):
+    self.each_their_own = bool(each_their_own)
+    self.require = None if self.each_their_own else Require(loader)
 
   def __call__(self, loader, module):
-    module.namespace.require = self.require
+    if self.each_their_own:
+      require = Require(loader)
+    else:
+      require = self.require
+    module.namespace.require = require
 
 
 class Require(object):
