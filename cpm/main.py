@@ -85,4 +85,53 @@ def run(cpm, ref, args):
       print('error: "{}" is not a function'.format(refstring.join(
           package.name, package.version, module.name, ref.member)))
       exit(1)
-    function(args)
+    function(*args)
+
+
+@cli.command()
+@click.argument('package')
+@click.pass_obj
+def install(cpm, package):
+  """
+  \b
+  cpm install <dir>
+  cpm install <package>[@<version>]
+  """
+
+  dirs = cpm.get_install_dirs(False)
+  if os.sep in os.path.normpath(package) or package == '.':
+    cpm.install_package_from_directory(package, dirs)
+  else:
+    try:
+      ref = refstring.parse(package)
+      if ref.module or ref.member:
+        raise ValueError('invalid package reference: "{}"'.format(package))
+    except ValueError as exc:
+      print('error:', exc)
+      exit(1)
+
+    cpm.install_package(ref.package, ref.version)
+
+
+@cli.command()
+@click.argument('package')
+@click.option('-y', '--yes', is_flag=True)
+@click.pass_obj
+def uninstall(cpm, package, yes):
+  """
+  \b
+  cpm install <package>[@<version>]
+  """
+
+  ref = refstring.parse(package)
+  package = cpm.load_package(ref.package, ref.version)
+  if not package.is_installed:
+    print('error: "{}" is a package was not installed via cpm'.format(package.identifier))
+  if not yes:
+    print('Files installed for "{}":\n'.format(package.identifier))
+    for filename in package.get_installed_files():
+      print('  {}'.format(filename))
+    reply = input('\nDo you want continue uninstalling? [y/N] ').lower()
+    if reply not in ('y', 'yes'):
+      exit(0)
+  package.uninstall()

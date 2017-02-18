@@ -40,9 +40,13 @@ import json
 import jsonschema
 import os
 import posixpath
+import shutil
+import textwrap
 import types
 
-from .utils import semver
+from .utils import pathutils, refstring, semver
+from distlib.scripts import ScriptMaker
+from fnmatch import fnmatch
 
 
 class NotAPackageDirectory(Exception):
@@ -141,6 +145,10 @@ class UnknownDependency(Exception):
         self.source_package.identifier, self.package_name)
 
 
+class InstallError(Exception):
+  pass
+
+
 class PackageManifest:
   """
   This class describes a `cpm.json` package manifest in memory. The manifest
@@ -158,12 +166,6 @@ class PackageManifest:
   arbitrary string. The JSON data of these fields will be stored in the
   #PackageManifest.specifics dictionary. The field can be used by packages that
   are used with applications that are built on top of cpm.
-
-  # Additional Members
-
-  - **is_main_package** (bool): This member can not be specified in the actual
-    manifest, but it can be set by the #Finder to indicate that the manifest
-    was read from the location where the main package is to be found.
   """
 
   schema = {
@@ -187,6 +189,10 @@ class PackageManifest:
       "scripts": {
         "type": "object",
         "additionalProperties": {"type": "string"}
+      },
+      "exclude_files": {
+        "type": "array",
+        "items": {"type": "string"}
       },
       ".*-specific": {},
     },
@@ -224,6 +230,11 @@ class PackageManifest:
     except ValueError as exc:
       raise InvalidPackageManifest(filename, exc)
 
+    dependencies = {}
+    for dep, sel in data.get('dependencies', {}).items():
+      dependencies[dep] = semver.Selector(sel)
+    data['dependencies'] = dependencies
+
     specifics = {}
     for key in tuple(data.keys()):
       if key.endswith('-specific'):
@@ -233,7 +244,7 @@ class PackageManifest:
 
   def __init__(self, filename, name, version, description=None, author=None,
       license=None, main='index', dependencies=None, python_dependencies=None,
-      scripts=None, specifics=None):
+      scripts=None, exclude_files=None, specifics=None):
     self.filename = filename
     self.directory = os.path.dirname(filename)
     self.name = name
@@ -246,7 +257,7 @@ class PackageManifest:
     self.python_dependencies = {} if python_dependencies is None else python_dependencies
     self.scripts = {} if scripts is None else scripts
     self.specifics = {} if specifics is None else specifics
-    self.is_main_package = False
+    self.exclude_files = [] if exclude_files is None else exclude_files
 
   def __repr__(self):
     return '<cpm.PackageManifest "{}">'.format(self.identifier)
@@ -272,13 +283,6 @@ class Finder:
   path (list of str): A list of search directories.
   cache (dict of (str, PackageManifest)): A dictionary that caches the manifest
     information read in for every package directory.
-  check_main_package (bool): Parse the main package manifest from the current
-    working directory. Defaults to #True. If enabled, the main package's
-    #PackageManifest.is_main_package will be set to #True and the manifest
-    will be accessible via #Finder.main_package after #update_cache().
-  main_package (PackageManifest): If #check_main_package is #True and the
-    current working directory exposes a valid manifest, this member will hold
-    that #PackageManifest after #update_cache().
   """
 
   def __init__(self, path=()):
@@ -449,6 +453,33 @@ class Package:
   def identifier(self):
     return self.manifest.identifier
 
+  @property
+  def directory(self):
+    return self.manifest.directory
+
+  @property
+  def is_installed(self):
+    """
+    Returns #True if the package is an installed package (that is, if there
+    exists an `.installed-files` file).
+    """
+
+    fn = os.path.join(self.directory, '.installed-files')
+    return os.path.isfile(fn)
+
+  def get_installed_files(self):
+    with open(os.path.join(self.directory, '.installed-files')) as fp:
+      return list(filter(bool, [x.rstrip('\n') for x in fp]))
+
+  def uninstall(self):
+    if not self.is_installed:
+      raise RuntimeError("this is not an installed package")
+    files = self.get_installed_files()
+    shutil.rmtree(self.directory)
+    for filename in files:
+      if os.path.isfile(filename):
+        os.remove(filename)
+
   def load_module(self, name=None):
     """
     Returns the #Module of this package that matches the specified *name*.
@@ -549,6 +580,7 @@ class Cpm:
 
   def __init__(self, prefix='~/.cpm', local_modules_dir='cpm_modules'):
     self.prefix = os.path.expanduser(prefix)
+    self.local_modules_dir = local_modules_dir
     self.loader = Loader()
     self.main_finder = Finder()
     self.local_finder = Finder([local_modules_dir])
@@ -652,6 +684,100 @@ class Cpm:
     if not module.executed:
       module.exec_()
     return module
+
+  def get_install_dirs(self, global_):
+    if global_:
+      return {'modules': os.path.join(self.prefix, 'modules'),
+              'bin': os.path.join(self.prefix, 'bin')}
+    else:
+      return {'modules': self.local_modules_dir,
+              'bin': os.path.join(self.local_modules_dir, '.bin')}
+
+  def install_package_from_directory(self, directory, dirs):
+    manifest = PackageManifest.parse(directory)
+    install_dir = os.path.join(dirs['modules'], manifest.name)
+    if os.path.exists(install_dir) :
+      raise InstallError('install directory "{}" already exists'.format(install_dir))
+
+    # Install CPM dependencies if they are unmet.
+    if manifest.dependencies:
+      print('Collecting dependencies for "{}"...'.format(manifest.identifier))
+    deps = []
+    for dep_name, dep_sel in manifest.dependencies.items():
+      try:
+        self.load_package(dep_name, dep_sel)
+      except PackageNotFound as exc:
+        deps.append((dep_name, dep_sel))
+      else:
+        print('  Skipping satisfied dependency "{}"'.format(
+            refstring.join(dep_name, dep_sel)))
+    if deps:
+      print('Installing dependencies:', ', '.join(refstring.join(*d) for d in deps))
+      for dep_name, dep_sel in deps:
+        self.install_package(dep_name, dep_sel)
+
+    installed_files = []
+
+    # Add default exclude patterns.
+    exclude_files = list(manifest.exclude_files)
+    exclude_files.append('cpm_modules/*')
+    exclude_files.append('.git/*')
+    exclude_files.append('.svn/*')
+    exclude_files.append('*.pyc')
+
+    # Copy the package files.
+    print('Installing "{}" to "{}" ...'.format(manifest.identifier, install_dir))
+    pathutils.makedirs(install_dir)
+    for root, __, files in os.walk(directory):
+      for filename in files:
+        filename = os.path.join(root, filename)
+        rel = os.path.relpath(filename, directory)
+        # Skip the file if any of the skip patterns match.
+        if any(fnmatch(rel, pat) for pat in exclude_files):
+          continue
+        dst = os.path.join(install_dir, rel)
+        pathutils.makedirs(os.path.dirname(dst))
+        print('  Copying', rel, '...')
+        shutil.copyfile(filename, dst)
+        installed_files.append(dst)
+
+    # Create scripts.
+    for script_name, ref in manifest.scripts.items():
+      try:
+        ref = refstring.parse(ref)
+      except ValueError as exc:
+        raise InstallError('invalid script "{}": {}'.format(script_name, exc))
+      if not ref.package:
+        ref = refstring.Ref(manifest.name, manifest.version, ref.module, ref.member)
+      print('  Installing script "{}"...'.format(script_name))
+      maker = ScriptMaker(None, dirs['bin'])
+      maker.clobber = True
+      maker.variants = set(('',))
+      maker.set_mode = True
+      # TODO: The script must support being called from any CWD.
+      maker.script_template = textwrap.dedent('''
+        import sys, cpm.main
+        if __name__ == '__main__':
+          sys.argv = [sys.argv[0], 'run', {!r}] + sys.argv[1:]
+          cpm.main.cli()
+        '''.format(refstring.join(*ref)))
+      installed_files += maker.make(script_name + '=foo')
+
+    # TODO Install Python dependencies.
+
+    with open(os.path.join(install_dir, '.installed-files'), 'w') as fp:
+      for filename in installed_files:
+        fp.write(filename)
+        fp.write('\n')
+
+  def install_package(self, package_name, selector):
+    """
+    Install packages from a remote registry.
+
+    TODO
+    """
+
+    raise InstallError('installation from registry not implement')
 
 
 class AddVars:
