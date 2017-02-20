@@ -26,13 +26,12 @@ if sys.version_info[0] != 3:
 
 setup(
   name = 'nnp',
-  version = '0.0.1.dev0',
+  version = '0.0.1',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
   description = '',
   url = 'https://github.com/NiklasRosenstein/nnp',
-
   packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm'],
   install_requires = ['click', 'distlib', 'jsonschema'],
   entry_points = {
