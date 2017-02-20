@@ -6,6 +6,12 @@ was intended as part of *[Craftr]*.
 
   [Craftr]: https://craftr.net
 
+## Current State
+
+- `nnp` command is fully implemented
+- `nnpm install` can only install from the current directory, without
+  dependencies, but also installs scripts
+
 ## Synopsis
 
     nnp
