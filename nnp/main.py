@@ -20,13 +20,28 @@
 
 import click
 import code
+import os
 import sys
 import traceback
 from sys import exit
 from . import __version__
-from .core.package import Module
+from .core.manifest import PackageManifest, NotAPackageDirectory
+from .core.package import Module, Package
 from .core.session import Session
 from .core.executor import ExecuteError
+
+
+def get_up_package(directory):
+  directory = os.path.abspath(directory)
+  prev = None  # Necessary to find root on Windows
+  while directory and directory != prev:
+    try:
+      return PackageManifest.parse(directory)
+    except NotAPackageDirectory:
+      pass
+    prev = directory
+    directory = os.path.dirname(directory)
+  return None
 
 
 def run(filename=None, package=None, local_dir=None, args=None):
@@ -38,7 +53,12 @@ def run(filename=None, package=None, local_dir=None, args=None):
 
   session = Session(local_dir=local_dir)
   if filename:
-    module = Module(None, filename)
+    manifest = get_up_package(os.path.dirname(filename))
+    if manifest:
+      package = session.add_package(manifest)
+      module = package.load_module_from_filename(filename)
+    else:
+      module = Module(None, filename)
   else:
     module = session.require(package, exec_=False)
     filename = module.filename
