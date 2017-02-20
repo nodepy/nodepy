@@ -26,7 +26,7 @@ if sys.version_info[0] != 3:
 
 setup(
   name = 'nnp',
-  version = '0.0.1',
+  version = '0.0.2',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',

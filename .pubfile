@@ -1,0 +1,4 @@
+versionPatterns:
+  "nnp/__init__.py": "__version__ = '$VERSION'"
+  "nnpm/__init__.py": "__version__ = '$VERSION'"
+  "setup.py": "  version = '$VERSION'"
