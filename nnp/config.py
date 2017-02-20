@@ -39,14 +39,10 @@ def _get_config():
       for option, value in parser.items(section):
         config[section + ':' + option] = value
 
-  # Initialize default values.
-  config.setdefault('nnp:prefix', os.path.expanduser('~/.nnp'))
-  config.setdefault('nnp:local_packages_dir', 'nnp_packages')
-
-  # Expand known config values.
-  config['nnp:prefix'] = os.path.expanduser(config['nnp:prefix'])
-
   return config
 
 
 config = _get_config()
+config.setdefault('nnp:prefix', os.getenv('NNP_PREFIX', '~/.nnp'))
+config.setdefault('nnp:local_packages_dir', 'nnp_packages')
+config['nnp:prefix'] = os.path.expanduser(config['nnp:prefix'])
