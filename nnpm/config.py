@@ -20,4 +20,4 @@
 
 from nnp.config import config
 
-config.setdefault('nnpm:registry', 'https://registry.craftr.net')
+config.setdefault('nnpm:registry', 'https://nnpy.org')

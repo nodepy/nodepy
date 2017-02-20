@@ -66,3 +66,12 @@ Example manifest:
   "postinstall": "postinstall.py"
 }
 ```
+
+## Registry Server
+
+**nnpmd** is the registry server that can be set-up anywhere you want. The
+default registry is available at `nnpy.org`. It is based on [Flask] and
+[Mongo DB].
+
+  [Flask]: http://flask.pocoo.org/
+  [Mongo DB]: https://www.mongodb.com/
