@@ -27,6 +27,33 @@ from .core.session import Session
 from .core.executor import ExecuteError
 
 
+def run(filename=None, package=None, local_dir=None, args=None):
+  if filename and package:
+    print('error: filename and --package can not be specified at the same time')
+    exit(1)
+  elif not filename and not package:
+    raise ValueError('neither filename nor package specified')
+
+  session = Session(local_dir=local_dir)
+  if filename:
+    module = Module(None, filename)
+  else:
+    module = session.require(package, exec_=False)
+    filename = module.filename
+
+  if args is not None:
+    sys.argv = [filename]
+    sys.argv.extend(args)
+
+  try:
+    session.exec_module(module)
+  except ExecuteError as exc:
+    if isinstance(exc.exc_info[1], SystemExit):
+      raise exc.exc_info[1]
+    traceback.print_exception(*exc.exc_info)
+    exit(1)
+
+
 @click.command()
 @click.argument('filename', required=False)
 @click.argument('args', nargs=-1)
@@ -37,21 +64,4 @@ def cli(filename, args, package, local_dir):
     # TODO: Enter interactive mode
     print('error: interactive mode not implemented')
     exit(1)
-  elif filename and package:
-    print('error: filename and --package can not be specified at the same time')
-    exit(1)
-
-  session = Session(local_dir=local_dir)
-  if filename:
-    module = Module(None, filename)
-  else:
-    module = session.require(package, exec_=False)
-    filename = module.filename
-
-  sys.argv = [filename]
-  sys.argv.extend(args)
-
-  try:
-    session.exec_module(module)
-  except ExecuteError as exc:
-    traceback.print_exception(*exc.exc_info)
+  run(filename, package, local_dir, args)

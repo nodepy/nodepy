@@ -18,23 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from setuptools import setup, find_packages
-
-setup(
-  name = 'nnp',
-  version = '0.0.1.dev0',
-  author = 'Niklas Rosenstein',
-  author_email = 'rosensteinniklas@gmail.com',
-  license = 'MIT',
-  description = '',
-  url = 'https://github.com/NiklasRosenstein/nnp',
-
-  packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm'],
-  install_requires = ['click', 'distlib', 'jsonschema'],
-  entry_points = {
-    'console_scripts': [
-      'nnp = nnp.main:cli',
-      'nnpm = nnpm.main:cli'
-    ]
-  }
-)
+__author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
+__version__ = '0.0.1'
+__license__ = 'MIT'
