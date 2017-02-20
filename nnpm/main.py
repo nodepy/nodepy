@@ -29,7 +29,14 @@ def cli():
 
 
 @cli.command()
-def install():
-  dirs = {'packages': 'nnp_packages', 'bin': 'nnp_packages/.bin',
-      'python_modules': 'nnp_packages/.pymodules', 'local_dir': os.getcwd()}
-  install_from_directory('.', dirs)
+@click.argument('directory')
+@click.option('-g', '--global/--local', 'global_', is_flag=True)
+def install(directory, global_):
+  if global_:
+    e = os.path.expanduser
+    dirs = {'packages': e('~/.nnp/packages'), 'bin': e('~/.nnp/bin'),
+        'python_modules': e('~/.nnp/pymodules'), 'local_dir': os.getcwd()}
+  else:
+    dirs = {'packages': 'nnp_packages', 'bin': 'nnp_packages/.bin',
+        'python_modules': 'nnp_packages/.pymodules', 'local_dir': os.getcwd()}
+  install_from_directory(directory or '.', dirs)
