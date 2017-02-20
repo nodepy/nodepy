@@ -63,6 +63,7 @@ Example manifest:
   },
   "dist": {
     "include_files": ["README.md", "*.py", "public/*"]
-  }
+  },
+  "postinstall": "postinstall.py"
 }
 ```
