@@ -117,12 +117,20 @@ class PackageManifest:
     filename = os.path.join(directory, 'package.json')
     if not os.path.isfile(filename):
       raise NotAPackageDirectory(directory)
+    return PackageManifest.parse_file(filename, directory)
 
-    with open(filename, 'r') as fp:
-      try:
-        data = json.load(fp)
-      except json.JSONDecodeError as exc:
-        raise InvalidPackageManifest(filename, exc)
+  @staticmethod
+  def parse_file(file, directory):
+    try:
+      if isinstance(file, str):
+        filename = file
+        with open(file, 'r') as fp:
+          data = json.load(fp)
+      else:
+        filename = 'package.json'
+        data = json.load(file)
+    except json.JSONDecodeError as exc:
+      raise InvalidPackageManifest(filename, exc)
 
     try:
       jsonschema.validate(data, PackageManifest.schema)
@@ -153,14 +161,14 @@ class PackageManifest:
           raise InvalidPackageManifest(msg.format(key))
         engine_props[key] = data.pop(key)
 
-    return PackageManifest(filename, **data, engine_props=engine_props)
+    return PackageManifest(filename, directory, **data, engine_props=engine_props)
 
-  def __init__(self, filename, name, version, description=None, author=None,
+  def __init__(self, filename, directory, name, version, description=None, author=None,
       license=None, main='index', dependencies=None, python_dependencies=None,
       scripts=None, bin=None, engines=None, engine_props=None, dist=None,
       postinstall=None):
     self.filename = filename
-    self.directory = os.path.dirname(filename)
+    self.directory = directory
     self.name = name
     self.version = version
     self.author = author
