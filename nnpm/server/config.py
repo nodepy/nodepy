@@ -35,3 +35,6 @@ def get_config():
   config.setdefault('nnpmd:prefix', '~/.nnp/registry')
   config['nnpmd:prefix'] = os.path.expanduser(config['nnpmd:prefix'])
   return config
+
+
+config = get_config()

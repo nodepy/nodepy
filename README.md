@@ -11,8 +11,9 @@ was intended as part of *[Craftr]*.
     [x] nnp
     [x] nnp <script>.py
     [x] nnp -p <package>[@<version>][/<module>][:<func>]
-    [/] nnpm install [-g] .
-    [ ] nnpm install [-g] <package>[@<version>]
+    [x] nnpm install [-g] .
+    [x] nnpm install [-g] <archive>
+    [x] nnpm install [-g] <package>[@<version>]
     [ ] nnpm uninstall [-g] <package>[@<version>]
     [ ] nnpm init
     [ ] nnpm ls

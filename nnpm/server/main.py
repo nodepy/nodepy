@@ -21,19 +21,21 @@
 import click
 import os
 from .app import app
-from .config import get_config
+from .config import config
 
 
 @click.command()
 @click.option('-h', '--host')
 @click.option('-p', '--port', type=int)
 @click.option('-d', '--debug/--no-debug', default=None)
-def cli(host, port, debug):
-  config = get_config()
+@click.option('--prefix')
+def cli(host, port, debug, prefix):
   if host is None:
     host = config['nnpmd:host']
   if port is None:
     port = int(os.getenv('NNPMWEB_PORT', int(config['nnpmd:port'])))
   if debug is None:
     debug = (config['nnpmd:debug'].lower().strip() == 'true')
+  if prefix is not None:
+    config['nnpmd:prefix'] = prefix
   app.run(host=host, port=port, debug=debug)

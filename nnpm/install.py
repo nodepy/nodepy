@@ -24,9 +24,13 @@ import nnp.main
 import os
 import shlex
 import shutil
+import tarfile
+import tempfile
+
 from distlib.scripts import ScriptMaker
 from fnmatch import fnmatch
 from nnp.core.manifest import PackageManifest
+from .utils import download
 
 default_exclude_patterns = ['.DS_Store', '.svn/*', '.git/*', 'nnp_packages/*', '*.pyc', '*.pyo', 'dist/*']
 
@@ -84,7 +88,7 @@ def walk_package_files(manifest):
         yield (filename, rel)
 
 
-def install_from_directory(source_directory, dirs, registry):
+def install_from_directory(source_directory, dirs, registry, expect=None):
   """
   Install an nnp package from a directory. The directory must provide a
   `package.json` file. An #InstallError is raised when the installation of the
@@ -96,8 +100,11 @@ def install_from_directory(source_directory, dirs, registry):
   """
 
   manifest = PackageManifest.parse(source_directory)
+  if expect is not None and (manifest.name, manifest.version) != expect:
+    raise InstallError('expected to install "{}@{}" but got "{}" in '
+        '"{}"'.format(expect[0], expect[1], manifest.identifier, source_directory))
+
   target_dir = os.path.join(dirs['packages'], manifest.name)
-  print(target_dir)
 
   # Error if the target directory already exists. The package must be
   # uninstalled before it can be installed again.
@@ -153,14 +160,43 @@ def install_from_directory(source_directory, dirs, registry):
     nnp.main.run(filename)
 
 
-def install_from_registry(self, package_name, selector):
+def install_from_archive(archive, dirs, registry, expect=None):
   """
-  Install packages from a remote registry.
-
-  TODO
+  Install a package from an archive.
   """
 
-  raise InstallError('installation from registry not implement')
+  directory = tempfile.mkdtemp(suffix='_' + os.path.basename(archive) + '_unpacked')
+  print('Unpacking "{}"...'.format(archive))
+  try:
+    with tarfile.open(archive) as tar:
+      tar.extractall(directory)
+    install_from_directory(directory, dirs, registry, expect=expect)
+  finally:
+    shutil.rmtree(directory)
+
+
+def install_from_registry(package_name, selector, dirs, registry):
+  """
+  Install a package from a registry.
+  """
+
+  print('Finding package matching "{}@{}"...'.format(package_name, selector))
+  info = registry.find_package(package_name, selector)
+  assert info.name == package_name, info
+
+  print('Downloading "{}@{}"...'.format(info.name, info.version))
+  response = registry.download(info.name, info.version)
+  filename = download.get_response_filename(response)
+
+  tmp = None
+  try:
+    with tempfile.NamedTemporaryFile(suffix='_' + filename, delete=False) as tmp:
+      progress = download.DownloadProgress(30, prefix='  ')
+      download.download_to_fileobj(response, tmp, progress=progress)
+    return install_from_archive(tmp.name, dirs, registry, expect=(package_name, info.version))
+  finally:
+    if tmp and os.path.isfile(tmp.name):
+      os.remove(tmp.name)
 
 
 class InstallError(Exception):

@@ -20,8 +20,13 @@
 
 import click
 import os
-from .install import install_from_directory
+import tarfile
+
+from nnp.utils import refstring, semver
+from nnp.core.manifest import PackageManifest
+from .install import install_from_directory, install_from_registry, install_from_archive, walk_package_files
 from .config import get_config
+from .registry import Registry, make_package_archive_name
 
 
 @click.group()
@@ -30,10 +35,11 @@ def cli():
 
 
 @cli.command()
-@click.argument('directory')
+@click.argument('package')
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
-def install(directory, global_):
+def install(package, global_):
   config = get_config()
+  registry = Registry(config['nnpm:registry'])
 
   if global_:
     e = os.path.expanduser
@@ -51,4 +57,29 @@ def install(directory, global_):
       'local_dir': os.getcwd()
     }
 
-  install_from_directory(directory or '.', dirs)
+  if os.path.isdir(package):
+    install_from_directory(package, dirs, registry)
+  elif os.path.isfile(package):
+    install_from_archive(package, dirs, registry)
+  else:
+    ref = refstring.parse(package)
+    selector = ref.version or semver.Selector('*')
+    install_from_registry(ref.package, selector, dirs, registry)
+
+
+@cli.command()
+def dist():
+  """
+  Create a .tar.gz distribution from the package.
+  """
+
+  manifest = PackageManifest.parse('.')
+  filename = os.path.join('dist', make_package_archive_name(manifest.name, manifest.version))
+  if not os.path.isdir('dist'):
+    os.mkdir('dist')
+  print('Creating archive "{}"...'.format(filename))
+  archive = tarfile.open(filename, 'w:gz')
+  for filename, rel in walk_package_files(manifest):
+    print('  Adding "{}"...'.format(rel))
+    archive.add(filename, rel)
+  print('Done!')
