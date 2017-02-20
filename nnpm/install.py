@@ -58,8 +58,10 @@ def _make_script(script_name, args, directory):
   return _make_python_script(script_name, code, directory)
 
 
-def _make_bin(script_name, filename, directory):
-  code = 'import sys, nnp.main;nnp.main.run(%r)' % (filename,)
+def _make_bin(script_name, filename, local_dir, directory):
+  # TODO: If local_dir is None here (for global installs), local module's
+  # shouldn't even be considered!
+  code = 'import sys, nnp.main;nnp.main.run(%r, local_dir=%r)' % (filename, local_dir)
   return _make_python_script(script_name, code, directory)
 
 
@@ -144,7 +146,8 @@ def install_from_directory(source_directory, dirs):
     installed_files += _make_script(script_name, shlex.split(command), dirs['bin'])
   for script_name, filename in manifest.bin.items():
     print('  Installing script "{}"...'.format(script_name))
-    installed_files += _make_bin(script_name, filename, dirs['bin'])
+    filename = os.path.abspath(os.path.join(target_dir, filename))
+    installed_files += _make_bin(script_name, filename, dirs['local_dir'], dirs['bin'])
 
 
 def install_from_registry(self, package_name, selector):

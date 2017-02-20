@@ -35,7 +35,7 @@ def install(directory, global_):
   if global_:
     e = os.path.expanduser
     dirs = {'packages': e('~/.nnp/packages'), 'bin': e('~/.nnp/bin'),
-        'python_modules': e('~/.nnp/pymodules'), 'local_dir': os.getcwd()}
+        'python_modules': e('~/.nnp/pymodules'), 'local_dir': None}
   else:
     dirs = {'packages': 'nnp_packages', 'bin': 'nnp_packages/.bin',
         'python_modules': 'nnp_packages/.pymodules', 'local_dir': os.getcwd()}
