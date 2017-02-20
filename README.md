@@ -1,4 +1,4 @@
-# nnp
+# nnp -- not Node, Python!
 
 **nnp** is a runner for Python modules, and **nnpm** is its package manager.
 The key concept is derived from *Node.js* and *npm*, though originally **nnp**
