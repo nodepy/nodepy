@@ -88,6 +88,25 @@ class Package:
   def directory(self):
     return self.manifest.directory
 
+  def load_module_from_filename(self, filename):
+    """
+    Loads a module from a filename. If the filename ends with `.py`, the
+    actual correct reference to the module is returned. If it is any other
+    filename, a new #Module is returned that is not actually cached in
+    #Package.modules.
+    """
+
+    if not os.path.isabs(filename):
+      rel = os.path.relpath(filename, self.directory)
+    else:
+      rel = filename
+    if rel == os.curdir or rel.startswith(os.pardir):
+      raise ValueError('"{}" not part of this package'.format(filename))
+
+    if rel.endswith('.py'):
+      return self.load_module(rel[:-3])
+    return self.module_class(self, filename)
+
   def load_module(self, name=None):
     """
     Returns a #Module instance from the specified module *name*. If #None is

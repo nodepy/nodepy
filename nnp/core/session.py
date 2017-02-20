@@ -21,6 +21,7 @@
 __all__ = ['Require', 'Session', 'DependencyMismatch']
 
 import os
+import posixpath
 from .executor import *
 from .finder import *
 from .manifest import *
@@ -40,7 +41,7 @@ class Require:
   def __call__(self, name):
     module = self.session.require(name, self.session.module)
     if hasattr(module.namespace, 'exports'):
-      return module.exports
+      return module.namespace.exports
     return module.namespace
 
 
@@ -93,6 +94,18 @@ class Session:
 
     pass
 
+  def add_package(self, manifest):
+    """
+    Adds a #Package to directly to the #Session from a #PackageManifest.
+    """
+
+    if manifest.name in self.packages:
+      raise RuntimeError('a package "{}" is already loaded'.format(manifest.name))
+    package = self.package_class(manifest, self.module_class)
+    assert isinstance(package, Package)
+    self.packages[manifest.name] = package
+    return package
+
   def load_package(self, package_name, selector):
     """
     Loads a #Package and returns it. No module is executed at that point.
@@ -116,9 +129,7 @@ class Session:
     else:
       raise PackageNotFound(package_name, selector)
 
-    package = self.package_class(manifest, self.module_class)
-    self.packages[package_name] = package
-    return package
+    return self.add_package(manifest)
 
   def require(self, name, origin=None, exec_=True):
     """
