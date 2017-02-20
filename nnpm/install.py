@@ -28,6 +28,8 @@ from distlib.scripts import ScriptMaker
 from fnmatch import fnmatch
 from nnp.core.manifest import PackageManifest
 
+default_exclude_patterns = ['.DS_Store', '.svn/*', '.git/*', 'nnp_packages/*', '*.pyc', '*.pyo', 'dist/*']
+
 
 def _makedirs(path):
   if not os.path.isdir(path):
@@ -66,7 +68,23 @@ def _make_bin(script_name, filename, local_dir, directory):
   return _make_python_script(script_name, code, directory)
 
 
-def install_from_directory(source_directory, dirs):
+def walk_package_files(manifest):
+  """
+  Walks over the files included in a package and yields (abspath, relpath).
+  """
+
+  inpat = manifest.dist.get('include_files', [])
+  expat = manifest.dist.get('include_files', []) + default_exclude_patterns
+
+  for root, __, files in os.walk(manifest.directory):
+    for filename in files:
+      filename = os.path.join(root, filename)
+      rel = os.path.relpath(filename, manifest.directory)
+      if rel == 'package.json' or _check_include_file(rel, inpat, expat):
+        yield (filename, rel)
+
+
+def install_from_directory(source_directory, dirs, registry):
   """
   Install an nnp package from a directory. The directory must provide a
   `package.json` file. An #InstallError is raised when the installation of the
@@ -112,34 +130,13 @@ def install_from_directory(source_directory, dirs):
   installed_files = []
 
   print('Installing "{}" to "{}" ...'.format(manifest.identifier, target_dir))
-  include_files = list(manifest.dist.get('include_files', []))
-  exclude_files = list(manifest.dist.get('exclude_files', []))
   _makedirs(target_dir)
-
-  if not include_files and not exclude_files:
-    print('  Warning: no include_files and no exclude_files specified, the '
-        'whole package directory will be installed')
-
-  # Add default exclude patterns.
-  exclude_files.append('.DS_Store')
-  exclude_files.append('.svn/*')
-  exclude_files.append('.git/*')
-  exclude_files.append('nnp_packages/*')
-  exclude_files.append('*.pyc')
-  exclude_files.append('*.pyo')
-
-  for root, __, files in os.walk(source_directory):
-    for filename in files:
-      filename = os.path.join(root, filename)
-      rel = os.path.relpath(filename, source_directory)
-      if rel != 'package.json' and not _check_include_file(rel, include_files, exclude_files):
-          continue
-
-      dst = os.path.join(target_dir, rel)
-      _makedirs(os.path.dirname(dst))
-      print('  Copying', rel, '...')
-      shutil.copyfile(filename, dst)
-      installed_files.append(dst)
+  for src, rel in walk_package_files(manifest):
+    dst = os.path.join(target_dir, rel)
+    _makedirs(os.path.dirname(dst))
+    print('  Copying', rel, '...')
+    shutil.copyfile(src, dst)
+    installed_files.append(dst)
 
   # Create scripts for the 'scripts' and 'bin' fields in the package manifest.
   for script_name, command in manifest.scripts.items():
