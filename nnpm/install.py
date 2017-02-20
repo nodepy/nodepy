@@ -22,6 +22,7 @@ __all__ = ['InstallError', 'install_from_directory', 'install_from_registry']
 
 import nnp.main
 import os
+import pip.commands
 import shlex
 import shutil
 import tarfile
@@ -30,6 +31,8 @@ import tempfile
 from distlib.scripts import ScriptMaker
 from fnmatch import fnmatch
 from nnp.core.manifest import PackageManifest
+from nnp.core.finder import PackageNotFound
+from nnp.utils import refstring
 from .utils import download
 
 default_exclude_patterns = ['.DS_Store', '.svn/*', '.git/*', 'nnp_packages/*', '*.pyc', '*.pyo', 'dist/*']
@@ -88,7 +91,7 @@ def walk_package_files(manifest):
         yield (filename, rel)
 
 
-def install_from_directory(source_directory, dirs, registry, expect=None):
+def install_from_directory(directory, dirs, registry, expect=None):
   """
   Install an nnp package from a directory. The directory must provide a
   `package.json` file. An #InstallError is raised when the installation of the
@@ -99,11 +102,12 @@ def install_from_directory(source_directory, dirs, registry, expect=None):
   are `'bin'` and `'packages`', `'python_modules'` and `'local_dir'`.
   """
 
-  manifest = PackageManifest.parse(source_directory)
+  manifest = PackageManifest.parse(directory)
   if expect is not None and (manifest.name, manifest.version) != expect:
     raise InstallError('expected to install "{}@{}" but got "{}" in '
-        '"{}"'.format(expect[0], expect[1], manifest.identifier, source_directory))
+        '"{}"'.format(expect[0], expect[1], manifest.identifier, directory))
 
+  session = nnp.main.make_session(dirs['local_dir'], exclude_local_dir=bool(dirs['local_dir']))
   target_dir = os.path.join(dirs['packages'], manifest.name)
 
   # Error if the target directory already exists. The package must be
@@ -111,15 +115,13 @@ def install_from_directory(source_directory, dirs, registry, expect=None):
   if os.path.exists(target_dir) :
     raise InstallError('install directory "{}" already exists'.format(target_dir))
 
-  # TODO: Install nnp packages that are not already installed.
-  print('warning: installation of nnp dependencies not implemented')
-  """
+  # Install nnp dependencies.
   if manifest.dependencies:
     print('Collecting dependencies for "{}"...'.format(manifest.identifier))
   deps = []
   for dep_name, dep_sel in manifest.dependencies.items():
     try:
-      self.load_package(dep_name, dep_sel)
+      session.load_package(dep_name, dep_sel)
     except PackageNotFound as exc:
       deps.append((dep_name, dep_sel))
     else:
@@ -128,11 +130,15 @@ def install_from_directory(source_directory, dirs, registry, expect=None):
   if deps:
     print('Installing dependencies:', ', '.join(refstring.join(*d) for d in deps))
     for dep_name, dep_sel in deps:
-      self.install_package(dep_name, dep_sel)
-  """
+      install_from_registry(dep_name, dep_sel, dirs, registry)
 
-  # TODO: Install python dependencies.
-  print('warning: installation of python dependencies not implemented.')
+  # Install python dependencies.
+  py_modules = []
+  for dep_name, dep_version in manifest.python_dependencies.items():
+    py_modules.append(dep_name + dep_version)
+  if py_modules:
+    print('Installing Python dependencies via Pip:', ', '.join(py_modules))
+  pip.commands.install.InstallCommand().main(['--target', dirs['python_modules']] + py_modules)
 
   installed_files = []
 

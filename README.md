@@ -8,7 +8,6 @@ was intended as part of *[Craftr]*.
 
 ## Todo
 
-- Install nnp and Python dependencies with `nnpm install`
 - Implemented `nnpm uninstall, init, ls`
 - Submit user credentials with `nnpm upload` and check them in `nnpmd`
 - Implemented a browsable web-interface for `nnpmd`
