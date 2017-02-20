@@ -33,7 +33,7 @@ setup(
   description = '',
   url = 'https://github.com/NiklasRosenstein/nnp',
   packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm'],
-  install_requires = ['click', 'distlib', 'jsonschema'],
+  install_requires = ['click', 'distlib', 'jsonschema', 'localimport>=1.5.1'],
   entry_points = {
     'console_scripts': [
       'nnp = nnp.main:cli',

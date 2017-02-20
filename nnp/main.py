@@ -45,10 +45,12 @@ def _get_up_package(directory):
   return None
 
 
-def _make_session(local_dir=None):
-  local_dir = os.path.join(local_dir or '.', config['nnp:local_packages_dir'])
-  return Session(prefix=config['nnp:prefix'], local_packages=local_dir)
-
+def make_session(local_dir=None, exclude_local_dir=False):
+  if local_dir or not exclude_local_dir:
+    local_packages = os.path.join(local_dir or '.', config['nnp:local_packages_dir'])
+  else:
+    local_packages = False
+  return Session(prefix=config['nnp:prefix'], local_packages=local_packages)
 
 
 def run(filename=None, package=None, local_dir=None, args=None):
@@ -58,7 +60,7 @@ def run(filename=None, package=None, local_dir=None, args=None):
   elif not filename and not package:
     raise ValueError('neither filename nor package specified')
 
-  session = _make_session(local_dir)
+  session = make_session(local_dir)
   if filename:
     manifest = _get_up_package(os.path.dirname(filename))
     if manifest:
@@ -75,7 +77,8 @@ def run(filename=None, package=None, local_dir=None, args=None):
     sys.argv.extend(args)
 
   try:
-    session.exec_module(module)
+    with session:
+      session.exec_module(module)
   except ExecuteError as exc:
     if isinstance(exc.exc_info[1], SystemExit):
       raise exc.exc_info[1]
@@ -84,10 +87,11 @@ def run(filename=None, package=None, local_dir=None, args=None):
 
 
 def run_interactive(local_dir=None):
-  session = _make_session(local_dir)
+  session = make_session(local_dir)
   module = Module(None, None)
   session.on_init_module(module)
-  code.interact('', local=vars(module.namespace))
+  with session:
+    code.interact('', local=vars(module.namespace))
 
 
 @click.command()

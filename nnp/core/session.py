@@ -22,6 +22,8 @@ __all__ = ['Require', 'Session', 'DependencyMismatch']
 
 import os
 import posixpath
+
+from localimport import localimport
 from .executor import *
 from .finder import *
 from .manifest import *
@@ -56,7 +58,11 @@ class Session:
   prefix (str): If *path* is not specified, this is the path to the global
     configuration and packages dir. Defaults to `~/.nnp`.
   local_packages (str): If *path* is not specified, this is the path where the
-    local packages are located. Defaults to `nnp_packages`.
+    local packages are located. Defaults to `nnp_packages`. If local packages
+    should be ignored completely, #False can be specified.
+  install_python_path (list of str): A list of additional Python search
+    directories that are temporarily installed when entering the session
+    context.
 
   # Members
 
@@ -66,19 +72,35 @@ class Session:
     package names to the actual #Package objects.
   """
 
-  def __init__(self, path=None, prefix=None, local_packages=None,
-      package_class=Package, module_class=Module, require_factory=Require):
+  def __init__(self, path=None, prefix=None, local_packages='nnp_packages',
+      install_python_path=None, package_class=Package, module_class=Module,
+      require_factory=Require):
 
+    prefix = prefix or os.path.expanduser('~/.nnp')
     if path is None:
-      prefix = prefix or os.path.expanduser('~/.nnp')
-      path = [local_packages, os.path.join(prefix, 'packages')]
+      path = [os.path.join(prefix, 'packages')]
+      if local_packages is not False:
+        path.insert(0, local_packages)
+    if install_python_path is None:
+      install_python_path = [os.path.join(prefix, 'pymodules')]
+      if local_packages is not False:
+        install_python_path.insert(0, os.path.join(local_packages, '.pymodules'))
 
     self.finders = [StandardFinder(x) for x in path]
     self.packages = {}
     self.executor = Executor([self.on_init_module])
+    self.install_python_path = install_python_path
+    self.importer = localimport(self.install_python_path, parent_dir=os.getcwd())
     self.package_class = package_class
     self.module_class = module_class
     self.require_factory = require_factory
+
+  def __enter__(self):
+    self.importer.__enter__()
+    return self
+
+  def __exit__(self, *args):
+    self.importer.__exit__(*args)
 
   @property
   def module(self):
@@ -171,6 +193,7 @@ class Session:
       if origin and origin.package:
         selector = origin.package.manifest.dependencies.get(ref.package)
       package = self.load_package(ref.package, selector)
+      module = ref.module
 
     module = package.load_module(module or None)
     if not module.executed and exec_:
