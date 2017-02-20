@@ -21,19 +21,20 @@
 from setuptools import setup, find_packages
 
 setup(
-  name = 'py-cpm',
+  name = 'nnp',
   version = '0.0.1.dev0',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
-  description = 'a Python-ish package manager',
-  url = 'https://github.com/NiklasRosenstein/cpm',
+  description = '',
+  url = 'https://github.com/NiklasRosenstein/nnp',
 
-  packages = find_packages(),
-  install_requires = ['click', 'jsonschema'],
+  packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnp.pm'],
+  install_requires = ['click', 'distlib', 'jsonschema'],
   entry_points = {
     'console_scripts': [
-      'cpm=cpm.main:cli'
+      'nnp = nnp.main:cli',
+      'nnpm = nnp.nnpm.main:cli'
     ]
   }
 )

@@ -18,31 +18,39 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import configparser
-import os
+import click
+import sys
+import traceback
+from sys import exit
+from .core.package import Module
+from .core.session import Session
+from .core.executor import ExecuteError
 
 
-def parse_config(filename):
-  """
-  Parses a INI-style configuration file and returns a dictionary of all
-  configuration values. Section names and option keys are joined together
-  by a double-colon (`:`).
+@click.command()
+@click.argument('filename', required=False)
+@click.argument('args', nargs=-1)
+@click.option('-p', '--package')
+def cli(filename, package, args):
+  if not filename and not package:
+    # TODO: Enter interactive mode
+    print('error: interactive mode not implemented')
+    exit(1)
+  elif filename and package:
+    print('error: filename and --package can not be specified at the same time')
+    exit(1)
 
-  # Raises
-  FileNotFoundError:
-  configparser.Error:
-  """
+  session = Session()
+  if filename:
+    module = Module(None, filename)
+  else:
+    module = session.require(package, exec_=False)
+    filename = module.filename
 
-  if filename is None:
-    filename = os.path.expanduser('~/.cpmconfig')
-  parser = configparser.SafeConfigParser()
-  parser.read([filename])
+  sys.argv = [filename]
+  sys.argv.extend(args)
 
-  result = {}
-  for section in parser.sections():
-    for option, value in parser.items(section):
-      if section:
-        option = ':'.join((section, option))
-      result[option] = value
-
-  return result
+  try:
+    session.exec_module(module)
+  except ExecuteError as exc:
+    traceback.print_exception(*exc.exc_info)

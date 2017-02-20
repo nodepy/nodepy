@@ -1,32 +1,51 @@
-# cpm
+# nnp
 
-**cpm** is a package manager for Python3-ish modules. It was originally
-intended as part of the [Craftr] build system.
+**nnp** is a runner for Python modules, and **nnpm** is its package manager.
+The key concept is derived from *Node.js* and *npm*, though originally *Pyn*
+was intended as part of *[Craftr]*.
 
-## Project Goals
-
-- [node.js]-style Python modules that can be loaded with `require()`
-- [npm]-style dependency management
-- Foundation for the [Craftr] build system
-
-
-  [npm]: https://www.npmjs.com
-  [node.js]: https://nodejs.org/en/
   [Craftr]: https://craftr.net
-  [SemVer]: http://semver.org/
 
-## Package Manifests
+## Synopsis
 
-Similar to node.js modules, **cpm** packages require a `cpm.json` package
-manifest file.
+    nnp
+    nnp <script>.py
+    nnp -p <package>[@<version>][/<module>][:<func>]
+    nnpm install [-g] .
+    nnpm install [-g] <package>[@<version>][+<dist>]
+    nnpm uninstall [-g] <package>[@<version>][+<dist>]
+    nnpm init
+    nnpm ls
+    nnpm register
+    nnpm dist [<type>]
+    nnpm upload <archive>
 
-### Example
+## Packages
+
+**nnpm** can install packages locally into the `nnp_packages/` directory or
+globally into `~/.nnp/packages` from a remote registry or from an existing
+package directory. Similar to *Node.js*, packages in Pyn require a manifest.
+
+When a package is ready to be made publicly available, it can be uploaded to
+the package registry. First it needs to be regsitered, then a distributable
+package archive must be created, which can be then be uploaded.
+
+Example manifest:
 
 ```json
 {
   "name": "demo-app",
   "version": "1.0.0",
   "main": "index.py",
+  "engines": {
+    "python": ">=3.0.0"
+  },
+  "bin": {
+    "demo-app": "index.py"
+  },
+  "scripts": {
+    "say-hello": "echo \"Hello!\""
+  },
   "dependencies": {
     "exile": "~1.2.0"
   },
@@ -34,42 +53,8 @@ manifest file.
     "requests": "==2.13.0",
     "glob2": "==0.4.1"
   },
-  "scripts": {
-    "demo-app": "index:main"
+  "dist": {
+    "include_files": ["README.md", "*.py", "public/*"]
   }
 }
 ```
-
-### name
-
-The name of the package. Valid identifiers consist of only ascii letters,
-digits and the special characters `.-_` .
-
-### version
-
-A [SemVer] for the package.
-
-### main
-
-The main Python script to load when the package is required.
-
-### dependencies
-
-An object that specifies which other **cpm** packages are necessary for this
-package. The values for each key must be a selector that specifies exactly one
-or a range of version numbers.
-
-### python-dependencies
-
-Similar to the **dependencies** field, but the package names listed here are
-installed using `pip install`. Note that here the values for each key must be
-version specifiers that Pip understands!
-
-### scripts
-
-A dictionary that maps names of console-scripts to the name of a Python
-script in this package and a function name as `<script>:<function>`. Note that
-the `<script>` part is without the `.py` suffix.
-
-Scripts will be installed globally under `~/.cpm/bin` and locally under
-`cpm_modules/.bin`.
