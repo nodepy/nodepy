@@ -97,7 +97,8 @@ class PackageManifest:
           "exclude_files": {"type": "array", "items": {"type": "string"}},
         },
         "additionalProperties": False
-      }
+      },
+      "postinstall": {"type": "string"}
     },
     "additionalProperties": {"type": "object"}
   }
@@ -156,7 +157,8 @@ class PackageManifest:
 
   def __init__(self, filename, name, version, description=None, author=None,
       license=None, main='index', dependencies=None, python_dependencies=None,
-      scripts=None, bin=None, engines=None, engine_props=None, dist=None):
+      scripts=None, bin=None, engines=None, engine_props=None, dist=None,
+      postinstall=None):
     self.filename = filename
     self.directory = os.path.dirname(filename)
     self.name = name
@@ -171,6 +173,7 @@ class PackageManifest:
     self.bin = {} if bin is None else bin
     self.engine_props = {} if engine_props is None else engine_props
     self.dist = {} if dist is None else dist
+    self.postinstall = postinstall
 
   def __repr__(self):
     return '<PackageManifest "{}">'.format(self.identifier)

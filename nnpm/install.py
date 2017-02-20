@@ -20,6 +20,7 @@
 
 __all__ = ['InstallError', 'install_from_directory', 'install_from_registry']
 
+import nnp.main
 import os
 import shlex
 import shutil
@@ -148,6 +149,11 @@ def install_from_directory(source_directory, dirs):
     print('  Installing script "{}"...'.format(script_name))
     filename = os.path.abspath(os.path.join(target_dir, filename))
     installed_files += _make_bin(script_name, filename, dirs['local_dir'], dirs['bin'])
+
+  if manifest.postinstall:
+    print('  Running postinstall script "{}"...'.format(manifest.postinstall))
+    filename = os.path.join(target_dir, manifest.postinstall)
+    nnp.main.run(filename)
 
 
 def install_from_registry(self, package_name, selector):
