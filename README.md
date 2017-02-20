@@ -6,25 +6,19 @@ was intended as part of *[Craftr]*.
 
   [Craftr]: https://craftr.net
 
-## Current State
-
-- `nnp` command is fully implemented
-- `nnpm install` can only install from the current directory, without
-  dependencies, but also installs scripts
-
 ## Synopsis
 
-    nnp
-    nnp <script>.py
-    nnp -p <package>[@<version>][/<module>][:<func>]
-    nnpm install [-g] .
-    nnpm install [-g] <package>[@<version>]
-    nnpm uninstall [-g] <package>[@<version>]
-    nnpm init
-    nnpm ls
-    nnpm register
-    nnpm dist [<type>]
-    nnpm upload <archive>
+    [x] nnp
+    [x] nnp <script>.py
+    [x] nnp -p <package>[@<version>][/<module>][:<func>]
+    [/] nnpm install [-g] .
+    [/] nnpm install [-g] <package>[@<version>]
+    [ ] nnpm uninstall [-g] <package>[@<version>]
+    [ ] nnpm init
+    [ ] nnpm ls
+    [ ] nnpm register
+    [ ] nnpm dist [<type>]
+    [ ] nnpm upload <archive>
 
 ## Packages
 
