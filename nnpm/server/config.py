@@ -18,27 +18,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sys
-from setuptools import setup, find_packages
+import os
+from nnp.config import get_config as _get_config
 
-if sys.version_info[0] != 3:
-  raise EnvironmentError('requires Python3')
 
-setup(
-  name = 'nnp',
-  version = '0.0.1',
-  author = 'Niklas Rosenstein',
-  author_email = 'rosensteinniklas@gmail.com',
-  license = 'MIT',
-  description = '',
-  url = 'https://github.com/NiklasRosenstein/nnp',
-  packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm'],
-  install_requires = ['click', 'distlib', 'jsonschema'],
-  entry_points = {
-    'console_scripts': [
-      'nnp = nnp.main:cli',
-      'nnpm = nnpm.main:cli',
-      'nnpmd = nnpm.server.main:cli'
-    ]
-  }
-)
+def get_config():
+  """
+  Alternative for #nnp.config.get_config() which adds default values for
+  nnpm-server configuration values.
+  """
+
+  config = _get_config()
+  config.setdefault('nnpmd:host', 'localhost')
+  config.setdefault('nnpmd:port', '8000')
+  config.setdefault('nnpmd:debug', 'false')
+  config.setdefault('nnpmd:prefix', '~/.nnp/registry')
+  config['nnpmd:prefix'] = os.path.expanduser(config['nnpmd:prefix'])
+  return config
