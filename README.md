@@ -17,7 +17,6 @@ was intended as part of *[Craftr]*.
     [ ] nnpm uninstall [-g] <package>[@<version>]
     [ ] nnpm init
     [ ] nnpm ls
-    [ ] nnpm register
     [x] nnpm dist
     [/] nnpm upload <archive>
 
