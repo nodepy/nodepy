@@ -23,7 +23,10 @@ import functools
 import io
 import json
 import os
+import shutil
+import sys
 import tarfile
+import tempfile
 import traceback
 
 from flask import request
@@ -66,6 +69,16 @@ def json_catch_error():
           return response({'error': str(exc)}, 500)
         else:
           return response({'error': "internal server error"}, 500)
+    return wrapper
+  return decorator
+
+
+def on_return():
+  def decorator(func):
+    handlers = []
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+      return func(handlers, *args, **kwargs)
     return wrapper
   return decorator
 
@@ -135,7 +148,8 @@ def download(package, version, filename):
 @app.route('/api/upload/<package>/<version>', methods=['POST'])
 @json_catch_error()
 @expect_package_info()
-def upload(package, version):
+@on_return()
+def upload(on_return, package, version):
   force = request.args.get('force', 'false').lower().strip() == 'true'
   if len(request.files) != 1:
     return response({'error': 'zero or more than 1 file(s) uploaded'}, 400)
@@ -150,20 +164,29 @@ def upload(package, version):
     return response({'error': 'file "{}" already exists'.format(filename)})
 
   if filename == make_package_archive_name(package, version):
+    # Save the file to a temporary path because we can only read from the
+    # FileStorage once.
+    with tempfile.NamedTemporaryFile(suffix='_' + filename, delete=False) as tmp:
+      shutil.copyfileobj(storage, tmp)
+    on_return.append(tmp.delete)
     try:
-      tar = tarfile.open(fileobj=storage, mode='r')
+      tar = tarfile.open(tmp.name, mode='r')
+      on_return.append(tar.close)
       fp = io.TextIOWrapper(tar.extractfile('package.json'))
       manifest = PackageManifest.parse_file(fp, directory)
     except KeyError as exc:
+      tar.close()
       return response({'error': str(exc)}, 400)
     except InvalidPackageManifest as exc:
       return response({'error': 'invalid package manifest: {}'.format(exc)}, 400)
     if not os.path.isdir(directory):
       os.makedirs(directory)
     tar.extract('package.json', directory)
+    shutil.copyfile(tmp.name, absfile)
   elif not os.path.isfile(os.path.join(directory, 'package.json')):
     return response({'error': 'package distribution must be uploaded before '
         'any additional files can be accepted'}, 400)
+  else:
+    storage.save(absfile)
 
-  storage.save(absfile)
   return response({'status': 'ok'})
