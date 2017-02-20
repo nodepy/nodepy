@@ -31,7 +31,8 @@ from .core.executor import ExecuteError
 @click.argument('filename', required=False)
 @click.argument('args', nargs=-1)
 @click.option('-p', '--package')
-def cli(filename, package, args):
+@click.option('-l', '--local-dir')
+def cli(filename, args, package, local_dir):
   if not filename and not package:
     # TODO: Enter interactive mode
     print('error: interactive mode not implemented')
@@ -40,7 +41,7 @@ def cli(filename, package, args):
     print('error: filename and --package can not be specified at the same time')
     exit(1)
 
-  session = Session()
+  session = Session(local_dir=local_dir)
   if filename:
     module = Module(None, filename)
   else:

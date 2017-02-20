@@ -58,10 +58,13 @@ class Session:
     package names to the actual #Package objects.
   """
 
-  def __init__(self, path=None, package_class=Package, module_class=Module,
-      require_factory=Require):
+  def __init__(self, path=None, local_dir=None, package_class=Package,
+      module_class=Module, require_factory=Require):
+    if local_dir is None:
+      local_dir = '.'
     if path is None:
-      path = ['nnp_packages/', os.path.expanduser('~/.nnp/packages')]
+      path = [os.path.join(local_dir, 'nnp_packages/'),
+          os.path.expanduser('~/.nnp/packages')]
 
     self.finders = [StandardFinder(x) for x in path]
     self.packages = {}
