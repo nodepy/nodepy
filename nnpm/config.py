@@ -18,37 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import click
-import os
-from .install import install_from_directory
-from .config import get_config
+from nnp.config import get_config as _get_config
 
 
-@click.group()
-def cli():
-  pass
+def get_config():
+  """
+  Alternative for #nnp.config.get_config() which adds default values for
+  nnpm configuration values.
+  """
 
-
-@cli.command()
-@click.argument('directory')
-@click.option('-g', '--global/--local', 'global_', is_flag=True)
-def install(directory, global_):
-  config = get_config()
-
-  if global_:
-    e = os.path.expanduser
-    dirs = {
-      'packages': os.path.join(config['nnp:prefix'], 'packages'),
-      'bin': os.path.join(config['nnp:prefix'], 'bin'),
-      'python_modules': os.path.join(configp['nnp:prefix'], 'pymodules'),
-      'local_dir': None
-    }
-  else:
-    dirs = {
-      'packages': config['nnp:local_packages_dir'],
-      'bin': os.path.join(config['nnp:local_packages_dir'], '.bin'),
-      'python_modules': os.path.join(config['nnp:local_packages_dir'], '.pymodules'),
-      'local_dir': os.getcwd()
-    }
-
-  install_from_directory(directory or '.', dirs)
+  config = _get_config()
+  config.setdefault('nnpm:registry', 'https://registry.craftr.net')
+  return config
