@@ -83,3 +83,12 @@ def dist():
     print('  Adding "{}"...'.format(rel))
     archive.add(filename, rel)
   print('Done!')
+
+
+@cli.command()
+@click.argument('filename')
+@click.option('-f', '--force', is_flag=True)
+def upload(filename, force):
+  manifest = PackageManifest.parse('.')
+  registry = Registry(get_config()['nnpm:registry'])
+  registry.upload(manifest.name, manifest.version, filename, force)

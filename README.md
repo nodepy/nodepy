@@ -18,8 +18,8 @@ was intended as part of *[Craftr]*.
     [ ] nnpm init
     [ ] nnpm ls
     [ ] nnpm register
-    [ ] nnpm dist [<type>]
-    [ ] nnpm upload <archive>
+    [x] nnpm dist
+    [/] nnpm upload <archive>
 
 ## Packages
 

@@ -20,40 +20,66 @@
 
 import flask
 import functools
+import io
 import json
 import os
+import tarfile
+import traceback
 
+from flask import request
 from nnp.utils import semver
 from nnp.core.manifest import PackageManifest, NotAPackageDirectory, InvalidPackageManifest
 from .app import app
 from .config import config
+from ..registry import make_package_archive_name
 
 
 def response(data, code=200):
   return flask.Response(json.dumps(data), code, mimetype='test/json')
 
 
-def expect_package_info(version_type=semver.Version):
+def expect_package_info(version_type=semver.Version, json=True):
   def decorator(func):
     @functools.wraps(func)
     def wrapper(package, version, *args, **kwargs):
       try:
         version = version_type(version)
       except ValueError as exc:
-        flask.abort(404)
+        if json:
+          return response({'error': str(exc)}, 404)
+        else:
+          flask.abort(404)
       return func(package, version, *args, **kwargs)
     return wrapper
   return decorator
 
 
+def json_catch_error():
+  def decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+      try:
+        return func(*args, **kwargs)
+      except Exception as exc:
+        traceback.print_exc()
+        if app.debug:
+          return response({'error': str(exc)}, 500)
+        else:
+          return response({'error': "internal server error"}, 500)
+    return wrapper
+  return decorator
+
 
 @app.route('/api/find/<package>/<version>')
+@json_catch_error()
 @expect_package_info(semver.Selector)
 def find(package, version):
+  def not_found(): return response({'status': 'package-not-found'}, 404)
+
   directory = os.path.join(config['nnpmd:prefix'], package)
   print(directory)
   if not os.path.isdir(directory):
-    return response({'status': 'not-found'}, 404)
+    return not_found()
 
   choices = []
   for have_version in os.listdir(directory):
@@ -67,7 +93,7 @@ def find(package, version):
       choices.append(have_version)
 
   if not choices:
-    return response({'status': 'not-found'})
+    return not_found()
 
   choice = version.best_of(choices)
   directory = os.path.join(directory, str(choice))
@@ -75,18 +101,18 @@ def find(package, version):
     manifest = PackageManifest.parse(directory)
   except NotAPackageDirectory:
     app.logger.warn('missing package.json in "{}"'.format(directory))
-    return response({'status': 'not-found'})
+    return not_found()
   except InvalidPackageManifest as exc:
     app.logger.warn('invalid package.json in "{}": {}'.format(directory, exc))
-    return response({'status': 'not-found'})
+    return not_found()
   if manifest.name != package:
     app.logger.warn('"{}" lists unexpected package name "{}"'.format(
         manifest.filename, manifest.name))
-    return response({'status': 'not-found'})
+    return not_found()
   if manifest.version != choice:
     app.logger.warn('"{}" lists unexpected version "{}"'.format(
         manifest.filename, manifest.version))
-    return response({'status': 'not-found'})
+    return not_found()
 
   with open(manifest.filename) as fp:
     data = json.load(fp)
@@ -95,7 +121,7 @@ def find(package, version):
 
 
 @app.route('/api/download/<package>/<version>/<filename>')
-@expect_package_info()
+@expect_package_info(json=False)
 def download(package, version, filename):
   """
   Note: Serving these files should usually be replaced by NGinx or Apache.
@@ -107,6 +133,37 @@ def download(package, version, filename):
 
 
 @app.route('/api/upload/<package>/<version>', methods=['POST'])
+@json_catch_error()
 @expect_package_info()
 def upload(package, version):
-  flask.abort(500)
+  force = request.args.get('force', 'false').lower().strip() == 'true'
+  if len(request.files) != 1:
+    return response({'error': 'zero or more than 1 file(s) uploaded'}, 400)
+
+  filename, storage = next(request.files.items())
+  if filename == 'package.json':
+    return response({'error': '"package.json" can not be uploaded directory'}, 400)
+
+  directory = os.path.join(config['nnpmd:prefix'], package, str(version))
+  absfile = os.path.join(directory, filename)
+  if os.path.isfile(absfile) and not force:
+    return response({'error': 'file "{}" already exists'.format(filename)})
+
+  if filename == make_package_archive_name(package, version):
+    try:
+      tar = tarfile.open(fileobj=storage, mode='r')
+      fp = io.TextIOWrapper(tar.extractfile('package.json'))
+      manifest = PackageManifest.parse_file(fp, directory)
+    except KeyError as exc:
+      return response({'error': str(exc)}, 400)
+    except InvalidPackageManifest as exc:
+      return response({'error': 'invalid package manifest: {}'.format(exc)}, 400)
+    if not os.path.isdir(directory):
+      os.makedirs(directory)
+    tar.extract('package.json', directory)
+  elif not os.path.isfile(os.path.join(directory, 'package.json')):
+    return response({'error': 'package distribution must be uploaded before '
+        'any additional files can be accepted'}, 400)
+
+  storage.save(absfile)
+  return response({'status': 'ok'})

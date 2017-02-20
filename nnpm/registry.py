@@ -23,7 +23,9 @@ __all__ = ['Registry', 'PackageNotFound']
 import collections
 import hammock
 import json
+import os
 import requests
+
 from nnp.utils import semver
 from nnp.core.finder import PackageNotFound
 
@@ -37,6 +39,21 @@ class Registry:
 
   def __init__(self, base_url):
     self.api = hammock.Hammock(base_url).api
+
+  def _handle_response(self, response):
+    try:
+      data = response.json()
+    except json.JSONDecodeError as exc:
+      if response.status_code != 500:
+        raise RegistryError(response.url, 'Invalid JSON response: {}'.format(exc))
+      else:
+        raise RegistryError(response.url, 'Internal server error: {}'.format(request.text))
+    if data.get('error') or response.status_code == 500:
+      message = data.get('error')
+      if message and response.status_code == 500:
+        message = 'Internal server error: ' + str(message)
+      raise RegistryError(response.url, message)
+    return data
 
   def download(self, package_name, version, filename=None):
     """
@@ -65,20 +82,41 @@ class Registry:
 
     assert isinstance(version_selector, semver.Selector)
     response = self.api.find(package_name, version_selector).GET()
-    try:
-      data = response.json()
-    except json.JSONDecodeError:
-      response.raise_for_status()
-      raise RuntimeError('invalid json returned from registry, but OK status')
-    if data.get('status') == 'not-found':
+    data = self._handle_response(response)
+    if response.status_code == 404:
       raise PackageNotFound(package_name, version_selector)
-    elif data.get('status') == 'error':
-      raise RuntimeError(data.get('message'))
-    elif data.get('status') == 'ok':
-      data = data['manifest']
-      return PackageInfo(data['name'], semver.Version(data['version']), data.get('description'))
-    else:
-      raise RuntimeError('invalid json response')
+    if data.get('status') != 'ok' or 'manifest' not in data:
+      raise RegistryError(response.url, response)
+    data = data['manifest']
+    return PackageInfo(data['name'], semver.Version(data['version']),
+        data.get('description'))
+
+  def upload(self, package_name, version, filename, force=False):
+    """
+    Upload a file for the specified package version. Note that a file that is
+    not the package distribution can only be uploaded when the package
+    distribution has already been uploaded. If *force* is #True, the file will
+    be uploaded and overwritten if it already exists in the registry.
+    """
+
+    assert isinstance(version, semver.Version)
+    with open(filename, 'rb') as fp:
+      files = {os.path.basename(filename): fp}
+      params = {'force': 'true' if force else 'false'}
+      response = self.api.upload(package_name, version).POST(files=files, params=params)
+      data = self._handle_response(response)
+      if data.get('status') != 'ok':
+        raise RegistryError(response.url, response)
+
+
+class RegistryError(Exception):
+
+  def __init__(self, url, message):
+    self.url = url
+    self.message = message
+
+  def __str__(self):
+    return self.message
 
 
 def make_package_archive_name(package_name, version):
