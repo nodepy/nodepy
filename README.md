@@ -6,6 +6,13 @@ was intended as part of *[Craftr]*.
 
   [Craftr]: https://craftr.net
 
+## Todo
+
+- Install nnp and Python dependencies with `nnpm install`
+- Implemented `nnpm uninstall, init, ls`
+- Submit user credentials with `nnpm upload` and check them in `nnpmd`
+- Implemented a browsable web-interface for `nnpmd`
+
 ## Synopsis
 
     [x] nnp
@@ -19,12 +26,13 @@ was intended as part of *[Craftr]*.
     [ ] nnpm ls
     [x] nnpm dist
     [/] nnpm upload <archive>
+    [/] nnpmd [-h] [-p] [-d] [--prefix]
 
 ## Packages
 
 **nnpm** can install packages locally into the `nnp_packages/` directory or
 globally into `~/.nnp/packages` from a remote registry or from an existing
-package directory. Similar to *Node.js*, packages in Pyn require a manifest.
+package directory. Similar to *Node.js*, packages in **nnp** require a manifest.
 
 When a package is ready to be made publicly available, it can be uploaded to
 the package registry. First it needs to be regsitered, then a distributable
