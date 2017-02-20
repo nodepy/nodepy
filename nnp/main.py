@@ -19,9 +19,11 @@
 # THE SOFTWARE.
 
 import click
+import code
 import sys
 import traceback
 from sys import exit
+from . import __version__
 from .core.package import Module
 from .core.session import Session
 from .core.executor import ExecuteError
@@ -54,14 +56,25 @@ def run(filename=None, package=None, local_dir=None, args=None):
     exit(1)
 
 
+def run_interactive(local_dir=None):
+  session = Session(local_dir=local_dir)
+  module = Module(None, None)
+  session.on_init_module(module)
+  code.interact('', local=vars(module.namespace))
+
+
 @click.command()
 @click.argument('filename', required=False)
 @click.argument('args', nargs=-1)
 @click.option('-p', '--package')
 @click.option('-l', '--local-dir')
-def cli(filename, args, package, local_dir):
+@click.option('-v', '--version', is_flag=True)
+def cli(filename, args, package, local_dir, version):
+  if version:
+    print('nnp {} on Python {}'.format(__version__, sys.version))
+    return
   if not filename and not package:
-    # TODO: Enter interactive mode
-    print('error: interactive mode not implemented')
-    exit(1)
-  run(filename, package, local_dir, args)
+    assert not args
+    run_interactive(local_dir)
+  else:
+    run(filename, package, local_dir, args)

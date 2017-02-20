@@ -18,8 +18,8 @@ was intended as part of *[Craftr]*.
     nnp <script>.py
     nnp -p <package>[@<version>][/<module>][:<func>]
     nnpm install [-g] .
-    nnpm install [-g] <package>[@<version>][+<dist>]
-    nnpm uninstall [-g] <package>[@<version>][+<dist>]
+    nnpm install [-g] <package>[@<version>]
+    nnpm uninstall [-g] <package>[@<version>]
     nnpm init
     nnpm ls
     nnpm register
