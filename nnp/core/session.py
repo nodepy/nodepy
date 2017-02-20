@@ -26,7 +26,7 @@ from .executor import *
 from .finder import *
 from .manifest import *
 from .package import *
-from ..utils import semver
+from ..utils import refstring, semver
 
 
 class Require:
@@ -156,16 +156,21 @@ class Session:
       raise TypeError('origin must be a cpm.Module')
 
     if name.startswith('./') or name.startswith('../'):
+      if not origin or not origin.package:
+        raise ValueError('can not use relative require() outside of a package')
       package = origin.package
       module = posixpath.join(posixpath.dirname(origin.name), name)
       module = posixpath.normpath(module)
     else:
-      package_name, module = name.partition('/')[::2]
-      self.on_require(origin, package_name)
+      ref = refstring.parse(name)
+      if ref.version or ref.member:
+        raise ValueError('invalid refstring for require(): {!r}'.format(name))
+
+      self.on_require(origin, ref.package)
       selector = None
       if origin and origin.package:
-        selector = origin.package.manifest.dependencies.get(package_name)
-      package = self.load_package(package_name, selector)
+        selector = origin.package.manifest.dependencies.get(ref.package)
+      package = self.load_package(ref.package, selector)
 
     module = package.load_module(module or None)
     if not module.executed and exec_:
