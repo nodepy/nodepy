@@ -74,7 +74,7 @@ class PackageManifest:
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
-      "python-dependencies": {
+      "python_dependencies": {
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
@@ -93,7 +93,8 @@ class PackageManifest:
       "dist": {
         "type": "object",
         "properties": {
-          "include-files": {"type": "array", "items": {"type": "string"}},
+          "include_files": {"type": "array", "items": {"type": "string"}},
+          "exclude_files": {"type": "array", "items": {"type": "string"}},
         },
         "additionalProperties": False
       }
