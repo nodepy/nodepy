@@ -32,7 +32,7 @@ setup(
   license = 'MIT',
   description = '',
   url = 'https://github.com/NiklasRosenstein/nnp',
-  packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm'],
+  packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm', 'nnpm.server', 'nnpm.utils'],
   install_requires = ['click', 'distlib', 'jsonschema', 'localimport>=1.5.1'],
   entry_points = {
     'console_scripts': [
