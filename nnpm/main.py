@@ -25,7 +25,7 @@ import tarfile
 from nnp.utils import refstring, semver
 from nnp.core.manifest import PackageManifest
 from .install import install_from_directory, install_from_registry, install_from_archive, walk_package_files
-from .config import get_config
+from .config import config
 from .registry import Registry, make_package_archive_name
 
 
@@ -38,7 +38,6 @@ def cli():
 @click.argument('package')
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
 def install(package, global_):
-  config = get_config()
   registry = Registry(config['nnpm:registry'])
 
   if global_:
@@ -90,5 +89,5 @@ def dist():
 @click.option('-f', '--force', is_flag=True)
 def upload(filename, force):
   manifest = PackageManifest.parse('.')
-  registry = Registry(get_config()['nnpm:registry'])
+  registry = Registry(config['nnpm:registry'])
   registry.upload(manifest.name, manifest.version, filename, force)

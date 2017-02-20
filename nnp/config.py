@@ -22,7 +22,7 @@ import configparser
 import os
 
 
-def get_config():
+def _get_config():
   """
   Returns the nnp configuration. Section and option keys are joined together
   by a double-color (`:`). By default, the configuration file is located at
@@ -47,3 +47,6 @@ def get_config():
   config['nnp:prefix'] = os.path.expanduser(config['nnp:prefix'])
 
   return config
+
+
+config = _get_config()

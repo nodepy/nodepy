@@ -29,7 +29,7 @@ from .core.manifest import PackageManifest, NotAPackageDirectory
 from .core.package import Module, Package
 from .core.session import Session
 from .core.executor import ExecuteError
-from .config import get_config
+from .config import config
 
 
 def _get_up_package(directory):
@@ -46,7 +46,6 @@ def _get_up_package(directory):
 
 
 def _make_session(local_dir=None):
-  config = get_config()
   local_dir = os.path.join(local_dir or '.', config['nnp:local_packages_dir'])
   return Session(prefix=config['nnp:prefix'], local_packages=local_dir)
 

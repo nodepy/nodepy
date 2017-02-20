@@ -18,15 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from nnp.config import get_config as _get_config
+from nnp.config import config
 
-
-def get_config():
-  """
-  Alternative for #nnp.config.get_config() which adds default values for
-  nnpm configuration values.
-  """
-
-  config = _get_config()
-  config.setdefault('nnpm:registry', 'https://registry.craftr.net')
-  return config
+config.setdefault('nnpm:registry', 'https://registry.craftr.net')

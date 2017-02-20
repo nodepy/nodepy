@@ -19,22 +19,10 @@
 # THE SOFTWARE.
 
 import os
-from nnp.config import get_config as _get_config
+from nnp.config import config
 
-
-def get_config():
-  """
-  Alternative for #nnp.config.get_config() which adds default values for
-  nnpm-server configuration values.
-  """
-
-  config = _get_config()
-  config.setdefault('nnpmd:host', 'localhost')
-  config.setdefault('nnpmd:port', '8000')
-  config.setdefault('nnpmd:debug', 'false')
-  config.setdefault('nnpmd:prefix', '~/.nnp/registry')
-  config['nnpmd:prefix'] = os.path.expanduser(config['nnpmd:prefix'])
-  return config
-
-
-config = get_config()
+config.setdefault('nnpmd:host', 'localhost')
+config.setdefault('nnpmd:port', '8000')
+config.setdefault('nnpmd:debug', 'false')
+config.setdefault('nnpmd:prefix', '~/.nnp/registry')
+config['nnpmd:prefix'] = os.path.expanduser(config['nnpmd:prefix'])
