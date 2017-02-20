@@ -18,27 +18,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import sys
-from setuptools import setup, find_packages
+import click
+import os
+from .install import install_from_directory
 
-if sys.version_info[0] != 3:
-  raise EnvironmentError('requires Python3')
 
-setup(
-  name = 'nnp',
-  version = '0.0.1.dev0',
-  author = 'Niklas Rosenstein',
-  author_email = 'rosensteinniklas@gmail.com',
-  license = 'MIT',
-  description = '',
-  url = 'https://github.com/NiklasRosenstein/nnp',
+@click.group()
+def cli():
+  pass
 
-  packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm'],
-  install_requires = ['click', 'distlib', 'jsonschema'],
-  entry_points = {
-    'console_scripts': [
-      'nnp = nnp.main:cli',
-      'nnpm = nnpm.main:cli'
-    ]
-  }
-)
+
+@cli.command()
+def install():
+  dirs = {'packages': 'nnp_packages', 'bin': 'nnp_packages/.bin',
+      'python_modules': 'nnp_packages/.pymodules', 'local_dir': os.getcwd()}
+  install_from_directory('.', dirs)
