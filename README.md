@@ -1,7 +1,7 @@
 # nnp
 
 **nnp** is a runner for Python modules, and **nnpm** is its package manager.
-The key concept is derived from *Node.js* and *npm*, though originally *Pyn*
+The key concept is derived from *Node.js* and *npm*, though originally **nnp**
 was intended as part of *[Craftr]*.
 
   [Craftr]: https://craftr.net
@@ -12,7 +12,7 @@ was intended as part of *[Craftr]*.
     [x] nnp <script>.py
     [x] nnp -p <package>[@<version>][/<module>][:<func>]
     [/] nnpm install [-g] .
-    [/] nnpm install [-g] <package>[@<version>]
+    [ ] nnpm install [-g] <package>[@<version>]
     [ ] nnpm uninstall [-g] <package>[@<version>]
     [ ] nnpm init
     [ ] nnpm ls
