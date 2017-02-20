@@ -29,11 +29,12 @@ from .core.manifest import PackageManifest, NotAPackageDirectory
 from .core.package import Module, Package
 from .core.session import Session
 from .core.executor import ExecuteError
+from .config import get_config
 
 
-def get_up_package(directory):
-  directory = os.path.abspath(directory)
+def _get_up_package(directory):
   prev = None  # Necessary to find root on Windows
+  directory = os.path.abspath(directory)
   while directory and directory != prev:
     try:
       return PackageManifest.parse(directory)
@@ -44,6 +45,13 @@ def get_up_package(directory):
   return None
 
 
+def _make_session(local_dir=None):
+  config = get_config()
+  local_dir = os.path.join(local_dir or '.', config['nnp:local_packages_dir'])
+  return Session(prefix=config['nnp:prefix'], local_packages=local_dir)
+
+
+
 def run(filename=None, package=None, local_dir=None, args=None):
   if filename and package:
     print('error: filename and --package can not be specified at the same time')
@@ -51,9 +59,9 @@ def run(filename=None, package=None, local_dir=None, args=None):
   elif not filename and not package:
     raise ValueError('neither filename nor package specified')
 
-  session = Session(local_dir=local_dir)
+  session = _make_session(local_dir)
   if filename:
-    manifest = get_up_package(os.path.dirname(filename))
+    manifest = _get_up_package(os.path.dirname(filename))
     if manifest:
       package = session.add_package(manifest)
       module = package.load_module_from_filename(filename)
@@ -77,7 +85,7 @@ def run(filename=None, package=None, local_dir=None, args=None):
 
 
 def run_interactive(local_dir=None):
-  session = Session(local_dir=local_dir)
+  session = _make_session(local_dir)
   module = Module(None, None)
   session.on_init_module(module)
   code.interact('', local=vars(module.namespace))

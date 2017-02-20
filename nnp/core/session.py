@@ -51,6 +51,13 @@ class Session:
   packages, handling the loading and module namespace default initialization.
   It provides the #require() function to modules.
 
+  # Parameters
+  path (list of str): A list of directories to search for packages in.
+  prefix (str): If *path* is not specified, this is the path to the global
+    configuration and packages dir. Defaults to `~/.nnp`.
+  local_packages (str): If *path* is not specified, this is the path where the
+    local packages are located. Defaults to `nnp_packages`.
+
   # Members
 
   finders (list of Finder): A list of finders that are employed to find
@@ -59,13 +66,12 @@ class Session:
     package names to the actual #Package objects.
   """
 
-  def __init__(self, path=None, local_dir=None, package_class=Package,
-      module_class=Module, require_factory=Require):
-    if local_dir is None:
-      local_dir = '.'
+  def __init__(self, path=None, prefix=None, local_packages=None,
+      package_class=Package, module_class=Module, require_factory=Require):
+
     if path is None:
-      path = [os.path.join(local_dir, 'nnp_packages/'),
-          os.path.expanduser('~/.nnp/packages')]
+      prefix = prefix or os.path.expanduser('~/.nnp')
+      path = [local_packages, os.path.join(prefix, 'packages')]
 
     self.finders = [StandardFinder(x) for x in path]
     self.packages = {}
