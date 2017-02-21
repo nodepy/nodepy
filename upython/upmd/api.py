@@ -31,12 +31,12 @@ import traceback
 
 from flask import request
 from flask_httpauth import HTTPBasicAuth
-from nnp.utils import semver
-from nnp.core.manifest import PackageManifest, NotAPackageDirectory, InvalidPackageManifest
+from ..config import config
+from ..core import PackageManifest, NotAPackageDirectory, InvalidPackageManifest
+from ..utils import semver
+from ..upm.registry import make_package_archive_name
 from .app import app
-from .config import config
 from .models import User, hash_password
-from ..registry import make_package_archive_name
 
 auth = HTTPBasicAuth()
 
@@ -106,7 +106,7 @@ def on_return():
 def find(package, version):
   def not_found(): return response({'status': 'package-not-found'}, 404)
 
-  directory = os.path.join(config['nnpmd:prefix'], package)
+  directory = os.path.join(config['upmd.prefix'], package)
   print(directory)
   if not os.path.isdir(directory):
     return not_found()
@@ -157,7 +157,7 @@ def download(package, version, filename):
   Note: Serving these files should usually be replaced by NGinx or Apache.
   """
 
-  directory = os.path.join(config['nnpmd:prefix'], package, str(version))
+  directory = os.path.join(config['upmd.prefix'], package, str(version))
   directory = os.path.normpath(os.path.abspath(directory))
   return flask.send_from_directory(directory, filename)
 
@@ -182,7 +182,7 @@ def upload(on_return, package, version):
   if filename == 'package.json':
     return response({'error': '"package.json" can not be uploaded directory'}, 400)
 
-  directory = os.path.join(config['nnpmd:prefix'], package, str(version))
+  directory = os.path.join(config['upmd.prefix'], package, str(version))
   absfile = os.path.join(directory, filename)
   if os.path.isfile(absfile) and not force:
     return response({'error': 'file "{}" already exists'.format(filename)})

@@ -23,6 +23,7 @@ import code
 import os
 import sys
 import traceback
+
 from sys import exit
 from . import __version__
 from .core.manifest import PackageManifest, NotAPackageDirectory
@@ -47,10 +48,10 @@ def _get_up_package(directory):
 
 def make_session(local_dir=None, exclude_local_dir=False):
   if local_dir or not exclude_local_dir:
-    local_packages = os.path.join(local_dir or '.', config['nnp:local_packages_dir'])
+    local_packages = os.path.join(local_dir or '.', config['upython.local_packages_dir'])
   else:
     local_packages = False
-  return Session(prefix=config['nnp:prefix'], local_packages=local_packages)
+  return Session(prefix=config['upython.prefix'], local_packages=local_packages)
 
 
 def run(filename=None, package=None, local_dir=None, args=None):
@@ -102,7 +103,7 @@ def run_interactive(local_dir=None):
 @click.option('-v', '--version', is_flag=True)
 def cli(filename, args, package, local_dir, version):
   if version:
-    print('nnp {} on Python {}'.format(__version__, sys.version))
+    print('upython {} on Python {}'.format(__version__, sys.version))
     return
   if not filename and not package:
     assert not args

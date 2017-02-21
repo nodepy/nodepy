@@ -1,37 +1,35 @@
-# nnp -- not Node, Python!
+# upython
 
-**nnp** is a runner for Python modules, and **nnpm** is its package manager.
-The key concept is derived from *Node.js* and *npm*, though originally **nnp**
-was intended as part of *[Craftr]*.
-
-  [Craftr]: https://craftr.net
+**upython** is a runner for Python scripts that provides a mechanism to load
+packages with `require()`. Packages are managed with **upm**. The key concept
+is derived from *Node.js* and *npm*.
 
 ## Todo
 
-- Implemented `nnpm uninstall, init, ls`
-- Implemented a browsable web-interface for `nnpmd`
+- Implemented `upm uninstall, init, ls`
+- Implemented a browsable web-interface for `upmd`
 
 ## Synopsis
 
-    [x] nnp
-    [x] nnp <script>.py
-    [x] nnp -p <package>[@<version>][/<module>]
-    [x] nnpm install [-g] .
-    [x] nnpm install [-g] <archive>
-    [x] nnpm install [-g] <package>[@<version>]
-    [ ] nnpm uninstall [-g] <package>[@<version>]
-    [ ] nnpm init
-    [ ] nnpm ls
-    [x] nnpm dist
-    [x] nnpm register
-    [/] nnpm upload <filename>
-    [/] nnpmd [-h] [-p] [-d] [--prefix]
+    [x] upython
+    [x] upython <script>.py
+    [x] upython -p <package>[@<version>][/<module>]
+    [x] upm install [-g] .
+    [x] upm install [-g] <archive>
+    [x] upm install [-g] <package>[@<version>]
+    [ ] upm uninstall [-g] <package>[@<version>]
+    [ ] upm init
+    [ ] upm ls
+    [x] upm dist
+    [x] upm register
+    [/] upm upload <filename>
+    [/] upmd [-h] [-p] [-d] [--prefix]
 
 ## Packages
 
-**nnpm** can install packages locally into the `nnp_packages/` directory or
-globally into `~/.nnp/packages` from a remote registry or from an existing
-package directory. Similar to *Node.js*, packages in **nnp** require a manifest.
+**upm** can install packages locally into the `upython_packages/` directory or
+globally into `~/.upython/packages` from a remote registry or from an existing
+package directory. Similar to *Node.js*, packages in **upython** require a manifest.
 
 When a package is ready to be made publicly available, it can be uploaded to
 the package registry. First it needs to be regsitered, then a distributable
@@ -69,8 +67,8 @@ Example manifest:
 
 ## Registry Server
 
-**nnpmd** is the registry server that can be set-up anywhere you want. The
-default registry is available at `nnpy.org`. It is based on [Flask] and
+**upmd** is the registry server that can be set-up anywhere you want. The
+default registry is available at `upmpy.org`. It is based on [Flask] and
 [Mongo DB].
 
   [Flask]: http://flask.pocoo.org/

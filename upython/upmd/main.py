@@ -22,7 +22,7 @@ import click
 import os
 
 from .app import app
-from .config import config
+from ..config import config
 
 
 @click.command()
@@ -32,11 +32,11 @@ from .config import config
 @click.option('--prefix')
 def cli(host, port, debug, prefix):
   if host is None:
-    host = config['nnpmd:host']
+    host = config['upmd.host']
   if port is None:
-    port = int(os.getenv('NNPMWEB_PORT', int(config['nnpmd:port'])))
+    port = int(os.getenv('', int(config['upmd.port'])))
   if debug is None:
-    debug = (config['nnpmd:debug'].lower().strip() == 'true')
+    debug = (config['upmd.debug'].lower().strip() == 'true')
   if prefix is not None:
-    config['nnpmd:prefix'] = prefix
+    config['upmd.prefix'] = prefix
   app.run(host=host, port=port, debug=debug)

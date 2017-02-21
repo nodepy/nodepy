@@ -18,9 +18,11 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['InstallError', 'install_from_directory', 'install_from_registry']
+__all__ = ['InstallError', 'install_from_archive', 'install_from_directory',
+    'install_from_registry', 'walk_package_files']
 
-import nnp.main
+
+import upython.main
 import os
 import pip.commands
 import shlex
@@ -30,12 +32,10 @@ import tempfile
 
 from distlib.scripts import ScriptMaker
 from fnmatch import fnmatch
-from nnp.core.manifest import PackageManifest
-from nnp.core.finder import PackageNotFound
-from nnp.utils import refstring
-from .utils import download
+from ..core import PackageManifest, PackageNotFound
+from ..utils import download, refstring
 
-default_exclude_patterns = ['.DS_Store', '.svn/*', '.git/*', 'nnp_packages/*', '*.pyc', '*.pyo', 'dist/*']
+default_exclude_patterns = ['.DS_Store', '.svn/*', '.git/*', 'upython_packages/*', '*.pyc', '*.pyo', 'dist/*']
 
 
 def _makedirs(path):
@@ -71,7 +71,7 @@ def _make_script(script_name, args, directory):
 def _make_bin(script_name, filename, local_dir, directory):
   # TODO: If local_dir is None here (for global installs), local module's
   # shouldn't even be considered!
-  code = 'import sys, nnp.main;nnp.main.run(%r, local_dir=%r)' % (filename, local_dir)
+  code = 'import sys, upython.main;upython.main.run(%r, local_dir=%r)' % (filename, local_dir)
   return _make_python_script(script_name, code, directory)
 
 
@@ -93,7 +93,7 @@ def walk_package_files(manifest):
 
 def install_from_directory(directory, dirs, registry, expect=None):
   """
-  Install an nnp package from a directory. The directory must provide a
+  Install an upython package from a directory. The directory must provide a
   `package.json` file. An #InstallError is raised when the installation of the
   package or any of its dependencies fail.
 
@@ -107,7 +107,7 @@ def install_from_directory(directory, dirs, registry, expect=None):
     raise InstallError('expected to install "{}@{}" but got "{}" in '
         '"{}"'.format(expect[0], expect[1], manifest.identifier, directory))
 
-  session = nnp.main.make_session(dirs['local_dir'], exclude_local_dir=bool(dirs['local_dir']))
+  session = upython.main.make_session(dirs['local_dir'], exclude_local_dir=bool(dirs['local_dir']))
   target_dir = os.path.join(dirs['packages'], manifest.name)
 
   # Error if the target directory already exists. The package must be
@@ -115,7 +115,7 @@ def install_from_directory(directory, dirs, registry, expect=None):
   if os.path.exists(target_dir) :
     raise InstallError('install directory "{}" already exists'.format(target_dir))
 
-  # Install nnp dependencies.
+  # Install upython dependencies.
   if manifest.dependencies:
     print('Collecting dependencies for "{}"...'.format(manifest.identifier))
   deps = []
@@ -138,7 +138,7 @@ def install_from_directory(directory, dirs, registry, expect=None):
     py_modules.append(dep_name + dep_version)
   if py_modules:
     print('Installing Python dependencies via Pip:', ', '.join(py_modules))
-  pip.commands.install.InstallCommand().main(['--target', dirs['python_modules']] + py_modules)
+    pip.commands.install.InstallCommand().main(['--target', dirs['python_modules']] + py_modules)
 
   installed_files = []
 
@@ -163,7 +163,7 @@ def install_from_directory(directory, dirs, registry, expect=None):
   if manifest.postinstall:
     print('  Running postinstall script "{}"...'.format(manifest.postinstall))
     filename = os.path.join(target_dir, manifest.postinstall)
-    nnp.main.run(filename)
+    upython.main.run(filename)
 
 
 def install_from_archive(archive, dirs, registry, expect=None):

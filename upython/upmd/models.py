@@ -23,14 +23,14 @@ __all__ = ['client', 'db', 'hash_password', 'Error', 'User']
 from datetime import datetime
 from hashlib import sha512
 from mongoengine import *
-from .config import config
+from ..config import config
 
 connect(
-  db = config['nnpmd:mongodb_database'],
-  host = config['nnpmd:mongodb_host'],
-  port = int(config['nnpmd:mongodb_port']),
-  username = config.get('npmd:mongodb_user'),
-  password = config.get('npmd:mongodb_password')
+  db = config['upmd.mongodb_database'],
+  host = config['upmd.mongodb_host'],
+  port = int(config['upmd.mongodb_port']),
+  username = config.get('upmd.mongodb_user'),
+  password = config.get('upmd.mongodb_password')
 )
 
 

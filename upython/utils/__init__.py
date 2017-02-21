@@ -17,22 +17,3 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
-__all__ = ['config', 'filename']
-
-import configparser
-import os
-
-config = {}
-filename = os.path.expanduser(os.getenv('NNP_CONFIG', '~/.nnp/config'))
-
-if os.path.isfile(filename):
-  parser = configparser.SafeConfigParser()
-  parser.read([filename])
-  for section in parser.sections():
-    for option, value in parser.items(section):
-      config[section + ':' + option] = value
-
-config.setdefault('nnp:prefix', os.getenv('NNP_PREFIX', '~/.nnp'))
-config.setdefault('nnp:local_packages_dir', 'nnp_packages')
-config['nnp:prefix'] = os.path.expanduser(config['nnp:prefix'])

@@ -49,16 +49,16 @@ class Require:
 
 class Session:
   """
-  This class implements the hypervisor and default environment for **nnp**
+  This class implements the hypervisor and default environment for **upython**
   packages, handling the loading and module namespace default initialization.
   It provides the #require() function to modules.
 
   # Parameters
   path (list of str): A list of directories to search for packages in.
   prefix (str): If *path* is not specified, this is the path to the global
-    configuration and packages dir. Defaults to `~/.nnp`.
+    configuration and packages dir. Defaults to `~/.upython`.
   local_packages (str): If *path* is not specified, this is the path where the
-    local packages are located. Defaults to `nnp_packages`. If local packages
+    local packages are located. Defaults to `upython_packages`. If local packages
     should be ignored completely, #False can be specified.
   install_python_path (list of str): A list of additional Python search
     directories that are temporarily installed when entering the session
@@ -72,11 +72,11 @@ class Session:
     package names to the actual #Package objects.
   """
 
-  def __init__(self, path=None, prefix=None, local_packages='nnp_packages',
+  def __init__(self, path=None, prefix=None, local_packages='upython_packages',
       install_python_path=None, package_class=Package, module_class=Module,
       require_factory=Require):
 
-    prefix = prefix or os.path.expanduser('~/.nnp')
+    prefix = prefix or os.path.expanduser('~/.upython')
     if path is None:
       path = [os.path.join(prefix, 'packages')]
       if local_packages is not False:

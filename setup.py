@@ -19,29 +19,34 @@
 # THE SOFTWARE.
 
 import sys
+import pip.req
 from setuptools import setup, find_packages
 
 if sys.version_info[0] != 3:
   raise EnvironmentError('requires Python3')
 
+parse_requirements = lambda fn: [
+    str(x.req) for x in pip.req.parse_requirements(
+      fn, session=pip.download.PipSession())]
+
 setup(
-  name = 'nnp',
+  name = 'upython',
   version = '0.0.2',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
   description = '',
-  url = 'https://github.com/NiklasRosenstein/nnp',
-  packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm', 'nnpm.server', 'nnpm.utils'],
-  install_requires = ['click', 'distlib', 'hammock', 'jsonschema', 'localimport>=1.5.1', 'requests'],
+  url = 'https://github.com/NiklasRosenstein/upython',
+  packages = find_packages(),
+  install_requires = parse_requirements('requirements.txt'),
   extras_require = {
-    'nnpmd': ['flask', 'flask-httpauth', 'mongoengine']
+    'upmd': parse_requirements('requirements-upmd.txt')
   },
   entry_points = {
     'console_scripts': [
-      'nnp = nnp.main:cli',
-      'nnpm = nnpm.main:cli',
-      'nnpmd = nnpm.server.main:cli'
+      'upython = upython.main:cli',
+      'upm = upython.upm.main:cli',
+      'upmd = upython.upmd.main:cli'
     ]
   }
 )

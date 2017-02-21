@@ -17,15 +17,3 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
-import os
-from nnp.config import config
-
-config.setdefault('nnpmd:host', 'localhost')
-config.setdefault('nnpmd:port', '8000')
-config.setdefault('nnpmd:debug', 'false')
-config.setdefault('nnpmd:prefix', '~/.nnp/registry')
-config.setdefault('nnpmd:mongodb_host', 'localhost')
-config.setdefault('nnpmd:mongodb_port', '27017')
-config.setdefault('nnpmd:mongodb_database', 'nnpmd')
-config['nnpmd:prefix'] = os.path.expanduser(config['nnpmd:prefix'])

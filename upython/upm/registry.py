@@ -26,8 +26,8 @@ import json
 import os
 import requests
 
-from nnp.utils import semver
-from nnp.core.finder import PackageNotFound
+from upython.utils import semver
+from upython.core.finder import PackageNotFound
 
 PackageInfo = collections.namedtuple('PackageInfo', 'name version description')
 
@@ -64,7 +64,7 @@ class Registry:
     Download the package archive for the specified *package_name* and *version*.
     If *filename* is not specified, the package-archive name is used which is
     generated with #make_package_archive_name(). Note that the file must
-    previously be uploaded with `nnpm uploaded`.
+    previously be uploaded with `upm upload`.
 
     Returns a #requests.Response object.
     """
