@@ -22,6 +22,7 @@ __all__ = ['Module', 'Package', 'NoSuchModule']
 
 import os
 import types
+from ..utils import semver
 
 
 class Module:
@@ -40,7 +41,7 @@ class Module:
     self.namespace.__name__ = self.name
     self.namespace.__file__ = filename
 
-  def __str__(self):
+  def __repr__(self):
     exec_info = '' if self.executed else ' (not executed)'
     return '<Module "{}" from "{}"{}>'.format(
         self.identifier, self.filename, exec_info)
@@ -50,7 +51,8 @@ class Module:
     if not self.package:
       return '__main__'
     name = self.filename[:-3] if self.filename.endswith('.py') else self.filename
-    return os.path.relpath(name, self.package.directory)
+    name = os.path.relpath(name, self.package.directory)
+    return name.replace(os.sep, '/')
 
   @property
   def identifier(self):
@@ -69,8 +71,8 @@ class Package:
     self.module_class = module_class
     self.modules = {}
 
-  def __str__(self):
-    return '<Package "{}" from "{}">'.format(self.identifier, self.directory)
+  def __repr__(self):
+    return '<{} "{}" from "{}">'.format(type(self).__name__, self.identifier, self.directory)
 
   @property
   def name(self):
@@ -121,7 +123,7 @@ class Package:
     if name in self.modules:
       return self.modules[name]
 
-    filename = os.path.join(self.manifest.directory, name + '.py')
+    filename = os.path.join(self.directory, name + '.py')
     filename = os.path.normpath(os.path.abspath(filename))
     if not os.path.isfile(filename):
       raise NoSuchModule(self, name)
@@ -129,6 +131,33 @@ class Package:
     module = self.module_class(self, filename)
     self.modules[name] = module
     return module
+
+
+class MainPackage(Package):
+  """
+  This #Package subclass is used when executing scripts directly that are not
+  part of a #Package with a `package.json` manifest.
+  """
+
+  def __init__(self, directory, module_class=Module):
+    super().__init__(None, module_class)
+    self._directory = directory
+
+  @property
+  def name(self):
+    return '__main__'
+
+  @property
+  def version(self):
+    return semver.Version('1.0.0')
+
+  @property
+  def identifier(self):
+    return '{}@{}'.format(self.name, self.version)
+
+  @property
+  def directory(self):
+    return self._directory
 
 
 class NoSuchModule(Exception):

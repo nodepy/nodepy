@@ -27,13 +27,13 @@ import traceback
 from sys import exit
 from . import __version__
 from .core.manifest import PackageManifest, NotAPackageDirectory
-from .core.package import Module, Package
+from .core.package import Module, Package, MainPackage
 from .core.session import Session
 from .core.executor import ExecuteError
 from .config import config
 
 
-def _get_up_package(directory):
+def _get_up_package_manifest(directory):
   prev = None  # Necessary to find root on Windows
   directory = os.path.abspath(directory)
   while directory and directory != prev:
@@ -63,12 +63,12 @@ def run(filename=None, package=None, local_dir=None, args=None):
 
   session = make_session(local_dir)
   if filename:
-    manifest = _get_up_package(os.path.dirname(filename))
+    manifest = _get_up_package_manifest(os.path.dirname(filename))
     if manifest:
       package = session.add_package(manifest)
-      module = package.load_module_from_filename(filename)
     else:
-      module = Module(None, filename)
+      package = MainPackage(os.getcwd())
+    module = package.load_module_from_filename(filename)
   else:
     module = session.require(package, exec_=False)
     filename = module.filename
