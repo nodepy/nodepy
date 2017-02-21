@@ -105,7 +105,9 @@ class Package:
     else:
       rel = filename
 
-    if rel == os.curdir or rel.startswith(os.pardir):
+    if rel == os.curdir:
+      rel = self.manifest.main
+    elif rel.startswith(os.pardir):
       raise ValueError('"{}" not part of this package'.format(filename))
 
     return self.load_module(rel)
