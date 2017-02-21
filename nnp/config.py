@@ -18,31 +18,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+__all__ = ['config', 'filename']
+
 import configparser
 import os
 
+config = {}
+filename = os.path.expanduser(os.getenv('NNP_CONFIG', '~/.nnp/config'))
 
-def _get_config():
-  """
-  Returns the nnp configuration. Section and option keys are joined together
-  by a double-color (`:`). By default, the configuration file is located at
-  `~/.nnp/config`. The `NNP_CONFIG` environment variable may override this
-  filename.
-  """
+if os.path.isfile(filename):
+  parser = configparser.SafeConfigParser()
+  parser.read([filename])
+  for section in parser.sections():
+    for option, value in parser.items(section):
+      config[section + ':' + option] = value
 
-  config = {}
-  filename = os.path.expanduser(os.getenv('NNP_CONFIG', '~/.nnp/config'))
-  if os.path.isfile(filename):
-    parser = configparser.SafeConfigParser()
-    parser.read([filename])
-    for section in parser.sections():
-      for option, value in parser.items(section):
-        config[section + ':' + option] = value
-
-  return config
-
-
-config = _get_config()
 config.setdefault('nnp:prefix', os.getenv('NNP_PREFIX', '~/.nnp'))
 config.setdefault('nnp:local_packages_dir', 'nnp_packages')
 config['nnp:prefix'] = os.path.expanduser(config['nnp:prefix'])
