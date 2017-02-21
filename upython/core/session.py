@@ -87,12 +87,12 @@ class Session:
         install_python_path.insert(0, os.path.join(local_packages, '.pymodules'))
 
     self.finders = [StandardFinder(x) for x in path]
-    self.packages = {}
+    self.packages = PackageContainer(package_class, module_class)
+    self.packages['__main__'] = MainPackage(module_class)
+
     self.executor = Executor([self.on_init_module])
     self.install_python_path = install_python_path
     self.importer = localimport(self.install_python_path, parent_dir=os.getcwd())
-    self.package_class = package_class
-    self.module_class = module_class
     self.require_factory = require_factory
 
   def __enter__(self):
@@ -105,6 +105,42 @@ class Session:
   @property
   def module(self):
     return self.executor.current_module
+
+  def load_module_from_filename(self, filename, parent_package=None):
+    """
+    Finds the package owning the specified *filename*. If there is no parent
+    package directory for the file, a #MainPackage will be created instead (or
+    re-used if it already exists) and the file is loaded into that package.
+
+    Returns a #Module object.
+    """
+
+    filename = os.path.abspath(filename)
+    directory = PackageManifest.find_module_package_directory(filename)
+
+    # Check if the directory is already cached in any of the finders.
+    manifest = None
+    if directory:
+      for finder in self.finders:
+        manifest = finder.get_manifest_cache(directory)
+        if manifest:
+          break
+
+    # If we found a manifest in the finders, it is a package that we would
+    # normally be able to find, too. Load it globally.
+    if manifest:
+      package = self.add_package(manifest, return_existing=True)
+    else:
+      if directory:
+        if not parent_package:
+          raise RuntimeError('private packages can only be loaded from an '
+              'existing package context')
+        manifest = PackageManifest.parse(directory)
+        package = parent_package.private_packages.add_package(manifest, True)
+      else:
+        package = self.packages['__main__']
+
+    return package.load_module_from_filename(filename)
 
   def on_init_module(self, module):
     """
@@ -122,17 +158,12 @@ class Session:
 
     pass
 
-  def add_package(self, manifest):
+  def add_package(self, manifest, return_existing=False):
     """
     Adds a #Package to directly to the #Session from a #PackageManifest.
     """
 
-    if manifest.name in self.packages:
-      raise RuntimeError('a package "{}" is already loaded'.format(manifest.name))
-    package = self.package_class(manifest, self.module_class)
-    assert isinstance(package, Package)
-    self.packages[manifest.name] = package
-    return package
+    return self.packages.add_package(manifest, return_existing)
 
   def load_package(self, package_name, selector):
     """
@@ -146,6 +177,7 @@ class Session:
       package = self.packages[package_name]
       if selector and not selector(package.version):
         raise DependencyMismatch(package, selector)
+      return package
 
     for finder in self.finders:
       try:
@@ -181,8 +213,9 @@ class Session:
       if not origin or not origin.package:
         raise ValueError('can not use relative require() outside of a package')
       package = origin.package
-      module = posixpath.join(posixpath.dirname(origin.name), name)
-      module = posixpath.normpath(module)
+      module_name = posixpath.join(posixpath.dirname(origin.name), name)
+      module_name = posixpath.join(package.directory, posixpath.normpath(module_name))
+      module = self.load_module_from_filename(module_name, package)
     else:
       ref = refstring.parse(name)
       if ref.version or ref.member:
@@ -190,12 +223,11 @@ class Session:
 
       self.on_require(origin, ref.package)
       selector = None
-      if origin and origin.package:
+      if origin and origin.package and origin.package.manifest:
         selector = origin.package.manifest.dependencies.get(ref.package)
       package = self.load_package(ref.package, selector)
-      module = ref.module
+      module = package.load_module(ref.module or None)
 
-    module = package.load_module(module or None)
     if not module.executed and exec_:
       self.exec_module(module)
     return module

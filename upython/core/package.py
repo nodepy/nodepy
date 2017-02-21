@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['Module', 'Package', 'NoSuchModule']
+__all__ = ['Module', 'Package', 'MainPackage', 'PackageContainer', 'NoSuchModule']
 
 import os
 import types
@@ -70,6 +70,7 @@ class Package:
     self.manifest = manifest
     self.module_class = module_class
     self.modules = {}
+    self.private_packages = PackageContainer(Package, module_class)
 
   def __repr__(self):
     return '<{} "{}" from "{}">'.format(type(self).__name__, self.identifier, self.directory)
@@ -92,22 +93,22 @@ class Package:
 
   def load_module_from_filename(self, filename):
     """
-    Loads a module from a filename. If the filename ends with `.py`, the
-    actual correct reference to the module is returned. If it is any other
-    filename, a new #Module is returned that is not actually cached in
-    #Package.modules.
+    Loads a module from a filename. The `.py` suffix can be skipped for
+    *filename*, but the actual file that will be loaded must have a `.py`
+    suffix.
     """
 
-    if not os.path.isabs(filename):
+    if filename.endswith('.py'):
+      filename = filename[:-3]
+    if os.path.isabs(filename):
       rel = os.path.relpath(filename, self.directory)
     else:
       rel = filename
+
     if rel == os.curdir or rel.startswith(os.pardir):
       raise ValueError('"{}" not part of this package'.format(filename))
 
-    if rel.endswith('.py'):
-      return self.load_module(rel[:-3])
-    return self.module_class(self, filename)
+    return self.load_module(rel)
 
   def load_module(self, name=None):
     """
@@ -139,9 +140,9 @@ class MainPackage(Package):
   part of a #Package with a `package.json` manifest.
   """
 
-  def __init__(self, directory, module_class=Module):
+  def __init__(self, module_class=Module):
     super().__init__(None, module_class)
-    self._directory = directory
+    self._directory = os.getcwd()
 
   @property
   def name(self):
@@ -158,6 +159,55 @@ class MainPackage(Package):
   @property
   def directory(self):
     return self._directory
+
+
+class PackageContainer:
+  """
+  A container for keep track of loaded packages. There is a global package
+  container in every #Session, but a single #Package also have a package
+  container for private packages (ones that are not in the global and local
+  package directory).
+  """
+
+  def __init__(self, package_class=Package, module_class=Module):
+    self._packages = {}
+    self._package_class = package_class
+    self._module_class = module_class
+
+  def __repr__(self):
+    return repr(self._packages)
+
+  def __getitem__(self, name):
+    return self._packages[name]
+
+  def __setitem__(self, name, value):
+    self._packages[name] = value
+
+  def __contains__(self, name):
+    return name in self._packages
+
+  def get(self, *args):
+    return self._packages.get(*args)
+
+  def add_package(self, manifest, return_existing=False):
+    """
+    Adds a #Package to directly to the container from a #PackageManifest.
+    """
+
+    if manifest.name in self._packages:
+      if not return_existing:
+        raise RuntimeError('a package "{}" is already loaded'.format(manifest.name))
+      package = self._packages[manifest.name]
+      if package.manifest != manifest:
+        raise RuntimeError('requested to return existing package for '
+            'manifest {!r} but the existing package\'s manifest doesn\'t '
+            'match'.format(manifest))
+      return package
+
+    package = self._package_class(manifest, self._module_class)
+    assert isinstance(package, Package)
+    self._packages[manifest.name] = package
+    return package
 
 
 class NoSuchModule(Exception):

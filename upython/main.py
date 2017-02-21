@@ -33,19 +33,6 @@ from .core.executor import ExecuteError
 from .config import config
 
 
-def _get_up_package_manifest(directory):
-  prev = None  # Necessary to find root on Windows
-  directory = os.path.abspath(directory)
-  while directory and directory != prev:
-    try:
-      return PackageManifest.parse(directory)
-    except NotAPackageDirectory:
-      pass
-    prev = directory
-    directory = os.path.dirname(directory)
-  return None
-
-
 def make_session(local_dir=None, exclude_local_dir=False):
   if local_dir or not exclude_local_dir:
     local_packages = os.path.join(local_dir or '.', config['upython.local_packages_dir'])
@@ -63,12 +50,7 @@ def run(filename=None, package=None, local_dir=None, args=None):
 
   session = make_session(local_dir)
   if filename:
-    manifest = _get_up_package_manifest(os.path.dirname(filename))
-    if manifest:
-      package = session.add_package(manifest)
-    else:
-      package = MainPackage(os.getcwd())
-    module = package.load_module_from_filename(filename)
+    module = session.load_module_from_filename(filename)
   else:
     module = session.require(package, exec_=False)
     filename = module.filename
