@@ -163,6 +163,24 @@ class PackageManifest:
 
     return PackageManifest(filename, directory, **data, engine_props=engine_props)
 
+  def find_module_package_directory(path):
+    """
+    Given a *path*, this method finds the first directory of that path that
+    is a package directory and returns the path to the directory. Returns
+    #None if there is no parent package directory.
+
+    Note that *path* can be the package directory itself.
+    """
+
+    prev = None  # Necessary to find root on Windows
+    directory = os.path.abspath(path)
+    while directory and directory != prev:
+      if os.path.isfile(os.path.join(directory, 'package.json')):
+        return directory
+      prev = directory
+      directory = os.path.dirname(directory)
+    return None
+
   def __init__(self, filename, directory, name, version, description=None, author=None,
       license=None, main='index', dependencies=None, python_dependencies=None,
       scripts=None, bin=None, engines=None, engine_props=None, dist=None,
@@ -182,6 +200,15 @@ class PackageManifest:
     self.engine_props = {} if engine_props is None else engine_props
     self.dist = {} if dist is None else dist
     self.postinstall = postinstall
+
+  def __eq__(self, other):
+    if isinstance(other, PackageManifest):
+      return (self.filename, self.directory, self.name, self.version) == \
+          (other.filename, other.directory, other.name, other.version)
+    return False
+
+  def __ne__(self, other):
+    return not (self == other)
 
   def __repr__(self):
     return '<PackageManifest "{}">'.format(self.identifier)
