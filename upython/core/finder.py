@@ -40,6 +40,16 @@ class Finder:
     PackageNotFound:
     """
 
+    raise PackageNotFound(package_name, version_selector)
+
+  def get_manifest_cache(self, directory):
+    """
+    Returns the #PackageManifest for *directory* if it is already cached in
+    this #Finder, otherwise #None.
+    """
+
+    return None
+
 
 class StandardFinder(Finder):
   """
@@ -139,6 +149,11 @@ class StandardFinder(Finder):
       raise PackageNotFound(package_name, selector)
 
     return best_match
+
+  def get_manifest_cache(self, directory):
+    " Overwrites #Finder.get_manifest_cache(). "
+    directory = os.path.normpath(os.path.abspath(directory))
+    return self.cache.get(directory)
 
 
 class PackageNotFound(Exception):
