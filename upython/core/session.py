@@ -213,9 +213,11 @@ class Session:
       if not origin or not origin.package:
         raise ValueError('can not use relative require() outside of a package')
       package = origin.package
-      module_name = posixpath.join(posixpath.dirname(origin.name), name)
-      module_name = posixpath.join(package.directory, posixpath.normpath(module_name))
-      module = self.load_module_from_filename(module_name, package)
+      filename = posixpath.join(posixpath.dirname(origin.name), name)
+      filename = posixpath.join(package.directory, posixpath.normpath(filename))
+      if not filename.endswith('.py') and not os.path.exists(filename):
+        filename += '.py'
+      module = self.load_module_from_filename(filename, package)
     else:
       ref = refstring.parse(name)
       if ref.version or ref.member:

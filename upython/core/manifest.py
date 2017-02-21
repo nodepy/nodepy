@@ -182,7 +182,7 @@ class PackageManifest:
     return None
 
   def __init__(self, filename, directory, name, version, description=None, author=None,
-      license=None, main='index', dependencies=None, python_dependencies=None,
+      license=None, main='index.py', dependencies=None, python_dependencies=None,
       scripts=None, bin=None, engines=None, engine_props=None, dist=None,
       postinstall=None):
     self.filename = filename

@@ -70,6 +70,7 @@ class Package:
     self.manifest = manifest
     self.module_class = module_class
     self.modules = {}
+    self.extra_module_files = {}
     self.private_packages = PackageContainer(Package, module_class)
 
   def __repr__(self):
@@ -98,8 +99,6 @@ class Package:
     suffix.
     """
 
-    if filename.endswith('.py'):
-      filename = filename[:-3]
     if os.path.isabs(filename):
       rel = os.path.relpath(filename, self.directory)
     else:
@@ -110,7 +109,15 @@ class Package:
     elif rel.startswith(os.pardir):
       raise ValueError('"{}" not part of this package'.format(filename))
 
-    return self.load_module(rel)
+    rel = rel.replace(os.sep, '/')
+    if rel.endswith('.py'):
+      return self.load_module(rel[:-3])
+    else:
+      if rel in self.extra_module_files:
+        return self.extra_module_files[rel]
+      module = self.module_class(self, filename)
+      self.extra_module_files[rel] = module
+      return module
 
   def load_module(self, name=None):
     """
