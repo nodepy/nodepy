@@ -31,7 +31,7 @@ parse_requirements = lambda fn: [
 
 setup(
   name = 'upython',
-  version = '0.0.2',
+  version = '0.0.3',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
