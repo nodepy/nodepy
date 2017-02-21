@@ -34,6 +34,9 @@ setup(
   url = 'https://github.com/NiklasRosenstein/nnp',
   packages = ['nnp', 'nnp.core', 'nnp.utils', 'nnpm', 'nnpm.server', 'nnpm.utils'],
   install_requires = ['click', 'distlib', 'hammock', 'jsonschema', 'localimport>=1.5.1', 'requests'],
+  extras_require = {
+    'nnpmd': ['flask', 'flask-httpauth', 'mongoengine']
+  },
   entry_points = {
     'console_scripts': [
       'nnp = nnp.main:cli',

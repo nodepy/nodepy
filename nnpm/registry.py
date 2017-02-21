@@ -37,17 +37,21 @@ class Registry:
   Wrapper for the REST API of a package registry.
   """
 
-  def __init__(self, base_url):
+  def __init__(self, base_url, username=None, password=None):
     self.api = hammock.Hammock(base_url).api
+    self.username = username
+    self.password = password
 
   def _handle_response(self, response):
     try:
       data = response.json()
     except json.JSONDecodeError as exc:
-      if response.status_code != 500:
+      if response.status_code == 500:
+        raise RegistryError(response.url, 'Internal server error: {}'.format(response.text))
+      elif response.status_code == 200:
         raise RegistryError(response.url, 'Invalid JSON response: {}'.format(exc))
       else:
-        raise RegistryError(response.url, 'Internal server error: {}'.format(request.text))
+        raise RegistryError(response.url, response.text)
     if data.get('error') or response.status_code == 500:
       message = data.get('error')
       if message and response.status_code == 500:
@@ -103,10 +107,23 @@ class Registry:
     with open(filename, 'rb') as fp:
       files = {os.path.basename(filename): fp}
       params = {'force': 'true' if force else 'false'}
-      response = self.api.upload(package_name, version).POST(files=files, params=params)
+      response = self.api.upload(package_name, version).POST(
+          files=files, params=params, auth=(self.username, self.password))
       data = self._handle_response(response)
       if data.get('status') != 'ok':
         raise RegistryError(response.url, response)
+
+  def register(self, username, password, email):
+    """
+    Register a new user on the registry.
+    """
+
+    response = self.api.register().POST(data={
+        'username': username, 'password': password, 'email': email})
+    data = self._handle_response(response)
+    if data.get('status') != 'ok':
+      raise RegistryError(response.url, response)
+    return data.get('message')
 
 
 class RegistryError(Exception):

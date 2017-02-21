@@ -18,25 +18,33 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import click
-import os
+__all__ = ['client', 'db', 'hash_password', 'Error', 'User']
 
-from .app import app
+from datetime import datetime
+from hashlib import sha512
+from mongoengine import *
 from .config import config
 
+connect(
+  db = config['nnpmd:mongodb_database'],
+  host = config['nnpmd:mongodb_host'],
+  port = int(config['nnpmd:mongodb_port']),
+  username = config.get('npmd:mongodb_user'),
+  password = config.get('npmd:mongodb_password')
+)
 
-@click.command()
-@click.option('-h', '--host')
-@click.option('-p', '--port', type=int)
-@click.option('-d', '--debug/--no-debug', default=None)
-@click.option('--prefix')
-def cli(host, port, debug, prefix):
-  if host is None:
-    host = config['nnpmd:host']
-  if port is None:
-    port = int(os.getenv('NNPMWEB_PORT', int(config['nnpmd:port'])))
-  if debug is None:
-    debug = (config['nnpmd:debug'].lower().strip() == 'true')
-  if prefix is not None:
-    config['nnpmd:prefix'] = prefix
-  app.run(host=host, port=port, debug=debug)
+
+class Error(Exception):
+  pass
+
+
+class User(Document):
+  name = StringField(required=True, min_length=3, max_length=64)
+  passhash = StringField(required=True)
+  email = StringField(required=True, min_length=4, max_length=54)
+  created = DateTimeField(default=datetime.now)
+  packages = ListField(StringField(max_length=64))
+
+
+def hash_password(password):
+  return sha512(password.encode('utf8')).hexdigest()

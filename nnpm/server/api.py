@@ -30,11 +30,28 @@ import tempfile
 import traceback
 
 from flask import request
+from flask_httpauth import HTTPBasicAuth
 from nnp.utils import semver
 from nnp.core.manifest import PackageManifest, NotAPackageDirectory, InvalidPackageManifest
 from .app import app
 from .config import config
+from .models import User, hash_password
 from ..registry import make_package_archive_name
+
+auth = HTTPBasicAuth()
+
+
+@auth.hash_password
+def hash_pw(username, password):
+  return hash_password(password)
+
+
+@auth.get_password
+def get_pw(username):
+  user = User.objects(name=username).first()
+  if user:
+    return user.passhash
+  return None
 
 
 def response(data, code=200):
@@ -146,10 +163,17 @@ def download(package, version, filename):
 
 
 @app.route('/api/upload/<package>/<version>', methods=['POST'])
-@json_catch_error()
+@auth.login_required
 @expect_package_info()
+@json_catch_error()
 @on_return()
 def upload(on_return, package, version):
+  # Find the user that the package belongs to.
+  owner = User.objects(packages__contains=package).first()
+  if owner and owner.name != auth.username():
+    return response({'error': 'not authorized to manage package "{}", '
+        'it belongs to "{}"'.format(package, owner.name)}, 400)
+
   force = request.args.get('force', 'false').lower().strip() == 'true'
   if len(request.files) != 1:
     return response({'error': 'zero or more than 1 file(s) uploaded'}, 400)
@@ -189,4 +213,32 @@ def upload(on_return, package, version):
   else:
     storage.save(absfile)
 
+  # If the package doesn't belong to anyone, we'll add it to the user.
+  if not owner:
+    user = User.objects(name=auth.username()).first()
+    user.packages.append(package)
+    user.save()
+    print('Added package', package, 'to user', user.name)
+
   return response({'status': 'ok'})
+
+
+@app.route('/api/register', methods=['POST'])
+def register():
+  username = request.form.get('username')
+  password = request.form.get('password')
+  email = request.form.get('email')
+  if not username or len(username) < 3 or len(username) > 24:
+    return response({'error': 'no or invalid username specified'}, 400)
+  if not password or len(password) < 6 or len(password) > 64:
+    return response({'error': 'no or invalid password specified'}, 400)
+  if not email or len(email) < 4 or len(email) > 64:
+    return response({'error': 'no or invalid email specified'}, 400)
+
+  user = User.objects(name=username).first()
+  if user:
+    return response({'error': 'user "{}" already exists'.format(username)}, 400)
+  user = User(name=username, passhash=hash_password(password), email=email)
+  user.save()
+
+  return response({'status': 'ok', 'message': 'User registered successfully'})

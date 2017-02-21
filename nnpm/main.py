@@ -20,13 +20,14 @@
 
 import click
 import os
+import getpass
 import tarfile
 
 from nnp.utils import refstring, semver
 from nnp.core.manifest import PackageManifest
 from .install import install_from_directory, install_from_registry, install_from_archive, walk_package_files
 from .config import config
-from .registry import Registry, make_package_archive_name
+from .registry import Registry, RegistryError, make_package_archive_name
 
 
 @click.group()
@@ -88,6 +89,52 @@ def dist():
 @click.argument('filename')
 @click.option('-f', '--force', is_flag=True)
 def upload(filename, force):
+  """
+  Upload a file to the current version to the registry. If the package does
+  not already exist on the registry, it will be added to your account
+  automatically. The first package that is uploaded must be the package
+  source distribution that can be created with 'nnpm dist'.
+  """
+
+  if not os.path.isfile(filename):
+    print('error: "{}" does not exist'.format(filename))
+    exit(1)
   manifest = PackageManifest.parse('.')
+
+  url = config['nnpm:registry']
+  username, password = config.get('nnpm:username'), config.get('nnpm:password')
+  if not username or not password:
+    print('Credentials for', url)
+  if not username:
+    username = input('Username: ')
+  if not password:
+    password = getpass.getpass()
+
+  registry = Registry(url, username, password)
+  try:
+    registry.upload(manifest.name, manifest.version, filename, force)
+  except RegistryError as exc:
+    print('error: registry:', exc)
+    exit(1)
+
+  print('Done!')
+
+
+@cli.command()
+@click.option('-u', '--username')
+@click.option('-p', '--password')
+@click.option('-e', '--email')
+def register(username, password, email):
+  """
+  Register a new user on the package registry.
+  """
+
+  if not username:
+    username = input('Username: ')
+  if not password:
+    password = getpass.getpass()
+  if not email:
+    email = input('E-Mail: ')
+
   registry = Registry(config['nnpm:registry'])
-  registry.upload(manifest.name, manifest.version, filename, force)
+  print(registry.register(username, password, email))

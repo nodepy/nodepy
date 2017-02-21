@@ -9,7 +9,6 @@ was intended as part of *[Craftr]*.
 ## Todo
 
 - Implemented `nnpm uninstall, init, ls`
-- Submit user credentials with `nnpm upload` and check them in `nnpmd`
 - Implemented a browsable web-interface for `nnpmd`
 
 ## Synopsis
@@ -24,6 +23,7 @@ was intended as part of *[Craftr]*.
     [ ] nnpm init
     [ ] nnpm ls
     [x] nnpm dist
+    [x] nnpm register
     [/] nnpm upload <filename>
     [/] nnpmd [-h] [-p] [-d] [--prefix]
 
