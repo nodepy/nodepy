@@ -19,6 +19,8 @@
 # THE SOFTWARE.
 
 import click
+import collections
+import json
 import os
 import getpass
 import tarfile
@@ -143,3 +145,38 @@ def register(username, password, email):
 
   registry = Registry(config['upm.registry'])
   print(registry.register(username, password, email))
+
+
+@cli.command()
+@click.argument('directory', default='.')
+def init(directory):
+  filename = os.path.join(directory, 'package.json')
+  if os.path.isfile(filename):
+    print('error: "{}" already exists'.format(filename))
+    return 1
+
+  questions = [
+    ('Package Name', 'name', None),
+    ('Package Version', 'version', '1.0.0'),
+    ('Author (Name <Email>)', 'author', config['upm.author']),
+    ('License', 'license', config['upm.license'])
+  ]
+
+  results = collections.OrderedDict()
+  for qu in questions:
+    msg = qu[0]
+    if qu[2]:
+      msg += ' [{}]'.format(qu[2])
+    while True:
+      reply = input(msg + '? ').strip() or qu[2]
+      if reply: break
+    results[qu[1]] = reply
+
+  results['dependencies'] = {}
+  results['python-dependencies'] = {}
+  results['postinstall'] = None
+  results['dist'] = collections.OrderedDict()
+  results['dist']['exclude_files'] = ['dist/*']
+
+  with open(filename, 'w') as fp:
+    json.dump(results, fp, indent=2)

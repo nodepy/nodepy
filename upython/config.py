@@ -41,6 +41,8 @@ config['upython.prefix'] = os.path.expanduser(config['upython.prefix'])
 
 # Default values for upm.
 config.setdefault('upm.registry', 'https://upmpy.org')
+config.setdefault('upm.author', '')
+config.setdefault('upm.license', '')
 
 # Default values for upmd.
 config.setdefault('upmd.host', 'localhost')

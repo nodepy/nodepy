@@ -18,7 +18,7 @@ is derived from *Node.js* and *npm*.
     [x] upm install [-g] <archive>
     [x] upm install [-g] <package>[@<version>]
     [x] upm uninstall [-g] <package>
-    [ ] upm init
+    [x] upm init
     [ ] upm ls
     [x] upm dist
     [x] upm register
@@ -71,10 +71,24 @@ Example manifest:
 The global registry is available at [upmpy.org]. To install the **upmd**
 requirements, use `pip install upython[upmd]`.
 
-The registry server can be configured in the `~/.upython/config` file. Below
-is an example that shows all default values (see the `upython.config` module).
+  [upmpy.org]: https://upmpy.org/
 
-```python
+## Configuring upython & upm
+
+The upython configuration file lives in `~/.upython/config`. By settings the
+`UPYTHON_CONFIG` environment variable, this default file location can be
+changed. You can find the default values below.
+
+```ini
+[upython]
+prefix = ~/.upython
+local_packages_dir = upython_packages
+
+[upm]
+registry = https://upmpy.org/
+author =
+license =
+
 [upmd]
 host = localhost
 port = 8000
@@ -84,7 +98,3 @@ mongodb_host = localhost
 mongodb_port = 27017
 mongodb_database = upm_registry
 ```
-
-  [Flask]: http://flask.pocoo.org/
-  [Mongo DB]: https://www.mongodb.com/
-  [upmpy.org]: https://upmpy.org/
