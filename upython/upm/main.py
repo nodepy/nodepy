@@ -95,7 +95,9 @@ def dist():
 @cli.command()
 @click.argument('filename')
 @click.option('-f', '--force', is_flag=True)
-def upload(filename, force):
+@click.option('-u', '--user')
+@click.option('-p', '--password')
+def upload(filename, force, user, password):
   """
   Upload a file to the current version to the registry. If the package does
   not already exist on the registry, it will be added to your account
@@ -109,15 +111,16 @@ def upload(filename, force):
   manifest = PackageManifest.parse('.')
 
   url = config['upm.registry']
-  username, password = config.get('upm.username'), config.get('upm.password')
-  if not username or not password:
+  user = user or config.get('upm.username')
+  password = password or config.get('upm.password')
+  if not user or not password:
     print('Credentials for', url)
-  if not username:
-    username = input('Username: ')
+  if not user:
+    user = input('Username: ')
   if not password:
     password = getpass.getpass()
 
-  registry = Registry(url, username, password)
+  registry = Registry(url, user, password)
   try:
     registry.upload(manifest.name, manifest.version, filename, force)
   except RegistryError as exc:

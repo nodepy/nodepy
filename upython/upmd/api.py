@@ -36,7 +36,7 @@ from ..core import PackageManifest, NotAPackageDirectory, InvalidPackageManifest
 from ..utils import semver
 from ..upm.registry import make_package_archive_name
 from .app import app
-from .models import User, hash_password
+from .models import User, Package, PackageVersion, hash_password
 
 auth = HTTPBasicAuth()
 
@@ -168,8 +168,9 @@ def download(package, version, filename):
 @json_catch_error()
 @on_return()
 def upload(on_return, package, version):
-  # Find the user that the package belongs to.
-  owner = User.objects(packages__contains=package).first()
+  # If the package already exists, make sure the user is authorized.
+  has_package = Package.objects(name=package).first()
+  owner = has_package.owner if has_package else None
   if owner and owner.name != auth.username():
     return response({'error': 'not authorized to manage package "{}", '
         'it belongs to "{}"'.format(package, owner.name)}, 400)
@@ -214,14 +215,23 @@ def upload(on_return, package, version):
     return response({'error': 'package distribution must be uploaded before '
         'any additional files can be accepted'}, 400)
   else:
+    manifest = None
     storage.save(absfile)
 
   # If the package doesn't belong to anyone, we'll add it to the user.
   if not owner:
     user = User.objects(name=auth.username()).first()
-    user.packages.append(package)
-    user.save()
+    has_package = Package(name=package, owner=user)
+    has_package.save()
     print('Added package', package, 'to user', user.name)
+
+  # Create the version if it doesn't exist already.
+  if manifest:
+    pv = PackageVersion.objects(package=has_package, version=str(manifest.version)).first()
+    if not pv:
+      pv = PackageVersion(package=has_package, version=str(manifest.version))
+      pv.save()
+      print('Added version', manifest.version, 'to package', package)
 
   return response({'status': 'ok'})
 

@@ -39,11 +39,20 @@ class Error(Exception):
 
 
 class User(Document):
-  name = StringField(required=True, min_length=3, max_length=64)
+  name = StringField(required=True, unique=True, min_length=3, max_length=64)
   passhash = StringField(required=True)
   email = StringField(required=True, min_length=4, max_length=54)
   created = DateTimeField(default=datetime.now)
-  packages = ListField(StringField(max_length=64))
+
+
+class Package(Document):
+  name = StringField(required=True, unique=True)
+  owner = ReferenceField('User', DENY)
+
+
+class PackageVersion(Document):
+  package = ReferenceField('Package', CASCADE)
+  version = StringField(required=True, min_length=1)
 
 
 def hash_password(password):
