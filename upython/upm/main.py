@@ -174,7 +174,6 @@ def init(directory):
 
   results['dependencies'] = {}
   results['python-dependencies'] = {}
-  results['postinstall'] = None
   results['dist'] = collections.OrderedDict()
   results['dist']['exclude_files'] = ['dist/*']
 

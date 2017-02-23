@@ -74,7 +74,7 @@ class PackageManifest:
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
-      "python_dependencies": {
+      "python-dependencies": {
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
@@ -158,9 +158,10 @@ class PackageManifest:
       if key not in PackageManifest.schema['properties']:
         if key not in data['engines']:
           msg = 'unexpected additional field: "{}"'
-          raise InvalidPackageManifest(msg.format(key))
+          raise InvalidPackageManifest(filename, msg.format(key))
         engine_props[key] = data.pop(key)
 
+    data['python_dependencies'] = data.pop('python-dependencies', None)
     return PackageManifest(filename, directory, **data, engine_props=engine_props)
 
   def find_module_package_directory(path):
