@@ -72,10 +72,12 @@ class Session:
     package names to the actual #Package objects.
   """
 
-  def __init__(self, path=None, prefix=None, local_packages='upython_packages',
+  def __init__(self, path=None, prefix=None, local_packages=None,
       install_python_path=None, package_class=Package, module_class=Module,
       require_factory=Require):
 
+    if local_packages is None:
+      local_packages = 'upython_packages'
     prefix = prefix or os.path.expanduser('~/.upython')
     if path is None:
       path = [os.path.join(prefix, 'packages')]

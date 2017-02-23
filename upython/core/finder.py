@@ -74,6 +74,9 @@ class StandardFinder(Finder):
     self.cache = {}
     self.update()
 
+  def __repr__(self):
+    return '<StandardFinder {!r}>'.format(self.directory)
+
   def load_package(self, directory):
     """
     Manually add a package in *directory* to the #cache. This will allow the

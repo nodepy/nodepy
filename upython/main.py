@@ -25,20 +25,12 @@ import sys
 import traceback
 
 from sys import exit
-from . import __version__
+from . import __version__, make_session
 from .core.manifest import PackageManifest, NotAPackageDirectory
 from .core.package import Module, Package, MainPackage
 from .core.session import Session
 from .core.executor import ExecuteError
 from .config import config
-
-
-def make_session(local_dir=None, exclude_local_dir=False):
-  if local_dir or not exclude_local_dir:
-    local_packages = os.path.join(local_dir or '.', config['upython.local_packages_dir'])
-  else:
-    local_packages = False
-  return Session(prefix=config['upython.prefix'], local_packages=local_packages)
 
 
 def run(filename=None, package=None, local_dir=None, args=None):

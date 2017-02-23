@@ -3,4 +3,5 @@ distlib==0.2.4
 hammock==0.2.4
 jsonschema==2.6.0
 localimport==1.5.1
+recordclass==0.4.2
 requests==2.13.0

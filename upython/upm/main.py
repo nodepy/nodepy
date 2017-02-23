@@ -40,34 +40,36 @@ def cli():
 
 @cli.command()
 @click.argument('package')
+@click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
-def install(package, global_):
-  registry = Registry(config['upm.registry'])
-
-  if global_:
-    e = os.path.expanduser
-    dirs = {
-      'packages': os.path.join(config['upython.prefix'], 'packages'),
-      'bin': os.path.join(config['upython.prefix'], 'bin'),
-      'python_modules': os.path.join(configp['upython.prefix'], 'pymodules'),
-      'local_dir': None
-    }
-  else:
-    dirs = {
-      'packages': config['upython.local_packages_dir'],
-      'bin': os.path.join(config['upython.local_packages_dir'], '.bin'),
-      'python_modules': os.path.join(config['upython.local_packages_dir'], '.pymodules'),
-      'local_dir': os.getcwd()
-    }
-
+def install(package, upgrade, global_):
+  installer = Installer(upgrade=upgrade, global_=global_)
   if os.path.isdir(package):
-    install_from_directory(package, dirs, registry)
+    success = installer.install_from_directory(package)
   elif os.path.isfile(package):
-    install_from_archive(package, dirs, registry)
+    success = installer.install_from_archive(package)
   else:
     ref = refstring.parse(package)
     selector = ref.version or semver.Selector('*')
-    install_from_registry(ref.package, selector, dirs, registry)
+    success = installer.install_from_registry(ref.package, selector)
+  if not success:
+    print('Installation failed')
+    return 1
+  return 0
+
+
+@cli.command()
+@click.argument('package')
+@click.option('-g', '--global', 'global_', is_flag=True)
+def uninstall(package, global_):
+  """
+  Uninstall a module with the specified name from the local package directory.
+  To uninstall the module from the global package directory, specify
+  -g/--global.
+  """
+
+  installer = Installer(global_=global_)
+  installer.uninstall(package)
 
 
 @cli.command()

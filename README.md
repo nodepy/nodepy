@@ -6,7 +6,7 @@ is derived from *Node.js* and *npm*.
 
 ## Todo
 
-- Implemented `upm uninstall, init, ls`
+- Implemented `upm init, ls`
 - Implemented a browsable web-interface for `upmd`
 
 ## Synopsis
@@ -17,7 +17,7 @@ is derived from *Node.js* and *npm*.
     [x] upm install [-g] .
     [x] upm install [-g] <archive>
     [x] upm install [-g] <package>[@<version>]
-    [ ] upm uninstall [-g] <package>[@<version>]
+    [x] upm uninstall [-g] <package>
     [ ] upm init
     [ ] upm ls
     [x] upm dist
