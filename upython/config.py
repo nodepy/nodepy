@@ -22,6 +22,7 @@ __all__ = ['config', 'filename']
 
 import configparser
 import os
+from .upm.logging import logger
 
 config = {}
 filename = os.path.expanduser(os.getenv('UPYTHON_CONFIG', '~/.upython/config'))

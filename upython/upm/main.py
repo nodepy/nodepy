@@ -27,12 +27,15 @@ from ..config import config
 from ..core import PackageManifest
 from ..utils import refstring, semver
 from .install import *
+from .logging import logger
 from .registry import Registry, RegistryError, make_package_archive_name
 
 
 @click.group()
 def cli():
-  pass
+  if not config['upm.registry'].startswith('https://'):
+    logger.warning('`upm.registry` is not an HTTPS url ({})'.format(
+        config['upm.registry']))
 
 
 @cli.command()
