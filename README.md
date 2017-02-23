@@ -67,9 +67,24 @@ Example manifest:
 
 ## Registry Server
 
-**upmd** is the registry server that can be set-up anywhere you want. The
-default registry is available at `upmpy.org`. It is based on [Flask] and
-[Mongo DB].
+**upmd** is the upython registry server that can be set-up anywhere you want.
+The global registry is available at [upmpy.org]. To install the **upmd**
+requirements, use `pip install upython[upmd]`.
+
+The registry server can be configured in the `~/.upython/config` file. Below
+is an example that shows all default values (see the `upython.config` module).
+
+```python
+[upmd]
+host = localhost
+port = 8000
+debug = false
+prefix = ~/.upython/registry
+mongodb_host = localhost
+mongodb_port = 27017
+mongodb_database = upm_registry
+```
 
   [Flask]: http://flask.pocoo.org/
   [Mongo DB]: https://www.mongodb.com/
+  [upmpy.org]: https://upmpy.org/
