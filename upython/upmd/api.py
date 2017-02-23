@@ -203,6 +203,9 @@ def upload(on_return, package, version):
       return response({'error': str(exc)}, 400)
     except InvalidPackageManifest as exc:
       return response({'error': 'invalid package manifest: {}'.format(exc)}, 400)
+    if not manifest.license:
+      return response({'error': 'packages on the registry must have a '
+          '`license` defined in the manifest'})
     if not os.path.isdir(directory):
       os.makedirs(directory)
     tar.extract('package.json', directory)
