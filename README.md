@@ -8,6 +8,8 @@ is derived from *Node.js* and *npm*.
 
 - Implemented `upm init, ls`
 - Implemented a browsable web-interface for `upmd`
+- Make `upython` compatible with Python 2.7+ and Python 3.3+ (currently
+  tested on Python 3.5 only)
 
 ## Synopsis
 
@@ -70,6 +72,11 @@ Example manifest:
 **upmd** is the upython registry server that can be set-up anywhere you want.
 The global registry is available at [upmpy.org]. To install the **upmd**
 requirements, use `pip install upython[upmd]`.
+
+__Requirements__
+
+- Python 3.5 or newer
+- MongoDB
 
   [upmpy.org]: https://upmpy.org/
 
