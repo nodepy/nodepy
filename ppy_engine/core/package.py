@@ -28,7 +28,7 @@ from ..utils import semver
 class Module:
   """
   This class represents an actual Python file that can be executed directly
-  via **upython** or be `require()`d by another module. A module may not be part
+  via **ppy** or be `require()`d by another module. A module may not be part
   of a #Package if it is executed directly (depending on whether the package
   can be resolved from the module's location).
   """

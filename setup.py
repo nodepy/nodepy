@@ -30,23 +30,18 @@ parse_requirements = lambda fn: [
       fn, session=pip.download.PipSession())]
 
 setup(
-  name = 'upython',
+  name = 'ppy-engine',
   version = '0.0.3',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
   description = '',
-  url = 'https://github.com/NiklasRosenstein/upython',
+  url = 'https://github.com/ppym/ppy-engine',
   packages = find_packages(),
   install_requires = parse_requirements('requirements.txt'),
-  extras_require = {
-    'upmd': parse_requirements('requirements-upmd.txt')
-  },
   entry_points = {
     'console_scripts': [
-      'upython = upython.main:cli',
-      'upm = upython.upm.main:cli',
-      'upmd = upython.upmd.main:cli'
+      'ppy = ppy_engine.main:cli'
     ]
   }
 )

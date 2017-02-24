@@ -56,11 +56,11 @@ class StandardFinder(Finder):
   A class to find packages in a directory. Packages must be sub-directories of
   the actual search-directory that contain a `package.json` file. Below is an
   example of which files can be detected given that the search directory is
-  `upython_packages/`.
+  `ppy_packages/`.
 
       package.json (not detected)
-      upython_packages/package.json  (not detected)
-      upython_packages/demo-app/package.json (detected)
+      ppy_packages/package.json  (not detected)
+      ppy_packages/demo-app/package.json (detected)
 
   # Members
 

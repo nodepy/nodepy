@@ -17,3 +17,22 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+__all__ = ['config']
+
+import configparser
+import os
+
+config = {}
+filename = os.path.expanduser(os.getenv('PPY_CONFIG', '~/.local/ppy/config.ini'))
+
+if os.path.isfile(filename):
+  parser = configparser.SafeConfigParser()
+  parser.read([filename])
+  for section in parser.sections():
+    for option, value in parser.items(section):
+      config[section + '.' + option] = value
+
+# Default values for ppy.
+config.setdefault('ppy.prefix', os.getenv('PPY_PREFIX', '~/.local/ppy'))
+config['ppy.prefix'] = os.path.expanduser(config['ppy.prefix'])

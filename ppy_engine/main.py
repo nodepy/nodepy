@@ -77,7 +77,7 @@ def run_interactive(local_dir=None):
 @click.option('-v', '--version', is_flag=True)
 def cli(filename, args, package, local_dir, version):
   if version:
-    print('upython {} on Python {}'.format(__version__, sys.version))
+    print('ppy {} on Python {}'.format(__version__, sys.version))
     return
   if not filename and not package:
     assert not args

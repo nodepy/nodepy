@@ -49,16 +49,16 @@ class Require:
 
 class Session:
   """
-  This class implements the hypervisor and default environment for **upython**
+  This class implements the hypervisor and default environment for **ppy**
   packages, handling the loading and module namespace default initialization.
   It provides the #require() function to modules.
 
   # Parameters
   path (list of str): A list of directories to search for packages in.
   prefix (str): If *path* is not specified, this is the path to the global
-    configuration and packages dir. Defaults to `~/.upython`.
+    configuration and packages dir. Defaults to `~/.ppy`.
   local_packages (str): If *path* is not specified, this is the path where the
-    local packages are located. Defaults to `upython_packages`. If local packages
+    local packages are located. Defaults to `ppy_packages`. If local packages
     should be ignored completely, #False can be specified.
   install_python_path (list of str): A list of additional Python search
     directories that are temporarily installed when entering the session
@@ -77,8 +77,8 @@ class Session:
       require_factory=Require):
 
     if local_packages is None:
-      local_packages = 'upython_packages'
-    prefix = prefix or os.path.expanduser('~/.upython')
+      local_packages = 'ppy_packages'
+    prefix = prefix or os.path.expanduser('~/.ppy')
     if path is None:
       path = [os.path.join(prefix, 'packages')]
       if local_packages is not False:

@@ -1,4 +1,5 @@
-/.env
-/dist
-/nnp.egg-info
-/nnp_packages
+.env
+dist
+*.egg-info
+ppy_packages
+*.py[oc]
