@@ -38,7 +38,18 @@ def package(package):
   package = Package.objects(name=package).first()
   if not package:
     abort(404)
-  return render_template('package.html', nav='browse', package=package)
+  return render_template('package.html', nav='browse', package=package, version=package.latest)
+
+
+@app.route('/package/<package>/<version>')
+def package_version(package, version):
+  package = Package.objects(name=package).first()
+  if not package:
+    abort(404)
+  version = PackageVersion.objects(package=package, version=version).first()
+  if not version:
+    abort(404)
+  return render_template('package.html', nav='browse', package=package, version=version)
 
 
 @app.route('/user/<user>')

@@ -20,6 +20,7 @@
 
 import flask
 import jinja2
+import markdown
 from . import models
 
 app = flask.Flask(__name__)
@@ -27,6 +28,9 @@ app.jinja_env.globals.update({
   'active': lambda v, x: jinja2.Markup('class="active"') if v == x else ''
 })
 app.jinja_env.globals.update({k: getattr(models, k) for k in models.__all__})
+app.jinja_env.filters.update({
+  'markdown': lambda x: jinja2.Markup(markdown.markdown(x))
+})
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 from . import api, browse

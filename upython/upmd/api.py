@@ -199,22 +199,34 @@ def upload(on_return, package, version):
     with tempfile.NamedTemporaryFile(suffix='_' + filename, delete=False) as tmp:
       shutil.copyfileobj(storage, tmp)
     on_return.append(tmp.delete)
+
+    # Open the tar archive and read the package.json and README.md.
+    with tarfile.open(tmp.name, mode='r') as tar:
+      try:
+        manifest_data = tar.extractfile('package.json').read().decode('utf8')
+      except KeyError as exc:
+        return response({'error': 'no `package.json` in the uploaded archive'}, 400)
+      try:
+        readme = tar.extractfile('README.md').read().decode('utf8')
+      except KeyError:
+        readme = None
+
+    # Parse the manifest.s
     try:
-      tar = tarfile.open(tmp.name, mode='r')
-      on_return.append(tar.close)
-      fp = io.TextIOWrapper(tar.extractfile('package.json'))
-      manifest = PackageManifest.parse_file(fp, directory)
-    except KeyError as exc:
-      tar.close()
-      return response({'error': str(exc)}, 400)
+      manifest = PackageManifest.parse_file(io.StringIO(manifest_data), directory)
     except InvalidPackageManifest as exc:
       return response({'error': 'invalid package manifest: {}'.format(exc)}, 400)
     if not manifest.license:
       return response({'error': 'packages on the registry must have a '
           '`license` defined in the manifest'}, 400)
+
+    # Save the package.json into the directory.
     if not os.path.isdir(directory):
       os.makedirs(directory)
-    tar.extract('package.json', directory)
+    with open(os.path.join(directory, 'package.json'), 'w') as fp:
+      fp.write(manifest_data)
+
+    # Copy the contents archive into the package version directory.
     shutil.copyfile(tmp.name, absfile)
   elif not os.path.isfile(os.path.join(directory, 'package.json')):
     return response({'error': 'package distribution must be uploaded before '
@@ -231,12 +243,21 @@ def upload(on_return, package, version):
     print('Added package', package, 'to user', user.name)
 
   # Create the version if it doesn't exist already.
+  pv = PackageVersion.objects(package=has_package, version=str(version)).first()
+  if not pv:
+    assert manifest
+    pv = PackageVersion(package=has_package, version=str(version))
+    print('Added version', manifest.version, 'to package', package)
   if manifest:
-    pv = PackageVersion.objects(package=has_package, version=str(manifest.version)).first()
-    if not pv:
-      pv = PackageVersion(package=has_package, version=str(manifest.version))
-      pv.save()
-      print('Added version', manifest.version, 'to package', package)
+    pv.readme = readme
+  pv.files.append(filename)
+  pv.save()
+
+  # Update the latest version if this one is newer than what we had
+  # saved previously as the most recent version.
+  if not has_package.latest or manifest.version > semver.Version(has_package.latest.version):
+    has_package.latest = pv
+    has_package.save()
 
   return response({'status': 'ok'})
 

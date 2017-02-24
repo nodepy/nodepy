@@ -82,6 +82,7 @@ class PackageVersion(Document):
   version = StringField(required=True, min_length=1)
   created = DateTimeField(default=datetime.now)
   files = ListField(StringField())
+  readme = StringField()
 
 
 def hash_password(password):
