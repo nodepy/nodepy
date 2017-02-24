@@ -117,6 +117,8 @@ class Session(object):
     if is_main and self.main_module:
       raise RuntimeError('already have a main module')
     current_dir = current_dir or os.getcwd()
+    if is_main and not ispurerelative(request) and os.path.isfile(request):
+      request = './' + request
     filename = self.resolve_module_filename(request, current_dir, is_main)
     if not filename:
       raise RuntimeError(request, current_dir)
@@ -150,7 +152,7 @@ class Session(object):
           or try_file_(os.path.join(request, main))
 
     current_dir = current_dir or os.getcwd()
-    if request.startswith('./') or request.startswith('..1/'):
+    if ispurerelative(request):
       filename = os.path.normpath(os.path.join(current_dir, request))
       return self.resolve_module_filename(filename, current_dir, is_main)
 
@@ -252,3 +254,12 @@ def try_file(filename, preserve_symlinks, is_main=False):
       os.path.relpath(filename)
     return filename
   return None
+
+
+def ispurerelative(path):
+  """
+  Returns #True if *path* is a purely relative filename, that is if it begins
+  with `./` or `../`. Returns #False otherwise.
+  """
+
+  return path.startswith('./') or path.startswith('../')
