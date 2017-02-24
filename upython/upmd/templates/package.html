@@ -1,0 +1,7 @@
+{% extends "_template.html" %}
+{% block body %}
+  <h1><span class="damp">Package</span> {{ package.name }}</h1>
+  {% if package.latest %}
+    {{ package.latest.readme|markdown }}
+  {% endif %}
+{% endblock body %}

@@ -18,15 +18,43 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import flask
-import jinja2
-from . import models
+from flask import abort, request, render_template
+from .app import app
+from .models import *
 
-app = flask.Flask(__name__)
-app.jinja_env.globals.update({
-  'active': lambda v, x: jinja2.Markup('class="active"') if v == x else ''
-})
-app.jinja_env.globals.update({k: getattr(models, k) for k in models.__all__})
-app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-from . import api, browse
+@app.route('/')
+def index():
+  return render_template('index.html', nav='index')
+
+
+@app.route('/browse')
+def browse():
+  return render_template('browse.html', nav='browse')
+
+
+@app.route('/package/<package>')
+def package(package):
+  package = Package.objects(name=package).first()
+  if not package:
+    abort(404)
+  return render_template('package.html', nav='browse', package=package)
+
+
+@app.route('/user/<user>')
+def user(user):
+  user = User.objects(name=user).first()
+  if not user:
+    abort(404)
+  return render_template('user.html', nav='browse', user=user)
+
+
+@app.route('/validate-email/<token>')
+def validate_email(token):
+  user = User.objects(validation_token=token).first()
+  if not user or user.validated:
+    abort(404)
+  user.validated = True
+  user.validation_token = None
+  user.save()
+  return render_template('validated.html', user=user)

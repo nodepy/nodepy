@@ -18,12 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['client', 'db', 'hash_password', 'Error', 'User']
+__all__ = ['User', 'Package', 'PackageVersion']
+
+import flask
+import uuid
 
 from datetime import datetime
 from hashlib import sha512
 from mongoengine import *
 from ..config import config
+from .email import make_smtp, MIMEText
 
 connect(
   db = config['upmd.mongodb_database'],
@@ -34,25 +38,50 @@ connect(
 )
 
 
-class Error(Exception):
-  pass
-
-
 class User(Document):
   name = StringField(required=True, unique=True, min_length=3, max_length=64)
   passhash = StringField(required=True)
   email = StringField(required=True, min_length=4, max_length=54)
   created = DateTimeField(default=datetime.now)
+  validation_token = StringField()
+  validated = BooleanField()
+
+  def send_validation_mail(self):
+    """
+    Sends an email with a email verification link. The user must be saved
+    after this method is called.
+    """
+
+    self.validation_token = str(uuid.uuid4())
+    me = config['upmd.email_origin']
+    html = flask.render_template('validate-email.html', user=self)
+    part = MIMEText(html, 'html')
+    part['Subject'] = 'Validate your upmpy.org email'
+    part['From'] = me
+    part['To'] = self.email
+    s = make_smtp()
+    s.sendmail(me, [self.email], part.as_string())
+    s.quit()
+
+  def get_validation_url(self):
+    res = config['upmd.visible_url_scheme'] + '://'
+    res += config['upmd.visible_host']
+    res += flask.url_for('validate_email', token=self.validation_token)
+    return res
 
 
 class Package(Document):
   name = StringField(required=True, unique=True)
   owner = ReferenceField('User', DENY)
+  latest = ReferenceField('PackageVersion', DENY)
+  created = DateTimeField(default=datetime.now)
 
 
 class PackageVersion(Document):
   package = ReferenceField('Package', CASCADE)
   version = StringField(required=True, min_length=1)
+  created = DateTimeField(default=datetime.now)
+  files = ListField(StringField())
 
 
 def hash_password(password):

@@ -92,9 +92,14 @@ license =
 [upmd]
 host = localhost
 port = 8000
+visible_host = %(host):%(port)
+visible_url_scheme = http
 debug = false
 prefix = ~/.upython/registry
 mongodb_host = localhost
 mongodb_port = 27017
 mongodb_database = upm_registry
+email_origin = no-reply@upmpy.org
+email_smtp_host = localhost
+email_smtp_ssl = false
 ```

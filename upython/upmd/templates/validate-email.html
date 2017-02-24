@@ -1,0 +1,7 @@
+<!DOCTYPE>
+<html>
+  <body>
+    <p>Hello <b>{{ user.name }}</b>. Thanks for registering an account on upmpy.org.</p>
+    <p>Please verify your e-mail address by clicking <a href="{{ user.get_validation_url() }}">this</a> link.</p>
+  </body>
+</html>

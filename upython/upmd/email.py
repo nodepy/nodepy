@@ -18,15 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import flask
-import jinja2
-from . import models
+from smtplib import SMTP, SMTP_SSL
+from email.mime.text import MIMEText
+from ..config import config
 
-app = flask.Flask(__name__)
-app.jinja_env.globals.update({
-  'active': lambda v, x: jinja2.Markup('class="active"') if v == x else ''
-})
-app.jinja_env.globals.update({k: getattr(models, k) for k in models.__all__})
-app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-from . import api, browse
+def make_smtp():
+  if str(config['upmd.email_smtp_ssl']).lower() == 'true':
+    cls = SMTP_SSL
+  else:
+    cls = SMTP
+  return cls(config['upmd.email_smtp_host'])

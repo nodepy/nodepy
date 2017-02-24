@@ -181,12 +181,12 @@ def upload(on_return, package, version):
 
   filename, storage = next(request.files.items())
   if filename == 'package.json':
-    return response({'error': '"package.json" can not be uploaded directory'}, 400)
+    return response({'error': '"package.json" can not be uploaded directly'}, 400)
 
   directory = os.path.join(config['upmd.prefix'], package, str(version))
   absfile = os.path.join(directory, filename)
   if os.path.isfile(absfile) and not force:
-    return response({'error': 'file "{}" already exists'.format(filename)})
+    return response({'error': 'file "{}" already exists'.format(filename)}, 400)
 
   if filename == make_package_archive_name(package, version):
     # Save the file to a temporary path because we can only read from the
@@ -206,7 +206,7 @@ def upload(on_return, package, version):
       return response({'error': 'invalid package manifest: {}'.format(exc)}, 400)
     if not manifest.license:
       return response({'error': 'packages on the registry must have a '
-          '`license` defined in the manifest'})
+          '`license` defined in the manifest'}, 400)
     if not os.path.isdir(directory):
       os.makedirs(directory)
     tar.extract('package.json', directory)
@@ -251,7 +251,15 @@ def register():
   user = User.objects(name=username).first()
   if user:
     return response({'error': 'user "{}" already exists'.format(username)}, 400)
-  user = User(name=username, passhash=hash_password(password), email=email)
+  if User.objects(email=email).first():
+    return response({'error': 'email "{}" already in use'.format(email)}, 400)
+  user = User(name=username, passhash=hash_password(password), email=email,
+      validation_token=None, validated=False)
+  user.send_validation_mail()
   user.save()
 
-  return response({'status': 'ok', 'message': 'User registered successfully'})
+  message = 'User registered successfully. Please verify your e-mail address '\
+      'by visiting the link we just sent you.'
+  if app.debug:
+    message += ' DEBUG: Verify URL: {}'.format(user.get_validation_url())
+  return response({'status': 'ok', 'message': message})
