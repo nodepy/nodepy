@@ -21,6 +21,7 @@
 import sys
 import pip.req
 from setuptools import setup, find_packages
+from setuptools.command.install import install
 
 if sys.version_info[0] != 3:
   raise EnvironmentError('requires Python3')
@@ -28,6 +29,20 @@ if sys.version_info[0] != 3:
 parse_requirements = lambda fn: [
     str(x.req) for x in pip.req.parse_requirements(
       fn, session=pip.download.PipSession())]
+
+
+class PostInstallCommand(install):
+  """
+  Post installation command to install `ppym`.
+  """
+
+  def run(self):
+    super(PostInstallCommand, self).run()
+    # TODO: Run ppym self-installation (into the global ppy packages directory).
+    #print('Running ppym/selfinstall.py ...')
+    #import ppy_engine.main
+    #ppy_engine.main.run('ppym/selfinstall.py')
+
 
 setup(
   name = 'ppy-engine',
@@ -43,5 +58,8 @@ setup(
     'console_scripts': [
       'ppy = ppy_engine.main:cli'
     ]
+  },
+  cmdclass = {
+    'install': PostInstallCommand
   }
 )
