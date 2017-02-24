@@ -117,8 +117,6 @@ class Session(object):
     if is_main and self.main_module:
       raise RuntimeError('already have a main module')
     current_dir = current_dir or os.getcwd()
-    if is_main and not ispurerelative(request) and os.path.isfile(request):
-      request = './' + request
     filename = self.resolve_module_filename(request, current_dir, is_main)
     if not filename:
       raise RuntimeError(request, current_dir)
@@ -156,7 +154,7 @@ class Session(object):
       filename = os.path.normpath(os.path.join(current_dir, request))
       return self.resolve_module_filename(filename, current_dir, is_main)
 
-    for path in itertools.chain(self.iter_module_paths(current_dir), self.path):
+    for path in itertools.chain(self.iter_module_paths(current_dir, is_main), self.path):
       filename = os.path.normpath(os.path.abspath(os.path.join(path, request)))
       filename = self.resolve_module_filename(filename, current_dir, is_main)
       if filename:
@@ -164,12 +162,14 @@ class Session(object):
 
     return None
 
-  def iter_module_paths(self, from_dir):
+  def iter_module_paths(self, from_dir, is_main=False):
     """
     Yield all possible `ppy_modules/` paths that can be matched starting from
     *from_dir*. Note that the method can yield directories that don't exist.
     """
 
+    if is_main:
+      yield '.'
     from_dir = os.path.normpath(os.path.abspath(from_dir))
     while from_dir:
       dirname, base = os.path.split(from_dir)
