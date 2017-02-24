@@ -168,6 +168,11 @@ def download(package, version, filename):
 @json_catch_error()
 @on_return()
 def upload(on_return, package, version):
+  user = User.objects(name=auth.username()).first()
+  assert user
+  if not user.validated:
+    return response({'error': 'your email address is not verified'}, 403)
+
   # If the package already exists, make sure the user is authorized.
   has_package = Package.objects(name=package).first()
   owner = has_package.owner if has_package else None
