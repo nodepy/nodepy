@@ -23,8 +23,8 @@ __version__ = '0.0.3'
 __license__ = 'MIT'
 
 import os
-from .config import config
-from .core import Session
+#from .core import Session
+#from .config import config
 
 
 def make_session(local_dir=None, pure_global=False):

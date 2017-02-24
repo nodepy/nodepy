@@ -18,21 +18,97 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['config']
+__all__ = ['get_default_prefix', 'Config']
 
-import configparser
+import appdirs
+import collections
 import os
+import sys
 
-config = {}
-filename = os.path.expanduser(os.getenv('PPY_CONFIG', '~/.local/ppy/config.ini'))
 
-if os.path.isfile(filename):
-  parser = configparser.SafeConfigParser()
-  parser.read([filename])
-  for section in parser.sections():
-    for option, value in parser.items(section):
-      config[section + '.' + option] = value
+def is_virtualenv():
+  return hasattr(sys, 'real_prefix') or (sys.prefix == sys.base_prefix)
 
-# Default values for ppy.
-config.setdefault('ppy.prefix', os.getenv('PPY_PREFIX', '~/.local/ppy'))
-config['ppy.prefix'] = os.path.expanduser(config['ppy.prefix'])
+
+def get_default_prefix():
+  """
+  Returns the default prefix path of where to store ppy packages, Python
+  modules, scripts, etc.
+  """
+
+  if is_virtualenv():
+    # Use the virtualenv's prefix instead.
+    return os.path.join(sys.prefix, 'share', 'ppy')
+
+  return appdirs.user_data_dir('ppy', False, roaming=True)
+
+
+class Config(object):
+  """
+  Reader/writer for the ppy configuration file. The file format must be in
+  plain `key=value` format, one per line.
+
+  # Parameters
+  filename (str): The config file to parse, and optionally save to. Pass
+      #NotImplemented to prevent the #Config object from actually loading any
+      configuration file. Defaults to the value of the `PPY_CONFIG` environment
+      variable or `~/.ppyrc`.
+  """
+
+  defaults = {
+    'prefix': get_default_prefix()
+  }
+
+  def __init__(self, filename=NotImplemented, defaults=None):
+    if filename is NotImplemented:
+      filename = os.getenv('PPY_CONFIG', '~/.ppyrc')
+    if filename:
+      filename = os.path.normpath(os.path.expanduser(filename))
+    if defaults is None:
+      defaults = Config.defaults
+
+    self.filename = filename
+    self.values = collections.OrderedDict()
+    self.defaults = defaults
+    self.loaded = False
+    if self.filename:
+      self.load()
+
+  def __repr__(self):
+    return '<Config {!r}>'.format(self.filename)
+
+  def load(self):
+    self.loaded = False
+    if not os.path.isfile(self.filename):
+      return
+    self.loaded = True
+    with open(self.filename, 'r') as fp:
+      for line in fp:
+        key, value = line.rstrip('\n').partition('=', '')
+        self.values[key.lower()] = value or ''
+
+  def save(self, create_directory=True):
+    if not self.values:
+      return
+    if create_directory:
+      dirname = os.path.dirname(self.filename)
+      if not os.path.isdir(directory):
+        os.makedirs(directory)
+    with open(self.filename, 'w') as fp:
+      for key, value in self.values.items():
+        fp.write('{}={}\n'.format(key, value))
+
+  def __getitem__(self, key):
+    try:
+      return self.values[key]
+    except KeyError:
+      return self.defaults[key]
+
+  def __setitem__(self, key, value):
+    self.values[key] = str(value)
+
+  def get(self, key, default=None):
+    try:
+      return self[key]
+    except KeyError:
+      return default

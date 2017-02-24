@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['PackageManifest', 'NotAPackageDirectory', 'InvalidPackageManifest']
+__all__ = ['PackageManifest', 'InvalidPackageManifest']
 
 import json
 import jsonschema
@@ -104,33 +104,34 @@ class PackageManifest:
   }
 
   @staticmethod
-  def parse(directory):
+  def parse_file(filename, directory=None):
     """
-    Parses the `package.json` file in the specified *directory* and returns a
-    #PackageManifest object for it.
+    Parses a manifest file and returns it. If *directory* is #None, it will
+    be derived from the *filename*.
 
     # Raises
-    NotAPackageDirectory: If *directory* does not contain a `package.json` file.
     InvalidPackageManifest: If the `package.json` file is invalid.
     """
 
-    filename = os.path.join(directory, 'package.json')
-    if not os.path.isfile(filename):
-      raise NotAPackageDirectory(directory)
-    return PackageManifest.parse_file(filename, directory)
+    if not directory:
+      directory = os.path.dirname(filename)
+    with open(filename, 'r') as fp:
+      try:
+        data = json.load(fp)
+      except json.JSONDecodeError as exc:
+        raise InvalidPackageManifest(filename, exc)
+      return PackageManifest.parse_json(data, filename, directory)
 
   @staticmethod
-  def parse_file(file, directory):
-    try:
-      if isinstance(file, str):
-        filename = file
-        with open(file, 'r') as fp:
-          data = json.load(fp)
-      else:
-        filename = 'package.json'
-        data = json.load(file)
-    except json.JSONDecodeError as exc:
-      raise InvalidPackageManifest(filename, exc)
+  def parse_json(data, filename=None, directory=None):
+    """
+    Takes a Python dictionary that represents a manifest from a JSON source
+    and converts it to a #PackageManifest. The *filename* and *directory* can
+    be set to #None depending on whether you want the respective members in
+    the #PackageManifest to be #None.
+
+    Note that *data* will be modified by this method!
+    """
 
     try:
       jsonschema.validate(data, PackageManifest.schema)
@@ -163,24 +164,6 @@ class PackageManifest:
 
     data['python_dependencies'] = data.pop('python-dependencies', None)
     return PackageManifest(filename, directory, **data, engine_props=engine_props)
-
-  def find_module_package_directory(path):
-    """
-    Given a *path*, this method finds the first directory of that path that
-    is a package directory and returns the path to the directory. Returns
-    #None if there is no parent package directory.
-
-    Note that *path* can be the package directory itself.
-    """
-
-    prev = None  # Necessary to find root on Windows
-    directory = os.path.abspath(path)
-    while directory and directory != prev:
-      if os.path.isfile(os.path.join(directory, 'package.json')):
-        return directory
-      prev = directory
-      directory = os.path.dirname(directory)
-    return None
 
   def __init__(self, filename, directory, name, version, description=None, author=None,
       license=None, main='index.py', dependencies=None, python_dependencies=None,
@@ -219,15 +202,6 @@ class PackageManifest:
     return '{}@{}'.format(self.name, self.version)
 
 
-class NotAPackageDirectory(Exception):
-
-  def __init__(self, directory):
-    self.directory = directory
-
-  def __str__(self):
-    return 'Not a package directory: "{}"'.format(self.directory)
-
-
 class InvalidPackageManifest(Exception):
 
   def __init__(self, filename, cause):
@@ -235,4 +209,6 @@ class InvalidPackageManifest(Exception):
     self.cause = cause
 
   def __str__(self):
-    return 'In file "{}": {}'.format(self.filename, self.cause)
+    if self.filename:
+      return 'In file "{}": {}'.format(self.filename, self.cause)
+    return str(self.cause)
