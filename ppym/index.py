@@ -25,10 +25,10 @@ import os
 import getpass
 import tarfile
 
-from ppy_engine.config import config
 from ppy_engine.core import PackageManifest
 from ppy_engine.utils import refstring, semver
 
+Config = require('./config')
 _install = require('./install')
 _registry = require('./registry')
 logger = require('./logger')

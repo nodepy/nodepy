@@ -20,7 +20,6 @@
 
 __all__ = ['InstallError', 'Installer', 'walk_package_files']
 
-import upython.main
 import os
 import pip.commands
 import shlex

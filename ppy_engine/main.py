@@ -26,30 +26,38 @@ import traceback
 
 from sys import exit
 from . import __version__
-from .core import Session, ResolveError
+from .config import Config
+from .core import Session, Module, ResolveError
+from .utils import debugging
 
 
-def run_interactive(session):
-  raise NotImplementedError
-  #module = Module(None, None)
-  #session.on_init_module(module)
-  #with session:
-  #  code.interact('', local=vars(module.namespace))
+def start_interactive_session(session):
+  module = Module('__main__', session)
+  module.loaded = True
+  code.interact('', local=vars(module.namespace))
 
 
 @click.command()
 @click.argument('filename', required=False)
 @click.argument('args', nargs=-1)
+@click.option('--preserve-symlinks', is_flag=True, default=None)
+@click.option('--pmd', '--post-mortem-debugger', is_flag=True)
 @click.option('-v', '--version', is_flag=True)
-def cli(filename, args, version):
+def cli(filename, args, preserve_symlinks, post_mortem_debugger, version):
   if version:
     print('ppy {} on Python {}'.format(__version__, sys.version))
     return
 
-  session = Session()
+  config = Config()
+  if preserve_symlinks is not None:
+    config['preserve_symlinks'] = str(preserve_symlinks).lower()
+  if post_mortem_debugger:
+    debugging.install_pmd()
+
+  session = Session(config)
   with session:
     if not filename:
-      run_interactive(session)
+      start_interactive_session(session)
       return
     module = session.resolve(filename, is_main=True)
     sys.argv = [module.filename] + list(args)

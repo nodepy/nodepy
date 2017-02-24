@@ -26,6 +26,7 @@ import os
 import types
 
 from .config import Config
+from .manifest import PackageManifest
 
 PPY_MODULES = 'ppy_modules'
 PACKAGE_JSON = 'package.json'
@@ -200,9 +201,11 @@ class Module(object):
     self.loaded = False
 
     # Initialize the module's namespace.
-    self.namespace.__filename = filename
-    self.namespace.__dirname = os.path.dirname(filename)
-    self.namespace.require = Require(self)
+    vars(self.namespace).update({
+      '_filename': filename,
+      '_dirname': os.path.dirname(filename),
+      'require': Require(self)
+    })
 
   def __repr__(self):
     return '<Module {!r}>'.format(self.filename)
@@ -234,9 +237,9 @@ class Require(object):
     return '<Require of {!r}>'.format(self.module)
 
   def __call__(self, name):
-    filename = self.session.resolve_module_filename(name, self.module.__dirname)
+    filename = self.session.resolve_module_filename(name, self.module.directory, False)
     if not filename:
-      raise ResolveError(name, self.module.__dirname)
+      raise ResolveError(name, self.module.directory)
     module = self.session.get_module(filename)
     if not module.loaded:
       module.load()

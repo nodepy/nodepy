@@ -23,7 +23,8 @@ __all__ = ['PackageManifest', 'InvalidPackageManifest']
 import json
 import jsonschema
 import os
-from ..utils import semver
+
+from .utils import semver
 
 
 class PackageManifest:
