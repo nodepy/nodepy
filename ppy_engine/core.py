@@ -102,7 +102,8 @@ class Session(object):
   def __enter__(self):
     self.localimport.__enter__()
     if self._require is None:
-      self._require = Require(None, self)
+      self._require = Require(None, self, is_bootstrap=True)
+      self._require('@ppym/manifest')
     return self
 
   def __exit__(self, *args):
@@ -168,7 +169,7 @@ class Session(object):
       self.main_module = module
     return module
 
-  def resolve_module_filename(self, request, current_dir, is_main, path):
+  def resolve_module_filename(self, request, current_dir, is_main, path, is_bootstrap=False):
     """
     Resolves the filename for a Python module from the specified *request*
     name. This may be a relative name like `./path/to/module` in which case
@@ -187,18 +188,15 @@ class Session(object):
         # We can only load a manifest once we bootstrapped the @ppym/manifest
         # package.
         mffile = os.path.join(request, PACKAGE_JSON)
-        if '@ppym/manifest' in self._require.cache and os.path.isfile(mffile):
-          main = self.get_manifest(mffile).main
-        else:
+        if is_bootstrap or not os.path.isfile(mffile):
           main = 'index'
+        else:
+          assert '@ppym/manifest' in self._require.cache
+          main = self.get_manifest(mffile).main
         filename = try_abs_(os.path.join(request, main))
-        if filename:
-          return filename
       else:
         filename = try_file_(request)
-        if filename:
-          return filename
-      return try_file_(request + '.py')
+      return filename or try_file_(request + '.py')
 
     if os.path.isabs(request):
       return try_abs_(request)
@@ -206,13 +204,13 @@ class Session(object):
     current_dir = current_dir or os.getcwd()
     if ispurerelative(request):
       filename = os.path.normpath(os.path.join(current_dir, request))
-      return self.resolve_module_filename(filename, current_dir, is_main, path)
+      return self.resolve_module_filename(filename, current_dir, is_main, path, is_bootstrap)
 
     for directory in path:
       if not os.path.isdir(directory):
         continue
       filename = os.path.normpath(os.path.abspath(os.path.join(directory, request)))
-      filename = self.resolve_module_filename(filename, current_dir, is_main, path)
+      filename = self.resolve_module_filename(filename, current_dir, is_main, path, is_bootstrap)
       if filename:
         return filename
 
@@ -222,10 +220,11 @@ class Module(object):
   Represents a ppy Python module.
   """
 
-  def __init__(self, filename, session):
+  def __init__(self, filename, session, is_bootstrap=False):
     self.filename = filename
     self.directory = os.path.dirname(filename)
     self.namespace = types.ModuleType(filename)
+    self.is_bootstrap = is_bootstrap
     self.session = session
     self.loaded = False
 
@@ -241,7 +240,7 @@ class Module(object):
     vars(self.namespace).update({
       '_filename': self.filename,
       '_dirname': self.directory,
-      'require': Require(self)
+      'require': Require(self, is_bootstrap=self.is_bootstrap)
     })
 
     with self.session.enter_module(self):
@@ -259,7 +258,7 @@ class Require(object):
 
   ResolveError = ResolveError
 
-  def __init__(self, module, session=None, directory=None):
+  def __init__(self, module, session=None, directory=None, is_bootstrap=False):
     self.module = module
     self.session = session or module.session
     self.directory = directory or (module.directory if module else None)
@@ -267,6 +266,7 @@ class Require(object):
     if self.directory:
       self.path.extend(iter_module_paths(self.directory, self.is_main))
     self.path.extend(self.session.path)
+    self.is_bootstrap = is_bootstrap
     self.cache = {}
 
   def __repr__(self):
@@ -276,6 +276,7 @@ class Require(object):
     if name in self.cache:
       return self.cache[name]
     module = self.session.get_module(self.resolve(name))
+    module.is_bootstrap = self.is_bootstrap
     if not module.loaded:
       module.load()
     result = module.namespace
@@ -285,8 +286,8 @@ class Require(object):
     return result
 
   def resolve(self, name):
-    filename = self.session.resolve_module_filename(
-        name, self.directory, False, self.path)
+    filename = self.session.resolve_module_filename(name, self.directory,
+        is_main=False, path=self.path, is_bootstrap=self.is_bootstrap)
     if not filename:
       raise ResolveError(name, self.directory, self.path)
     return filename
