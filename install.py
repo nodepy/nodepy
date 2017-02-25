@@ -28,21 +28,21 @@ import tarfile
 import tempfile
 import traceback
 
-from distlib.scripts import ScriptMaker
-from ppy_engine.core import Session
 from fnmatch import fnmatch
-from recordclass import recordclass
 
 
 _registry = require('./registry')
 _config = require('./config')
 _download = require('./utils/download')
 _refstring = require('./utils/refstring')
-_manifest = require('@ppym/manifest')
+
+parse_manifest = require('@ppym/manifest').parse
+PackageManifest = require('@ppym/manifest').PackageManifest
+InvalidPackageManifest = require('@ppym/manifest').InvalidPackageManifest
 
 
 default_exclude_patterns = [
-    '.DS_Store', '.svn/*', '.git/*', 'ppy_packages/*',
+    '.DS_Store', '.svn/*', '.git/*', 'ppy_modules/*',
     '*.pyc', '*.pyo', 'dist/*']
 
 
@@ -88,26 +88,25 @@ class Installer:
   This class manages the installation/uninstallation procedure.
   """
 
-  def __init__(self, registry=None, upgrade=False, global_=False):
+  def __init__(self, registry=None, upgrade=False, global_=False, strict=False):
     self.reg = registry or _registry.RegistryClient(_config['registry'])
     self.upgrade = upgrade
     self.global_ = global_
+    self.strict = strict
     if self.global_:
       self.dirs = {
-        'packages': os.path.join(_config['prefix'], 'ppy_packages'),
+        'packages': os.path.join(_config['prefix'], 'ppy_modules'),
         'bin': os.path.join(_config['prefix'], 'bin'),
         'python_modules': os.path.join(_config['prefix'], 'pymodules'),
         'reference_dir': None
       }
     else:
       self.dirs = {
-        'packages': 'ppy_packages',
-        'bin': 'ppy_packages/.bin',
-        'python_modules': 'ppy_packages/.pymodules',
+        'packages': 'ppy_modules',
+        'bin': 'ppy_modules/.bin',
+        'python_modules': 'ppy_modules/.pymodules',
         'reference_dir': os.getcwd()
       }
-    # Only used as a storage for PackageManifests.
-    self.session = Session(_config)
 
   def find_package(self, package):
     """
@@ -116,10 +115,21 @@ class Installer:
     an #InvalidPackageManifest exception if the manifest is invalid.
     """
 
-    filename = os.path.join(self.dirs['packages'], package, 'package.json')
-    if os.path.isfile(filename):
-      return self.session.get_manifest(filename)
+    filename = None
+    if self.strict:
+      filename = os.path.join(self.dirs['packages'], package, 'package.json')
+    else:
+      try:
+        module = require.session.resolve(package)
+        filename = os.path.join(module.directory, 'package.json')
+      except ResolveError:
+        pass
+
+    if filename and os.path.isfile(filename):
+      return require.session.get_manifest(filename)
+
     raise PackageNotFound(package)
+
 
   def uninstall(self, package_name):
     """
@@ -141,7 +151,7 @@ class Installer:
     """
 
     try:
-      manifest = self.session.get_manifest(os.path.join(directory, 'package.json'))
+      manifest = require.session.get_manifest(os.path.join(directory, 'package.json'))
     except InvalidPackageManifest as exc:
       print('Can not uninstall: directory "{}": Invalid manifest": {}'.format(directory, ext))
       return False
@@ -177,7 +187,7 @@ class Installer:
     """
 
     try:
-      manifest = self.session.get_manifest(os.path.join(directory, 'package.json'))
+      manifest = require.session.get_manifest(os.path.join(directory, 'package.json'))
     except FileNotFoundError:
       print('Error: directory "{}" contains no package manifest'.format(directory))
       return False

@@ -54,13 +54,14 @@ class RegistryError(Exception):
   def __init__(self, response, message, body=None):
     self.response = response
     self.message = message
-    self.body = body
+    self.body = body or response.text
 
   def __str__(self):
-    res = '{}\n\nUrl: {}'.format(self.message, self.url)
+    res = '{}\n  Url:  {} -- Status {}'.format(self.message,
+        self.response.url, self.response.status_code)
     bdy = text.truncate(str(self.body), 40, 40) if self.body is not None else ''
     if bdy:
-      res += '\n\nBody: ' + bdy
+      res += '\n  Body: ' + bdy
     return res
 
   @property
@@ -163,7 +164,7 @@ class RegistryClient(object):
     try:
       data = self._handle_response(response)
     except RegistryError as exc:
-      if exc.title == 'Package not found':
+      if exc.message == 'Package not found':
         raise PackageNotFound(package_name, version_selector)
       raise
 
