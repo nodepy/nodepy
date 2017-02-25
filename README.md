@@ -49,6 +49,11 @@ Information on manifest of package "demo-app@1.0.0"
 [...]
 ```
 
+__Projects in the PPY ecosystem__
+
+- [@ppym/ppym][ppym] &ndash; PPY package manager
+- [@ppym/registry](https://github.com/ppym/registry) &ndash; Package registry server
+
 ---
 
 <sub>\* Original image from http://www.rcsinnovations.com/wp-content/uploads/2012/09/Popeye1.gif.
