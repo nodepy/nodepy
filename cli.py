@@ -43,10 +43,11 @@ def cli():
 
 @cli.command()
 @click.argument('packages', nargs=-1)
+@click.option('-e', '--develop', is_flag=True)
 @click.option('-S', '--strict', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
-def install(packages, strict, upgrade, global_):
+def install(packages, develop, strict, upgrade, global_):
   installer = _install.Installer(upgrade=upgrade, global_=global_, strict=strict)
   if not packages:
     success = installer.install_dependencies_for(manifest.parse('package.json'))
@@ -56,7 +57,7 @@ def install(packages, strict, upgrade, global_):
 
   for package in packages:
     if os.path.isdir(package):
-      success = installer.install_from_directory(package)
+      success = installer.install_from_directory(package, develop)
     elif os.path.isfile(package):
       success = installer.install_from_archive(package)
     else:

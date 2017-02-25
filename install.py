@@ -28,6 +28,7 @@ import tarfile
 import tempfile
 import traceback
 
+from ppy_engine.core import PACKAGE_LINK
 from fnmatch import fnmatch
 
 _registry = require('./registry')
@@ -98,7 +99,7 @@ class Installer:
     if self.global_:
       self.dirs = {
         'packages': os.path.join(_config['prefix'], 'ppy_modules'),
-        'bin': os.path.join(_config['prefix'], 'bin'),
+        'bin': _config['bindir'],
         'python_modules': os.path.join(_config['prefix'], 'pymodules'),
         'reference_dir': None
       }
@@ -252,7 +253,7 @@ class Installer:
 
     return True
 
-  def install_from_directory(self, directory, expect=None):
+  def install_from_directory(self, directory, develop=False, expect=None):
     """
     Installs a package from a directory. The directory must have a
     `package.json` file. If *expect* is specified, it must be a tuple of
@@ -296,12 +297,20 @@ class Installer:
 
     print('Installing "{}" to "{}" ...'.format(manifest.identifier, target_dir))
     _makedirs(target_dir)
-    for src, rel in walk_package_files(manifest):
-      dst = os.path.join(target_dir, rel)
-      _makedirs(os.path.dirname(dst))
-      print('  Copying', rel, '...')
-      shutil.copyfile(src, dst)
-      installed_files.append(dst)
+    if develop:
+      # Create a link file that contains the path to the actual package directory.
+      print('  Creating {} ...'.format(PACKAGE_LINK))
+      linkfn = os.path.join(target_dir, PACKAGE_LINK)
+      with open(linkfn, 'w') as fp:
+        fp.write(directory)
+      installed_files.append(linkfn)
+    else:
+      for src, rel in walk_package_files(manifest):
+        dst = os.path.join(target_dir, rel)
+        _makedirs(os.path.dirname(dst))
+        print('  Copying', rel, '...')
+        shutil.copyfile(src, dst)
+        installed_files.append(dst)
 
     # Create scripts for the 'scripts' and 'bin' fields in the package manifest.
     for script_name, command in manifest.script.items():
