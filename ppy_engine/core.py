@@ -101,9 +101,7 @@ class Session(object):
 
   def __enter__(self):
     self.localimport.__enter__()
-    if self._require is None:
-      self._require = Require(None, self, is_bootstrap=True)
-      self._require('@ppym/manifest')
+    self.bootstrap()
     return self
 
   def __exit__(self, *args):
@@ -118,13 +116,21 @@ class Session(object):
     finally:
       assert self.current_modules.pop() is module
 
+  def bootstrap(self):
+    if self._require is None:
+      self._require = Require(None, self, is_bootstrap=True)
+    self._require('@ppym/manifest')
+
   def get_manifest(self, filename):
     """
     Parses a #PackageManifest from *filename* and returns it. The manifest
     is cached by the absolute and normalized *filename*.
     """
 
-    filename = os.path.normpath(os.path.abspath(filename))
+    if not self._require:
+      raise RuntimeError('Session is not bootstrapped')
+
+    filename = canonicalpath(filename)
     if filename in self.manifest_cache:
       return self.manifest_cache[filename]
     manifest = self._require('@ppym/manifest').parse(filename)
@@ -136,11 +142,15 @@ class Session(object):
     Returns a #Module from the specified *filename*. If the module is not
     already cached, it will be created. Note that the module is not necessarily
     loaded. You can do that with #Module.load().
+
+    Requires the session to be bootstrapped, that is #Session.bootstrap()
+    must have been called or #Session.__enter__() be used.
     """
 
-    filename = os.path.normpath(os.path.abspath(filename))
+    filename = canonicalpath(filename)
     if filename in self.module_cache:
       return self.module_cache[filename]
+
     module = Module(filename, self)
     self.module_cache[filename] = module
     return module
@@ -209,7 +219,7 @@ class Session(object):
     for directory in path:
       if not os.path.isdir(directory):
         continue
-      filename = os.path.normpath(os.path.abspath(os.path.join(directory, request)))
+      filename = canonicalpath(os.path.join(directory, request))
       filename = self.resolve_module_filename(filename, current_dir, is_main, path, is_bootstrap)
       if filename:
         return filename
@@ -309,7 +319,7 @@ def iter_module_paths(from_dir, is_main=False):
 
   if is_main:
     yield '.'
-  from_dir = os.path.normpath(os.path.abspath(from_dir))
+  from_dir = canonicalpath(from_dir)
   while from_dir:
     dirname, base = os.path.split(from_dir)
     if base != PPY_MODULES and not base.startswith('@'):
@@ -346,6 +356,18 @@ def ispurerelative(path):
   """
 
   return path.startswith('./') or path.startswith('../')
+
+
+def canonicalpath(path):
+  """
+  Makes *path* absolute and normalizes it. On Windows, all letters are
+  converted to lowercase.
+  """
+
+  path = os.path.normpath(os.path.abspath(path))
+  if os.name == 'nt':
+    path = path.lower()
+  return path
 
 
 def get_bootstrap_modules_dir(config):
