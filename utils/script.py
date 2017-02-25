@@ -22,6 +22,7 @@ Helper function to create script files for pure Python code, ppy modules or
 shell commands. Uses the Python #distlib package.
 """
 
+import os
 from distlib.scripts import ScriptMaker
 
 argschema = require('@ppym/argschema')
@@ -59,11 +60,11 @@ def make_command_script(script_name, directory, args):
   """
 
   argschema.validate('args', args, {'type': [list, tuple],
-      'items': {'type': 'str'})
+      'items': {'type': str}})
   code = 'import subprocess\n'\
-         'import sys\n'
+         'import sys\n'\
          'sys.exit(subprocess.call({!r}))\n'.format(args)
-  return make_python_script(script_name, code, directory)
+  return make_python_script(script_name, directory, code)
 
 
 def make_ppy_runner(script_name, directory, filename, reference_dir=None):
@@ -81,12 +82,13 @@ def make_ppy_runner(script_name, directory, filename, reference_dir=None):
   args = []
   if reference_dir:
     # Find modules in the reference directory.
-    args.append('-i', os.path.join(reference_dir, 'ppy_packages'))
+    args.append('-i')
+    args.append(os.path.join(reference_dir, 'ppy_packages'))
   args.append(filename)
 
-  code = 'import sys\n'
-         'import ppy_engine.main\n'
-         'sys.argv = [sys.argv[0]] + {args!r} + sys.argv[1:]\n'
+  code = 'import sys\n'\
+         'import ppy_engine.main\n'\
+         'sys.argv = [sys.argv[0]] + {args!r} + sys.argv[1:]\n'\
          'sys.exit(ppy_engine.main.cli())\n'.format(args=args)
 
-  return make_python_script(script_name, code, directory)
+  return make_python_script(script_name, directory, code)

@@ -35,6 +35,7 @@ _registry = require('./registry')
 _config = require('./config')
 _download = require('./utils/download')
 _refstring = require('./utils/refstring')
+_script = require('./utils/script')
 
 parse_manifest = require('@ppym/manifest').parse
 PackageManifest = require('@ppym/manifest').PackageManifest
@@ -261,11 +262,13 @@ class Installer:
     # Create scripts for the 'scripts' and 'bin' fields in the package manifest.
     for script_name, command in manifest.scripts.items():
       print('  Installing script "{}"...'.format(script_name))
-      installed_files += _make_script(script_name, shlex.split(command), self.dirs['bin'])
+      installed_files += _script.make_command_script(
+          script_name, self.dirs['bin'], shlex.split(command))
     for script_name, filename in manifest.bin.items():
       print('  Installing script "{}"...'.format(script_name))
       filename = os.path.abspath(os.path.join(target_dir, filename))
-      installed_files += _make_bin(script_name, filename, self.dirs['reference_dir'], self.dirs['bin'])
+      installed_files += _script.make_ppy_runner(
+          script_name, self.dirs['bin'], filename, self.dirs['reference_dir'])
 
     # Write down the names of the installed files.
     with open(os.path.join(target_dir, '.upm-installed-files'), 'w') as fp:

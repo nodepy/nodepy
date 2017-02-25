@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "license": "MIT",
   "main": "cli",
+  "bin": {
+    "ppym": "cli"
+  },
   "dependencies": {
     "@ppym/argschema": "^1.0.0",
     "@ppym/semver": "^1.0.0",
