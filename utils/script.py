@@ -24,6 +24,7 @@ shell commands. Uses the Python #distlib package.
 
 import os
 from distlib.scripts import ScriptMaker
+from ppy_engine.core import PPY_MODULES
 
 argschema = require('@ppym/argschema')
 
@@ -72,7 +73,7 @@ def make_ppy_runner(script_name, directory, filename, reference_dir=None):
   Uses #make_python_script() to create a script that invokes the current
   python and ppy runtime to run the ppy module specified by *filename*.
   If a *reference_dir* is specified, that directory will be used as a
-  the base directory to start searching for `ppy_packages/` directories
+  the base directory to start searching for `ppy_modules/` directories
   instead of the current working directory.
   """
 
@@ -83,7 +84,7 @@ def make_ppy_runner(script_name, directory, filename, reference_dir=None):
   if reference_dir:
     # Find modules in the reference directory.
     args.append('-i')
-    args.append(os.path.join(reference_dir, 'ppy_packages'))
+    args.append(os.path.join(reference_dir, PPY_MODULES))
   args.append(filename)
 
   code = 'import sys\n'\

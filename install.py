@@ -30,7 +30,6 @@ import traceback
 
 from fnmatch import fnmatch
 
-
 _registry = require('./registry')
 _config = require('./config')
 _download = require('./utils/download')
@@ -40,6 +39,8 @@ _script = require('./utils/script')
 parse_manifest = require('@ppym/manifest').parse
 PackageManifest = require('@ppym/manifest').PackageManifest
 InvalidPackageManifest = require('@ppym/manifest').InvalidPackageManifest
+
+PPYM_INSTALLED_FILES = '.ppym-installed-files'
 
 
 default_exclude_patterns = [
@@ -126,7 +127,7 @@ class Installer:
       try:
         module = require.session.resolve(package)
         filename = os.path.join(module.directory, 'package.json')
-      except ResolveError:
+      except require.ResolveError:
         pass
 
     if filename and os.path.isfile(filename):
@@ -162,10 +163,10 @@ class Installer:
     print('Uninstalling "{}" from "{}"{}...'.format(manifest.identifier,
         directory, ' before upgrade' if self.upgrade else ''))
 
-    filelist_fn = os.path.join(directory, '.ppy-installed-files')
+    filelist_fn = os.path.join(directory, PPYM_INSTALLED_FILES)
     installed_files = []
     if not os.path.isfile(filelist_fn):
-      print('  Warning: No `.ppy-installed-files` found in package directory')
+      print('  Warning: No `{}` found in package directory'.format(PPYM_INSTALLED_FILES))
     else:
       with open(filelist_fn, 'r') as fp:
         for line in fp:
@@ -271,7 +272,7 @@ class Installer:
           script_name, self.dirs['bin'], filename, self.dirs['reference_dir'])
 
     # Write down the names of the installed files.
-    with open(os.path.join(target_dir, '.upm-installed-files'), 'w') as fp:
+    with open(os.path.join(target_dir, PPYM_INSTALLED_FILES), 'w') as fp:
       for fn in installed_files:
         fp.write(fn)
         fp.write('\n')
