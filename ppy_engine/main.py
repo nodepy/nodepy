@@ -32,8 +32,8 @@ from .utils import debugging
 
 
 def start_interactive_session(session):
-  module = Module('__main__', session)
-  module.loaded = True
+  module = Module(None, session)
+  module.load()
   code.interact('', local=vars(module.namespace))
 
 
@@ -68,3 +68,7 @@ def cli(
     module = session.resolve(filename, is_main=True)
     sys.argv = [module.filename] + list(args)
     module.load()
+
+
+if __name__ == '__main__':
+  cli()

@@ -236,8 +236,8 @@ class Module(object):
 
   def __init__(self, filename, session, is_bootstrap=False):
     self.filename = filename
-    self.directory = os.path.dirname(filename)
-    self.namespace = types.ModuleType(filename)
+    self.directory = os.path.dirname(filename) if filename else None
+    self.namespace = types.ModuleType(filename or '__main__')
     self.is_bootstrap = is_bootstrap
     self.session = session
     self.loaded = False
@@ -257,6 +257,8 @@ class Module(object):
       'require': Require(self, is_bootstrap=self.is_bootstrap)
     })
 
+    if self.filename is None:
+      return
     with self.session.enter_module(self):
       with open(self.filename, 'r') as fp:
         code = fp.read()
