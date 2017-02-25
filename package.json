@@ -1,5 +1,5 @@
 {
-  "name": "ppym",
+  "name": "@ppym/ppym",
   "version": "0.0.1",
   "license": "MIT",
   "main": "cli",

@@ -113,6 +113,9 @@ class Installer:
     Finds an installed package and returns its #PackageManifest.
     Raises #PackageNotFound if the package could not be found, or possibly
     an #InvalidPackageManifest exception if the manifest is invalid.
+
+    If #Installer.strict is set, the package is only looked for in the target
+    packages directory instead of all possibly inherited paths.
     """
 
     filename = None
@@ -129,7 +132,6 @@ class Installer:
       return require.session.get_manifest(filename)
 
     raise PackageNotFound(package)
-
 
   def uninstall(self, package_name):
     """
