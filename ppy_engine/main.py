@@ -25,10 +25,9 @@ import sys
 import traceback
 
 from sys import exit
-from . import __version__
+from . import __version__, debugging
 from .config import Config
 from .core import Session, Module, ResolveError
-from .utils import debugging
 
 
 def start_interactive_session(session):
