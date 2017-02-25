@@ -26,7 +26,6 @@ import os
 import types
 
 from .config import Config
-from .manifest import PackageManifest
 
 PPY_MODULES = 'ppy_modules'
 PACKAGE_JSON = 'package.json'
@@ -37,15 +36,45 @@ class ResolveError(Exception):
   Raised when a module name could not be resolved.
   """
 
+  def __init__(self, request, current_dir, path):
+    self.request = request
+    self.current_dir = current_dir
+    self.path = path
+
+  def __str__(self):
+    msg = 'Cannot find module \'{}\''.format(self.request)
+    if self.current_dir:
+      msg += '\n  From \'{}\''.format(self.current_dir)
+    if self.path:
+      msg += '\n  In  - ' + '\n      - '.join(self.path)
+    return msg
+
 
 class Session(object):
   """
-  A session represents a complete and isolated ppy environment.
+  A session represents a complete and isolated ppy environment. Note that for
+  ppy to function, the following ppy packages must always be present:
+
+  - @ppym/argschema (a dependency of @ppym/semver)
+  - @ppym/semver (a dependency of @ppym/manifest)
+  - @ppym/manifest
+
+  When installing ppy via Pip, these and @ppym/ppym will be automatically
+  installed into the global packages directory from the versions contained
+  as Git submodules.
+
+  For a development install of ppy, they will be automatically loade from
+  the development directorie's `ppy_modules/` directory.
+
+  The #Session has a global #Require instance that is used to bootstrap these
+  modules when they are needed. Currently, only #Session.get_manifest() needs
+  to bootstrap the @ppym/manifest module. #Session._require will be initialized
+  once the session context is entered with #Session.__enter__().
   """
 
   def __init__(self, config=None):
     self.config = config = config or Config()
-    self.path = []
+    self.path = [get_bootstrap_modules_dir(config)]
     self.main_module = None
     self.module_cache = {}
     self.manifest_cache = {}
@@ -64,8 +93,16 @@ class Session(object):
     # `ppy_modules/.pymodules` directory.
     self.localimport = localimport.localimport([PPY_MODULES + '/.pymodules'], '.')
 
+    # Some code, like the `PackageManifest` class, is contained in the
+    # @ppym/manifest package and must be bootstrap-loaded. This member
+    # will be initialized to a dictionary with bootstrapped members, like
+    # the `PackageManifest` class.
+    self._require = None
+
   def __enter__(self):
     self.localimport.__enter__()
+    if self._require is None:
+      self._require = Require(None, self)
     return self
 
   def __exit__(self, *args):
@@ -89,7 +126,7 @@ class Session(object):
     filename = os.path.normpath(os.path.abspath(filename))
     if filename in self.manifest_cache:
       return self.manifest_cache[filename]
-    manifest = PackageManifest.parse_file(filename)
+    manifest = self._require('@ppym/manifest').parse(filename)
     self.manifest_cache[filename] = manifest
     return manifest
 
@@ -107,7 +144,7 @@ class Session(object):
     self.module_cache[filename] = module
     return module
 
-  def resolve(self, request, current_dir=None, is_main=False):
+  def resolve(self, request, current_dir=None, is_main=False, path=None):
     """
     Uses #resolve_module_filename() and raises #ResolveError if the *request*
     could not be resolved. Returns a #Module object. If *is_main* is #True,
@@ -117,22 +154,27 @@ class Session(object):
 
     if is_main and self.main_module:
       raise RuntimeError('already have a main module')
+
     current_dir = current_dir or os.getcwd()
-    filename = self.resolve_module_filename(request, current_dir, is_main)
+    if path is None:
+      path = list(iter_module_paths(current_dir, is_main)) + self.path
+
+    filename = self.resolve_module_filename(request, current_dir, is_main, path)
     if not filename:
-      raise RuntimeError(request, current_dir)
+      raise ResolveError(request, current_dir, path)
+
     module = self.get_module(filename)
     if is_main:
       self.main_module = module
     return module
 
-  def resolve_module_filename(self, request, current_dir, is_main):
+  def resolve_module_filename(self, request, current_dir, is_main, path):
     """
     Resolves the filename for a Python module from the specified *request*
     name. This may be a relative name like `./path/to/module` in which case
     it is evaluated solely in *current_dir*. Otherwise, if the requested module
     is in standard format (eg. `module-name/core`), the module name is resolved
-    in the ppy search path.
+    in the specified *path*.
 
     If no file can be found, #None is returned.
     """
@@ -140,52 +182,39 @@ class Session(object):
     def try_file_(filename):
       return try_file(filename, self.preserve_symlinks and not is_main)
 
-    if os.path.isabs(request):
-      main = 'index.py'
+    def try_abs_(request):
       if os.path.isdir(request):
+        # We can only load a manifest once we bootstrapped the @ppym/manifest
+        # package.
         mffile = os.path.join(request, PACKAGE_JSON)
-        if os.path.isfile(mffile):
-          # TODO: Only log invalid manifests..?
+        if '@ppym/manifest' in self._require.cache and os.path.isfile(mffile):
           main = self.get_manifest(mffile).main
-      return try_file_(request) or try_file_(request + '.py') \
-          or try_file_(os.path.join(request, main))
+        else:
+          main = 'index'
+        filename = try_abs_(os.path.join(request, main))
+        if filename:
+          return filename
+      else:
+        filename = try_file_(request)
+        if filename:
+          return filename
+      return try_file_(request + '.py')
+
+    if os.path.isabs(request):
+      return try_abs_(request)
 
     current_dir = current_dir or os.getcwd()
     if ispurerelative(request):
       filename = os.path.normpath(os.path.join(current_dir, request))
-      return self.resolve_module_filename(filename, current_dir, is_main)
+      return self.resolve_module_filename(filename, current_dir, is_main, path)
 
-    for path in itertools.chain(self.iter_module_paths(current_dir, is_main), self.path):
-      filename = os.path.normpath(os.path.abspath(os.path.join(path, request)))
-      filename = self.resolve_module_filename(filename, current_dir, is_main)
+    for directory in path:
+      if not os.path.isdir(directory):
+        continue
+      filename = os.path.normpath(os.path.abspath(os.path.join(directory, request)))
+      filename = self.resolve_module_filename(filename, current_dir, is_main, path)
       if filename:
         return filename
-
-    return None
-
-  def iter_module_paths(self, from_dir, is_main=False):
-    """
-    Yield all possible `ppy_modules/` paths that can be matched starting from
-    *from_dir*. Note that the method can yield directories that don't exist.
-    """
-
-    if is_main:
-      yield '.'
-    from_dir = os.path.normpath(os.path.abspath(from_dir))
-    while from_dir:
-      dirname, base = os.path.split(from_dir)
-      if base != PPY_MODULES:
-        # Avoid yielding paths like `ppy_modules/ppy_modules`.
-        yield os.path.join(from_dir, 'ppy_modules')
-      if from_dir == dirname:
-        # If we hit a drive letter on Windows.
-        break
-      from_dir = dirname
-
-    if os.name != 'nt':
-      # TODO: Node does this, but I'm not sure if we need that with our
-      # current implementation of this method.
-      yield '/node_modules'
 
 
 class Module(object):
@@ -200,13 +229,6 @@ class Module(object):
     self.session = session
     self.loaded = False
 
-    # Initialize the module's namespace.
-    vars(self.namespace).update({
-      '_filename': filename,
-      '_dirname': os.path.dirname(filename),
-      'require': Require(self)
-    })
-
   def __repr__(self):
     return '<Module {!r}>'.format(self.filename)
 
@@ -214,6 +236,14 @@ class Module(object):
     if self.loaded:
       raise RuntimeError('module already loaded')
     self.loaded = True
+
+    # Initialize the module's namespace.
+    vars(self.namespace).update({
+      '_filename': self.filename,
+      '_dirname': self.directory,
+      'require': Require(self)
+    })
+
     with self.session.enter_module(self):
       with open(self.filename, 'r') as fp:
         code = fp.read()
@@ -229,26 +259,36 @@ class Require(object):
 
   ResolveError = ResolveError
 
-  def __init__(self, module):
+  def __init__(self, module, session=None, directory=None):
     self.module = module
-    self.session = module.session
+    self.session = session or module.session
+    self.directory = directory or (module.directory if module else None)
+    self.path = []
+    if self.directory:
+      self.path.extend(iter_module_paths(self.directory, self.is_main))
+    self.path.extend(self.session.path)
+    self.cache = {}
 
   def __repr__(self):
     return '<Require of {!r}>'.format(self.module)
 
-  def __call__(self, name, get_exports=True):
+  def __call__(self, name):
+    if name in self.cache:
+      return self.cache[name]
     module = self.session.get_module(self.resolve(name))
     if not module.loaded:
       module.load()
     result = module.namespace
-    if get_exports and hasattr(result, 'exports'):
+    if hasattr(result, 'exports'):
       result = result.exports
+    self.cache[name] = result
     return result
 
   def resolve(self, name):
-    filename = self.session.resolve_module_filename(name, self.module.directory, False)
+    filename = self.session.resolve_module_filename(
+        name, self.directory, False, self.path)
     if not filename:
-      raise ResolveError(name, self.module.directory)
+      raise ResolveError(name, self.directory, self.path)
     return filename
 
   @property
@@ -260,6 +300,31 @@ class Require(object):
     return self.session.main_module
 
 
+def iter_module_paths(from_dir, is_main=False):
+  """
+  Yield all possible `ppy_modules/` paths that can be matched starting from
+  *from_dir*. Note that the method can yield directories that don't exist.
+  """
+
+  if is_main:
+    yield '.'
+  from_dir = os.path.normpath(os.path.abspath(from_dir))
+  while from_dir:
+    dirname, base = os.path.split(from_dir)
+    if base != PPY_MODULES and not base.startswith('@'):
+      # Avoid yielding paths like `ppy_modules/ppy_modules`.
+      yield os.path.join(from_dir, 'ppy_modules')
+    if from_dir == dirname:
+      # If we hit a drive letter on Windows.
+      break
+    from_dir = dirname
+
+  if os.name != 'nt':
+    # TODO: Node does this, but I'm not sure if we need that with our
+    # current implementation of this method.
+    yield '/node_modules'
+
+
 def try_file(filename, preserve_symlinks, is_main=False):
   """
   Returns *filename* if it exists. If *is_main* is #False and
@@ -268,7 +333,7 @@ def try_file(filename, preserve_symlinks, is_main=False):
 
   if os.path.isfile(filename):
     if not preserve_symlinks and not is_main and os.path.islink(filename):
-      os.path.relpath(filename)
+      return os.path.realpath(filename)
     return filename
   return None
 
@@ -280,3 +345,20 @@ def ispurerelative(path):
   """
 
   return path.startswith('./') or path.startswith('../')
+
+
+def get_bootstrap_modules_dir(config):
+  """
+  Finds the package `ppy_modules/` directory that contains the bootstrap
+  modules.
+  """
+
+  # Ppy-engine could be installed in development mode, in which case
+  # the `ppy_modules/` dir is in the same as the ppy-engine module.
+  develop_dir = os.path.normpath(__file__ + '/../../' + PPY_MODULES)
+  if os.path.isdir(develop_dir):
+    return develop_dir
+
+  # Otherwise, the modules dir is probably the same as the global
+  # install directory.
+  return os.path.join(config['prefix'], PPY_MODULES)

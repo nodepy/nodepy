@@ -42,8 +42,12 @@ def start_interactive_session(session):
 @click.argument('args', nargs=-1)
 @click.option('--preserve-symlinks', is_flag=True, default=None)
 @click.option('--pmd', '--post-mortem-debugger', is_flag=True)
+@click.option('-i', '--ppypath', multiple=True)
 @click.option('-v', '--version', is_flag=True)
-def cli(filename, args, preserve_symlinks, post_mortem_debugger, version):
+def cli(
+    filename, args, preserve_symlinks, post_mortem_debugger,
+    ppypath, version):
+
   if version:
     print('ppy {} on Python {}'.format(__version__, sys.version))
     return
@@ -55,6 +59,8 @@ def cli(filename, args, preserve_symlinks, post_mortem_debugger, version):
     debugging.install_pmd()
 
   session = Session(config)
+  session.path.extend(ppypath)
+
   with session:
     if not filename:
       start_interactive_session(session)

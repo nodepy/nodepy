@@ -1,0 +1,9 @@
+[submodule "ppy_modules/@ppym/argschema"]
+	path = ppy_modules/@ppym/argschema
+	url = git@github.com:ppym/argschema.git
+[submodule "ppy_modules/@ppym/semver"]
+	path = ppy_modules/@ppym/semver
+	url = git@github.com:ppym/semver.git
+[submodule "ppy_modules/@ppym/ppym"]
+	path = ppy_modules/@ppym/ppym
+	url = https://github.com/ppym/ppym.git

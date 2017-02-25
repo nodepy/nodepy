@@ -18,4 +18,28 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-print("hello from selfinstall.py")
+import sys
+import pdb
+
+_pmd_restore = None
+
+
+def install_pmd():
+  global _pmd_restore
+  if _pmd_restore:
+    return  # already installed
+
+  old_hook = _pmd_restore = sys.excepthook
+  def excepthook(type, value, traceback):
+    pdb.post_mortem(traceback)
+    old_hook(type, value, traceback)
+
+  sys.excepthook = excepthook
+
+
+def uninstall_pmd():
+  global _pmd_restore
+  if not _pmd_restore:
+    return  # not installed
+  sys.excepthook = _pmd_restore
+  _pmd_restore = None

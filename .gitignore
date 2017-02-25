@@ -1,5 +1,4 @@
-.env
+.env[23]
 dist
 *.egg-info
-ppy_packages
 *.py[oc]
