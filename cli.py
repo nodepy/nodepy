@@ -46,10 +46,11 @@ def cli():
 
 @cli.command()
 @click.argument('package', required=False)
+@click.option('-S', '--strict', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
-def install(package, upgrade, global_):
-  installer = _install.Installer(upgrade=upgrade, global_=global_)
+def install(package, strict, upgrade, global_):
+  installer = _install.Installer(upgrade=upgrade, global_=global_, strict=strict)
   if not package:
     success = installer.install_dependencies_for(_manifest.parse('package.json'))
     if not success:

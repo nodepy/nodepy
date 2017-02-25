@@ -218,7 +218,7 @@ class Installer:
     if not install_deps:
       return True
 
-    depfmt = ', '.join(refstring.join(n, version=v) for (n, v) in install_des)
+    depfmt = ', '.join(refstring.join(n, version=v) for (n, v) in install_deps)
     print('  Installing dependencies:', depfmt)
     for name, version in install_deps:
       if not self.install_from_registry(name, version):
