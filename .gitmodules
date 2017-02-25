@@ -7,3 +7,6 @@
 [submodule "ppy_modules/@ppym/ppym"]
 	path = ppy_modules/@ppym/ppym
 	url = https://github.com/ppym/ppym.git
+[submodule "ppy_modules/@ppym/manifest"]
+	path = ppy_modules/@ppym/manifest
+	url = git@github.com:ppym/manifest.git
