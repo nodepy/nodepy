@@ -7,10 +7,10 @@
     "ppym": "cli"
   },
   "dependencies": {
-    "@ppym/argschema": "^1.0.0",
-    "@ppym/semver": "^1.0.0",
-    "@ppym/manifest": "^1.0.0",
-    "@ppym/refstring": "^1.0.0"
+    "@ppym/argschema": "~0.0.1",
+    "@ppym/semver": "~0.0.1",
+    "@ppym/manifest": "~0.0.1",
+    "@ppym/refstring": "~0.0.1"
   },
   "python-dependencies": {
     "click": "==6.7",
