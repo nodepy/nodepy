@@ -236,14 +236,28 @@ class Require(object):
   def __repr__(self):
     return '<Require of {!r}>'.format(self.module)
 
-  def __call__(self, name):
+  def __call__(self, name, get_exports=True):
+    module = self.session.get_module(self.resolve(name))
+    if not module.loaded:
+      module.load()
+    result = module.namespace
+    if get_exports and hasattr(result, 'exports'):
+      result = result.exports
+    return result
+
+  def resolve(self, name):
     filename = self.session.resolve_module_filename(name, self.module.directory, False)
     if not filename:
       raise ResolveError(name, self.module.directory)
-    module = self.session.get_module(filename)
-    if not module.loaded:
-      module.load()
-    return module
+    return filename
+
+  @property
+  def is_main(self):
+    return self.module is self.main
+
+  @property
+  def main(self):
+    return self.session.main_module
 
 
 def try_file(filename, preserve_symlinks, is_main=False):
