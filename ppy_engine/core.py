@@ -27,6 +27,7 @@ import types
 
 from .config import Config
 
+PYMODULES = '.pymodules'
 PPY_MODULES = 'ppy_modules'
 PACKAGE_JSON = 'package.json'
 
@@ -53,14 +54,14 @@ class ResolveError(Exception):
 class Session(object):
   """
   A session represents a complete and isolated ppy environment. Note that for
-  ppy to function, the following ppy packages must always be present:
+  ppy to function, the following ppy modules must always be present:
 
   - @ppym/argschema (a dependency of @ppym/semver)
   - @ppym/semver (a dependency of @ppym/manifest)
   - @ppym/manifest
 
   When installing ppy via Pip, these and @ppym/ppym will be automatically
-  installed into the global packages directory from the versions contained
+  installed into the global modules directory from the versions contained
   as Git submodules.
 
   For a development install of ppy, they will be automatically loade from
@@ -81,17 +82,14 @@ class Session(object):
     self.current_modules = collections.deque()
     self.preserve_symlinks = config.get('preserve_symlinks') == 'true'
 
+    # Import context for Python modules.
+    self.localimport = localimport.localimport([PPY_MODULES + '/' + PYMODULES], '.')
+
     prefix = config.get('prefix')
     if prefix:
-      self.path.append(os.path.join(prefix, PPY_MODULES))
-    self.path.extend(filter(bool, config.get('path', '').split(os.pathsep)))
-    self.path.extend(filter(bool, os.environ.get('PPY_PATH', '').split(os.pathsep)))
-
-    # For now, standard Python modules are only support from the the local
-    # `ppy_modules/.pymodules` directory. In the future, we may add loading
-    # Python modules with a separate `localimport` for *every*
-    # `ppy_modules/.pymodules` directory.
-    self.localimport = localimport.localimport([PPY_MODULES + '/.pymodules'], '.')
+      self.add_path(os.path.join(prefix, PPY_MODULES))
+    self.add_path(*filter(bool, config.get('path', '').split(os.pathsep)))
+    self.add_path(*filter(bool, os.environ.get('PPY_PATH', '').split(os.pathsep)))
 
     # Some code, like the `PackageManifest` class, is contained in the
     # @ppym/manifest package and must be bootstrap-loaded. This member
@@ -115,6 +113,12 @@ class Session(object):
       yield
     finally:
       assert self.current_modules.pop() is module
+
+  def add_path(self, *path):
+    for p in path:
+      self.path.append(p)
+      x = os.path.join(p, PYMODULES)
+      self.localimport.path.append(x)
 
   def bootstrap(self):
     if self._require is None:

@@ -59,7 +59,7 @@ def cli(
     debugging.install_pmd()
 
   session = Session(config)
-  session.path.extend(ppypath)
+  session.add_path(*ppypath)
 
   with session:
     if not filename:

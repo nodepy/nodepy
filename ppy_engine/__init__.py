@@ -21,14 +21,3 @@
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 __version__ = '0.0.3'
 __license__ = 'MIT'
-
-import os
-#from .core import Session
-#from .config import config
-
-
-def make_session(local_dir=None, pure_global=False):
-  local_packages = False
-  if not pure_global:
-    local_packages = os.path.join(local_dir or '.', 'ppy_packages')
-  return Session(prefix=config['ppy.prefix'], local_packages=local_packages)
