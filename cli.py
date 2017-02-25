@@ -25,9 +25,6 @@ import os
 import getpass
 import tarfile
 
-#import recordclass
-#print(recordclass)
-
 manifest = require('@ppym/manifest')
 semver = require('@ppym/semver')
 refstring = require('@ppym/refstring')
