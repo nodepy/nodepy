@@ -21,6 +21,7 @@
 import sys
 import pip.req
 from setuptools import setup, find_packages
+from setuptools.command.develop import develop
 from setuptools.command.install import install
 
 if sys.version_info[0] != 3:
@@ -31,17 +32,20 @@ parse_requirements = lambda fn: [
       fn, session=pip.download.PipSession())]
 
 
-class PostInstallCommand(install):
-  """
-  Post installation command to install `ppym`.
-  """
+def postinstall(args=None):
+  if args is None: args = []
+  import ppy_engine.main
+  ppy_engine.main.cli(['postinstall.py'] + ['--'] + args)
 
+class PostDevelopCommand(develop):
+  def run(self):
+    super(PostDevelopCommand, self).run()
+    postinstall(['-e'])
+
+class PostInstallCommand(install):
   def run(self):
     super(PostInstallCommand, self).run()
-    import ppy_engine.main
-    print('Running ppym/selfinstall.py ...')
-    ppy_engine.main.cli(['postinstall.py'])
-
+    postinstall()
 
 setup(
   name = 'ppy-engine',
@@ -59,6 +63,7 @@ setup(
     ]
   },
   cmdclass = {
+    'develop': PostDevelopCommand,
     'install': PostInstallCommand
   }
 )

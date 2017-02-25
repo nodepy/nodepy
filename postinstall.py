@@ -26,7 +26,7 @@ are delivered with the PPY distribution into the global install directory.
 if not require.is_main:
   raise RuntimeError('should not be require()d')
 
-import os
+import os, sys
 ppym = require('@ppym/ppym')
 
 # Packages in their correct installation order.
@@ -37,5 +37,6 @@ deps = [
   '@ppym/manifest',
   '@ppym/ppym']
 
-ppym.cli(['install', '-g'] + [
-    os.path.join(_dirname, 'ppy_modules', dep) for dep in deps])
+cmd = ['install', '-g'] + sys.argv[1:]
+cmd.extend(os.path.join(_dirname, 'ppy_modules', dep) for dep in deps)
+ppym.cli(cmd)

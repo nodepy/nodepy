@@ -43,6 +43,27 @@ def get_default_prefix():
   return appdirs.user_data_dir('ppy', False, roaming=True)
 
 
+def get_default_bindir():
+  """
+  Returns the default value for the `bindir` option. Inside virtual
+  environments, it will be the `bin/` or `Scripts/` directory respectively
+  depending on the system, otherwise it will be `~/bin` (if it exists) or
+  alternatively be the `bin/` directory in the directory returned by
+  #get_default_prefix().
+  """
+
+  if is_virtualenv():
+    if os.name == 'nt':
+      return os.path.join(sys.prefix, 'Scripts')
+    else:
+      return os.path.join(sys.prefix, 'bin')
+
+  dirname = os.path.expanduser('~/bin')
+  if os.path.isdir(dirname):
+    return dirname
+  return os.path.join(get_default_prefix(), 'bin')
+
+
 class Config(object):
   """
   Reader/writer for the ppy configuration file. The file format must be in
@@ -56,7 +77,8 @@ class Config(object):
   """
 
   defaults = {
-    'prefix': get_default_prefix()
+    'prefix': get_default_prefix(),
+    'bindir': get_default_bindir()
   }
 
   def __init__(self, filename=NotImplemented, defaults=None):
