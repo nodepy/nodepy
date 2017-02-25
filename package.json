@@ -1,0 +1,16 @@
+{
+  "name": "ppym",
+  "version": "0.0.1",
+  "license": "MIT",
+  "dependencies": {
+    "@ppym/argschema": "^1.0.0",
+    "@ppym/semver": "^1.0.0"
+  },
+  "python-dependencies": {
+    "click": "==6.7",
+    "distlib": "==0.2.4",
+    "hammock": "==0.2.4",
+    "recordclass": "==0.4.2",
+    "requests": "==2.13.0"
+  }
+}
