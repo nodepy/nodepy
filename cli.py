@@ -28,13 +28,13 @@ import tarfile
 #import recordclass
 #print(recordclass)
 
+manifest = require('@ppym/manifest')
 semver = require('@ppym/semver')
 refstring = require('@ppym/refstring')
 config = require('./config')
 logger = require('./logger')
 _install = require('./install')
-_registry = require('./registry')
-_manifest = require('@ppym/manifest')
+registry = require('./registry')
 
 
 @click.group()
@@ -52,7 +52,7 @@ def cli():
 def install(package, strict, upgrade, global_):
   installer = _install.Installer(upgrade=upgrade, global_=global_, strict=strict)
   if not package:
-    success = installer.install_dependencies_for(_manifest.parse('package.json'))
+    success = installer.install_dependencies_for(manifest.parse('package.json'))
     if not success:
       return 1
     return 0
@@ -90,13 +90,16 @@ def dist():
   Create a .tar.gz distribution from the package.
   """
 
-  manifest = _manifest.parse('package.json')
-  filename = os.path.join('dist', _registry.get_package_archive_name(manifest.name, manifest.version))
+  mf = manifest.parse('package.json')
+  filename = registry.get_package_archive_name(mf.name, mf.version)
+  filename = os.path.join('dist', filename)
+
   if not os.path.isdir('dist'):
     os.mkdir('dist')
+
   print('Creating archive "{}"...'.format(filename))
   archive = tarfile.open(filename, 'w:gz')
-  for filename, rel in _install.walk_package_files(manifest):
+  for filename, rel in _install.walk_package_files(mf):
     print('  Adding "{}"...'.format(rel))
     archive.add(filename, rel)
   print('Done!')
@@ -112,17 +115,16 @@ def upload(filename, force, user, password):
   Upload a file to the current version to the registry. If the package does
   not already exist on the registry, it will be added to your account
   automatically. The first package that is uploaded must be the package
-  source distribution that can be created with 'upm dist'.
+  source distribution that can be created with 'ppym dist'.
   """
 
   if not os.path.isfile(filename):
     print('error: "{}" does not exist'.format(filename))
     exit(1)
-  manifest = PackageManifest.parse('.')
+  mf = manifest.parse('.')
 
-  url = config['upm.registry']
-  user = user or config.get('upm.username')
-  password = password or config.get('upm.password')
+  url = config['registry']
+  user = user or config.get('username')
   if not user or not password:
     print('Credentials for', url)
   if not user:
@@ -130,14 +132,9 @@ def upload(filename, force, user, password):
   if not password:
     password = getpass.getpass()
 
-  registry = _registry.Registry(url, user, password)
-  try:
-    registry.upload(manifest.name, manifest.version, filename, force)
-  except RegistryError as exc:
-    print('error: registry:', exc)
-    exit(1)
-
-  print('Done!')
+  reg = registry.RegistryClient(url, user, password)
+  msg = reg.upload(mf.name, mf.version, filename, force)
+  print(msg)
 
 
 @cli.command()
@@ -156,8 +153,9 @@ def register(username, password, email):
   if not email:
     email = input('E-Mail: ')
 
-  registry = _registry.Registry(config['upm.registry'])
-  print(registry.register(username, password, email))
+  reg = registry.RegistryClient(config['registry'])
+  msg = reg.register(username, password, email)
+  print(msg)
 
 
 @cli.command()
@@ -171,8 +169,8 @@ def init(directory):
   questions = [
     ('Package Name', 'name', None),
     ('Package Version', 'version', '1.0.0'),
-    ('Author (Name <Email>)', 'author', config['upm.author']),
-    ('License', 'license', config['upm.license'])
+    ('Author (Name <Email>)', 'author', config.get('author')),
+    ('License', 'license', config,get('license'))
   ]
 
   results = collections.OrderedDict()

@@ -48,7 +48,7 @@ def get_package_archive_name(package_name, version):
   return '{}-{}.tar.gz'.format(package_name.replace('/', '-'), version)
 
 
-class RegistryError(Exception):
+class Error(Exception):
   """
   Raised when an error occurred while communicating with the registry.
   """
@@ -107,25 +107,25 @@ class RegistryClient(object):
   def _handle_response(self, response):
     """
     Takes a #requests.Response object and handles the status code and JSON
-    response, eventually raising a #RegistryError exception. Returns the
-    JSON data if the response has no error.
+    response, eventually raising an #Error. Returns the JSON data if the
+    response has no error.
     """
 
     if response.status_code == 500:
-      raise RegistryError(response, "Internal Server Error")
+      raise Error(response, "Internal Server Error")
     try:
       data = response.json()
     except json.JSONDecodeError as exc:
-      raise RegistryError(response, "Invalid JSON returned")
+      raise Error(response, "Invalid JSON returned")
 
     if 'error' in data:
       if isinstance(data['error'], dict):
         try:
-          raise RegistryError(response, data['error']['title'], data['error']['description'])
+          raise Error(response, data['error']['title'], data['error']['description'])
         except KeyError:
-          raise RegistryError(response, "Invalid Error description", data['error'])
+          raise Error(response, "Invalid Error description", data['error'])
       else:
-        raise RegistryError(response, str(data['error']))
+        raise Error(response, str(data['error']))
 
     return data
 
@@ -165,7 +165,7 @@ class RegistryClient(object):
     response = self.api.find(package_name, version_selector).GET()
     try:
       data = self._handle_response(response)
-    except RegistryError as exc:
+    except Error as exc:
       if exc.message == 'Package not found':
         raise PackageNotFound(package_name, version_selector)
       raise
@@ -173,7 +173,7 @@ class RegistryClient(object):
     try:
       manifest = PackageManifest.parse_json(data, None, None)
     except InvalidPackageManifest as exc:
-      raise RegistryError(response.url,
+      raise Error(response.url,
           'Invalid package manifest ({})'.format(exc), data)
 
     return manifest
