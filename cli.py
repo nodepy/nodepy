@@ -45,28 +45,30 @@ def cli():
 
 
 @cli.command()
-@click.argument('package', required=False)
+@click.argument('packages', nargs=-1)
 @click.option('-S', '--strict', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
-def install(package, strict, upgrade, global_):
+def install(packages, strict, upgrade, global_):
   installer = _install.Installer(upgrade=upgrade, global_=global_, strict=strict)
-  if not package:
+  if not packages:
     success = installer.install_dependencies_for(manifest.parse('package.json'))
     if not success:
       return 1
     return 0
-  if os.path.isdir(package):
-    success = installer.install_from_directory(package)
-  elif os.path.isfile(package):
-    success = installer.install_from_archive(package)
-  else:
-    ref = refstring.parse(package)
-    selector = ref.version or semver.Selector('*')
-    success = installer.install_from_registry(ref.package, selector)
-  if not success:
-    print('Installation failed')
-    return 1
+
+  for package in packages:
+    if os.path.isdir(package):
+      success = installer.install_from_directory(package)
+    elif os.path.isfile(package):
+      success = installer.install_from_archive(package)
+    else:
+      ref = refstring.parse(package)
+      selector = ref.version or semver.Selector('*')
+      success = installer.install_from_registry(ref.package, selector)
+    if not success:
+      print('Installation failed')
+      return 1
   return 0
 
 
