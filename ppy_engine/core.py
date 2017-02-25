@@ -30,6 +30,7 @@ from .config import Config
 PYMODULES = '.pymodules'
 PPY_MODULES = 'ppy_modules'
 PACKAGE_JSON = 'package.json'
+PACKAGE_LINK = '.package-link'
 
 
 class ResolveError(Exception):
@@ -213,6 +214,11 @@ class Session(object):
       return filename or try_file_(request + '.py')
 
     if os.path.isabs(request):
+      # If there is a PACKAGE_LINK file somewhere, we switch to the linked
+      # directory instead.
+      link = find_package_link(request)
+      if link:
+        request = os.path.join(link.dest, link.rel)
       return try_abs_(request)
 
     current_dir = current_dir or os.getcwd()
@@ -315,6 +321,34 @@ class Require(object):
   @property
   def main(self):
     return self.session.main_module
+
+
+PackageLink = collections.namedtuple('PackageLink', 'dest rel')
+
+
+def find_package_link(path):
+  """
+  Searches for a #PACKAGE_LINK file in the hierarchy of the absolute path
+  *path*. If the file is found, a #PackageLink tuple is returned, otherwise
+  #None is returned.
+  """
+
+  curr = path
+  while curr:
+    dirname, base = os.path.split(curr)
+    link_file = os.path.join(curr, PACKAGE_LINK)
+    if base != PPY_MODULES and not base.startswith('@') and os.path.isfile(link_file):
+      # Don't take into account misplaced PACKAGE_LINK files inside
+      # ppy_modules/ or @scope/ directories.
+      with open(link_file, 'r') as fp:
+        dest_dir = fp.read().rstrip('\n')
+      if os.path.isdir(dest_dir):
+        return PackageLink(dest_dir, os.path.relpath(path, curr))
+    if dirname == curr:
+      break
+    curr = dirname
+
+  return None
 
 
 def iter_module_paths(from_dir, is_main=False):
