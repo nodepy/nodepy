@@ -43,7 +43,7 @@ def get_package_archive_name(package_name, version):
   files.
   """
 
-  return '{}-{}.tar.gz'.format(package_name, version)
+  return '{}-{}.tar.gz'.format(package_name.replace('/', '-'), version)
 
 
 class RegistryError(Exception):

@@ -81,13 +81,13 @@ def dist():
   Create a .tar.gz distribution from the package.
   """
 
-  manifest = PackageManifest.parse('.')
-  filename = os.path.join('dist', make_package_archive_name(manifest.name, manifest.version))
+  manifest = _manifest.parse('package.json')
+  filename = os.path.join('dist', _registry.get_package_archive_name(manifest.name, manifest.version))
   if not os.path.isdir('dist'):
     os.mkdir('dist')
   print('Creating archive "{}"...'.format(filename))
   archive = tarfile.open(filename, 'w:gz')
-  for filename, rel in walk_package_files(manifest):
+  for filename, rel in _install.walk_package_files(manifest):
     print('  Adding "{}"...'.format(rel))
     archive.add(filename, rel)
   print('Done!')

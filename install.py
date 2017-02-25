@@ -44,7 +44,7 @@ PPYM_INSTALLED_FILES = '.ppym-installed-files'
 
 
 default_exclude_patterns = [
-    '.DS_Store', '.svn/*', '.git/*', 'ppy_modules/*',
+    '.DS_Store', '.svn/*', '.git', '.git/*', 'ppy_modules/*',
     '*.pyc', '*.pyo', 'dist/*']
 
 
