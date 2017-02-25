@@ -5,15 +5,16 @@ PPY is kind of a Node.js clone. This is the PPY engine that lays the foundation
 for loading Python modules resolved from actual filenames with a `require()`
 function.
 
-Installing the PPY engine with [Pip] will automatically install **ppym**, the
+Installing the PPY engine with [Pip] will automatically install [ppym], the
 PPY package manager. The engine itself relies on some code that is contained in
 new-style Python modules and will bootstrap these modules automatically (see
 the `ppy_modules/` directory for a list of the bootstrapped modules that are
 also automatically installed with PPY).
 
   [Pip]: https://pypi.python.org/pypi/pip
+  [ppym]: https://github.com/ppym/ppym
 
-__Goal__ 
+__Goal__
 
 The goal of this project is to develop a Python environment that can execute
 Python code **free from global state**.
@@ -52,4 +53,4 @@ Information on manifest of package "demo-app@1.0.0"
 
 <sub>\* Original image from http://www.rcsinnovations.com/wp-content/uploads/2012/09/Popeye1.gif.
 If anyone can find or make a similar image of PopPey with specific information on copyright and
-license, that would be great.</sub> 
+license, that would be great.</sub>
