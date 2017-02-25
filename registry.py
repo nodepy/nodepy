@@ -32,7 +32,7 @@ import requests
 
 argschema = require('@ppym/argschema')
 semver = require('@ppym/semver')
-_manifest = require('@ppym/manifest')
+refstring = require('@ppym/refstring')
 text = require('./utils/text')
 
 
@@ -43,6 +43,8 @@ def get_package_archive_name(package_name, version):
   files.
   """
 
+  # Validate the package name.
+  refstring.parse_package(package_name)
   return '{}-{}.tar.gz'.format(package_name.replace('/', '-'), version)
 
 

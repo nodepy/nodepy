@@ -25,12 +25,15 @@ import os
 import getpass
 import tarfile
 
+#import recordclass
+#print(recordclass)
+
 semver = require('@ppym/semver')
+refstring = require('@ppym/refstring')
 config = require('./config')
 logger = require('./logger')
 _install = require('./install')
 _registry = require('./registry')
-_refstring = require('./utils/refstring')
 _manifest = require('@ppym/manifest')
 
 
@@ -42,11 +45,16 @@ def cli():
 
 
 @cli.command()
-@click.argument('package')
+@click.argument('package', required=False)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
 def install(package, upgrade, global_):
   installer = _install.Installer(upgrade=upgrade, global_=global_)
+  if not package:
+    success = installer.install_dependencies_for(_manifest.parse('package.json'))
+    if not success:
+      return 1
+    return 0
   if os.path.isdir(package):
     success = installer.install_from_directory(package)
   elif os.path.isfile(package):

@@ -33,8 +33,8 @@ from fnmatch import fnmatch
 _registry = require('./registry')
 _config = require('./config')
 _download = require('./utils/download')
-_refstring = require('./utils/refstring')
 _script = require('./utils/script')
+refstring = require('@ppym/refstring')
 
 parse_manifest = require('@ppym/manifest').parse
 PackageManifest = require('@ppym/manifest').PackageManifest
@@ -180,6 +180,78 @@ class Installer:
     shutil.rmtree(directory)
     return True
 
+  def install_dependencies_for(self, manifest):
+    """
+    Installs the ppy and Python dependencies of a #PackageManifest.
+    """
+
+    if manifest.dependencies:
+      print('Installing dependencies for "{}"...'.format(manifest.identifier))
+      if not self.install_dependencies(manifest.dependencies):
+        return False
+    if manifest.python_dependencies:
+      print('Installing Python dependencies for "{}"...'.format(manifest.identifier))
+      if not self.install_python_dependencies(manifest.python_dependencies):
+        return False
+
+    return True
+
+  def install_dependencies(self, deps):
+    """
+    Install all dependencies specified in the dictionary *deps*.
+    """
+
+    install_deps = []
+    for name, version in deps.items():
+      try:
+        dep = self.find_package(name)
+      except PackageNotFound as exc:
+        install_deps.append((name, version))
+      else:
+        if not version(dep.version):
+          print('  Warning: Dependency "{}@{}" unsatisfied, have "{}" installed'
+              .format(name, version, dep.identifier))
+        else:
+          print('  Skipping satisfied dependency "{}@{}", have "{} installed'.
+              format(name, version, dep.identifier))
+
+    if not install_deps:
+      return True
+
+    depfmt = ', '.join(refstring.join(n, version=v) for (n, v) in install_des)
+    print('  Installing dependencies:', depfmt)
+    for name, version in install_deps:
+      if not self.install_from_registry(name, version):
+        return False
+
+    return True
+
+  def install_python_dependencies(self, deps):
+    """
+    Install all Python dependencies specified in *deps* using Pip.
+    """
+
+    install_modules = []
+    for name, version in deps.items():
+      install_modules.append(name + version)
+
+    # TODO: Upgrade strategy?
+    # TODO: Skip modules we have already installed? (Pip will show a big info message)
+    # TODO: This install method always behaves like `strict`, ALL modules
+    #       will be installed into the target directory if they are not already
+    #       in the directory. In reality when using ppy, we take .pymodule
+    #       directories of a lot of paths into account.
+
+    if install_modules:
+      print('  Installing Python dependencies via Pip:', ' '.join(install_modules))
+      cmd = ['--target', self.dirs['python_modules']] + install_modules
+      res = pip.commands.install.InstallCommand().main(cmd)
+      if res != 0:
+        print('Error: `pip install` failed with exit-code', res)
+        return False
+
+    return True
+
   def install_from_directory(self, directory, expect=None):
     """
     Installs a package from a directory. The directory must have a
@@ -216,38 +288,9 @@ class Installer:
       if not self.uninstall_directory(target_dir):
         return False
 
-    # Install upython dependencies.
-    if manifest.dependencies:
-      print('Collecting dependencies for "{}"...'.format(manifest.identifier))
-    deps = []
-    for dep_name, dep_sel in manifest.dependencies.items():
-      try:
-        dep_manifest = self.find_package(dep_name)
-      except PackageNotFound as exc:
-        deps.append((dep_name, dep_sel))
-      else:
-        if not dep_sel(dep_manifest.version):
-          print('  Warning: Dependency "{}@{}" unsatisfied, have "{}" installed'
-              .format(dep_name, dep_sel, dep_manifest.identifier))
-        else:
-          print('  Skipping satisfied dependency "{}"'.format(
-              _refstring.join(dep_name, dep_sel)))
-    if deps:
-      print('Installing dependencies:', ', '.join(_refstring.join(*d) for d in deps))
-      for dep_name, dep_sel in deps:
-        if not self.install_from_registry(dep_name, dep_sel):
-          return False
-
-    # Install python dependencies.
-    py_modules = []
-    for dep_name, dep_version in manifest.python_dependencies.items():
-      py_modules.append(dep_name + dep_version)
-    if py_modules:
-      print('Installing Python dependencies via Pip:', ', '.join(py_modules))
-      res = pip.commands.install.InstallCommand().main(['--target', self.dirs['python_modules']] + py_modules)
-      if res != 0:
-        print('Error: `pip install` failed with exit-code', res)
-        return False
+    # Install dependencies.
+    if not self.install_dependencies_for(manifest):
+      return False
 
     installed_files = []
 

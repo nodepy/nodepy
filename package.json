@@ -9,7 +9,8 @@
   "dependencies": {
     "@ppym/argschema": "^1.0.0",
     "@ppym/semver": "^1.0.0",
-    "@ppym/manifest": "^1.0.0"
+    "@ppym/manifest": "^1.0.0",
+    "@ppym/refstring": "^1.0.0"
   },
   "python-dependencies": {
     "click": "==6.7",
