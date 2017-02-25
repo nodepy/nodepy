@@ -260,7 +260,7 @@ class Installer:
       installed_files.append(dst)
 
     # Create scripts for the 'scripts' and 'bin' fields in the package manifest.
-    for script_name, command in manifest.scripts.items():
+    for script_name, command in manifest.script.items():
       print('  Installing script "{}"...'.format(script_name))
       installed_files += _script.make_command_script(
           script_name, self.dirs['bin'], shlex.split(command))
