@@ -16,8 +16,7 @@ also automatically installed with PPY).
 __Goal__ 
 
 The goal of this project is to develop a Python environment that can execute
-Python code **free from global state**. I have come across problems with the
-global interpreter state especially in Python plugin development.
+Python code **free from global state**.
 
 __Synopsis__
 
