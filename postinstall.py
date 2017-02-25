@@ -17,48 +17,25 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+"""
+This module should not be required but only be executed from the installation
+process of `@ppym/engine`. It will install the bootstrapped dependencies that
+are delivered with the PPY distribution into the global install directory.
+"""
 
-import ppy_engine.main
-import sys
-import pip.req
-from setuptools import setup, find_packages
-from setuptools.command.install import install
+if not require.is_main:
+  raise RuntimeError('should not be require()d')
 
-if sys.version_info[0] != 3:
-  raise EnvironmentError('requires Python3')
+import os
+ppym = require('@ppym/ppym')
 
-parse_requirements = lambda fn: [
-    str(x.req) for x in pip.req.parse_requirements(
-      fn, session=pip.download.PipSession())]
+# Packages in their correct installation order.
+deps = [
+  '@ppym/argschema',
+  '@ppym/semver',
+  '@ppym/refstring',
+  '@ppym/manifest',
+  '@ppym/ppym']
 
-
-class PostInstallCommand(install):
-  """
-  Post installation command to install `ppym`.
-  """
-
-  def run(self):
-    super(PostInstallCommand, self).run()
-    print('Running ppym/selfinstall.py ...')
-    ppy_engine.main.cli(['postinstall.py'])
-
-
-setup(
-  name = 'ppy-engine',
-  version = '0.0.3',
-  author = 'Niklas Rosenstein',
-  author_email = 'rosensteinniklas@gmail.com',
-  license = 'MIT',
-  description = '',
-  url = 'https://github.com/ppym/ppy-engine',
-  packages = find_packages(),
-  install_requires = parse_requirements('requirements.txt'),
-  entry_points = {
-    'console_scripts': [
-      'ppy = ppy_engine.main:cli'
-    ]
-  },
-  cmdclass = {
-    'install': PostInstallCommand
-  }
-)
+ppym.cli(['install', '-g'] + [
+    os.path.join(_dirname, 'ppy_modules', dep) for dep in deps])
