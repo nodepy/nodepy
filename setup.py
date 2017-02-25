@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import ppy_engine.main
 import sys
 import pip.req
 from setuptools import setup, find_packages
@@ -39,6 +38,7 @@ class PostInstallCommand(install):
 
   def run(self):
     super(PostInstallCommand, self).run()
+    import ppy_engine.main
     print('Running ppym/selfinstall.py ...')
     ppy_engine.main.cli(['postinstall.py'])
 
