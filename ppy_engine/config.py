@@ -84,7 +84,7 @@ class Config(object):
     self.loaded = True
     with open(self.filename, 'r') as fp:
       for line in fp:
-        key, value = line.rstrip('\n').partition('=', '')
+        key, value = line.rstrip('\n').partition('=')[::2]
         self.values[key.lower()] = value or ''
 
   def save(self, create_directory=True):

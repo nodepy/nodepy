@@ -10,3 +10,6 @@
 [submodule "ppy_modules/@ppym/manifest"]
 	path = ppy_modules/@ppym/manifest
 	url = git@github.com:ppym/manifest.git
+[submodule "ppy_modules/@ppym/refstring"]
+	path = ppy_modules/@ppym/refstring
+	url = https://github.com/ppym/refstring.git
