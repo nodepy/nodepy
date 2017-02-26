@@ -35,7 +35,7 @@ parse_requirements = lambda fn: [
 def postinstall(args=None):
   if args is None: args = []
   import ppy_engine.main
-  ppy_engine.main.cli(['postinstall.py'] + ['--'] + args)
+  ppy_engine.main.cli(['postinstall.py'] + args)
 
 class PostDevelopCommand(develop):
   def run(self):

@@ -36,9 +36,11 @@ def start_interactive_session(session):
   code.interact('', local=vars(module.namespace))
 
 
-@click.command()
+@click.command(
+  context_settings={'ignore_unknown_options': True}
+)
 @click.argument('filename', required=False)
-@click.argument('args', nargs=-1)
+@click.argument('args', nargs=-1, type=click.UNPROCESSED)
 @click.option('--preserve-symlinks', is_flag=True, default=None)
 @click.option('--pmd', '--post-mortem-debugger', is_flag=True)
 @click.option('-i', '--ppypath', multiple=True)
