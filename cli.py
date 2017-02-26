@@ -121,7 +121,7 @@ def upload(filename, force, user, password):
   if not os.path.isfile(filename):
     print('error: "{}" does not exist'.format(filename))
     exit(1)
-  mf = manifest.parse('.')
+  mf = manifest.parse('package.json')
 
   url = config['registry']
   user = user or config.get('username')
