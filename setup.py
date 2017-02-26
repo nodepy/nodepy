@@ -49,7 +49,7 @@ class PostInstallCommand(install):
 
 setup(
   name = 'ppy-engine',
-  version = '0.0.3',
+  version = '0.0.4',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
