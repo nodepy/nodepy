@@ -114,10 +114,11 @@ class Config(object):
       return
     if create_directory:
       dirname = os.path.dirname(self.filename)
-      if not os.path.isdir(directory):
-        os.makedirs(directory)
+      if not os.path.isdir(dirname):
+        os.makedirs(dirname)
     with open(self.filename, 'w') as fp:
       for key, value in self.values.items():
+        if not key: continue
         fp.write('{}={}\n'.format(key, value))
 
   def __getitem__(self, key):
