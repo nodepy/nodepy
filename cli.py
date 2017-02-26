@@ -179,6 +179,9 @@ def register(agree_tos, save):
   if len(password) < 6 or len(password) > 64:
     print('Password must be 6 or more characters long.')
     return 1
+  if getpass.getpass('Confirm Password? ') != password:
+    print('Passwords do not match.')
+    return 1
   email = input('E-Mail? ')
   # TODO: Validate email.
   if len(email) < 4:
