@@ -149,11 +149,9 @@ def upload(filename, force, user, password):
 
 
 @cli.command()
-@click.option('-u', '--username')
-@click.option('-p', '--password')
-@click.option('-e', '--email')
 @click.option('--agree-tos', is_flag=True)
-def register(username, password, email, agree_tos):
+@click.option('--save', is_flag=True, help='Save username in configuration.')
+def register(agree_tos, save):
   """
   Register a new user on the package registry.
   """
@@ -173,25 +171,27 @@ def register(username, password, email, agree_tos):
       print('Aborted.')
       return 0
 
-  if not username:
-    username = input('Username? ')
-    if len(username) < 3 or len(username) > 30:
-      print('Username must be 3 or more characters.')
-      return 1
-  if not password:
-    password = getpass.getpass('Password? ')
-    if len(password) < 6 or len(password) > 64:
-      print('Password must be 6 or more characters long.')
-      return 1
-  if not email:
-    email = input('E-Mail? ')
-    # TODO: Validate email.
-    if len(email) < 4:
-      print('Invalid email.')
-      return 1
+  username = input('Username? ')
+  if len(username) < 3 or len(username) > 30:
+    print('Username must be 3 or more characters.')
+    return 1
+  password = getpass.getpass('Password? ')
+  if len(password) < 6 or len(password) > 64:
+    print('Password must be 6 or more characters long.')
+    return 1
+  email = input('E-Mail? ')
+  # TODO: Validate email.
+  if len(email) < 4:
+    print('Invalid email.')
+    return 1
 
   msg = reg.register(username, password, email)
   print(msg)
+
+  if save:
+    config['username'] = username
+    config.save()
+    print('Username saved in', config.filename)
 
 
 @cli.command()
