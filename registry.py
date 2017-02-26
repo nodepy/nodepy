@@ -31,6 +31,7 @@ import os
 import requests
 
 argschema = require('@ppym/argschema')
+manifest = require('@ppym/manifest')
 semver = require('@ppym/semver')
 refstring = require('@ppym/refstring')
 text = require('./utils/text')
@@ -171,12 +172,10 @@ class RegistryClient(object):
       raise
 
     try:
-      manifest = PackageManifest.parse_json(data, None, None)
-    except InvalidPackageManifest as exc:
+      return manifest.parse_dict(data, None, None, copy=False)
+    except manifest.InvalidPackageManifest as exc:
       raise Error(response.url,
           'Invalid package manifest ({})'.format(exc), data)
-
-    return manifest
 
   def upload(self, package_name, version, filename, force=False):
     """

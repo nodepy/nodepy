@@ -380,13 +380,13 @@ class Installer:
 
     print('Downloading "{}@{}"...'.format(info.name, info.version))
     response = self.reg.download(info.name, info.version)
-    filename = download.get_response_filename(response)
+    filename = _download.get_response_filename(response)
 
     tmp = None
     try:
       with tempfile.NamedTemporaryFile(suffix='_' + filename, delete=False) as tmp:
-        progress = download.DownloadProgress(30, prefix='  ')
-        download.download_to_fileobj(response, tmp, progress=progress)
+        progress = _download.DownloadProgress(30, prefix='  ')
+        _download.download_to_fileobj(response, tmp, progress=progress)
       return self.install_from_archive(tmp.name, expect=(package_name, info.version))
     finally:
       if tmp and os.path.isfile(tmp.name):
