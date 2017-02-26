@@ -1,15 +1,18 @@
 [submodule "ppy_modules/@ppym/argschema"]
 	path = ppy_modules/@ppym/argschema
-	url = git@github.com:ppym/argschema.git
+	url = https://github.com/ppym/argschema.git
 [submodule "ppy_modules/@ppym/semver"]
 	path = ppy_modules/@ppym/semver
-	url = git@github.com:ppym/semver.git
+	url = https://github.com/ppym/semver.git
 [submodule "ppy_modules/@ppym/ppym"]
 	path = ppy_modules/@ppym/ppym
 	url = https://github.com/ppym/ppym.git
 [submodule "ppy_modules/@ppym/manifest"]
 	path = ppy_modules/@ppym/manifest
-	url = git@github.com:ppym/manifest.git
+	url = https://github.com/ppym/manifest.git
 [submodule "ppy_modules/@ppym/refstring"]
 	path = ppy_modules/@ppym/refstring
 	url = https://github.com/ppym/refstring.git
+[submodule "ppy_modules/@ppym/registry"]
+	path = ppy_modules/@ppym/registry
+	url = https://github.com/ppym/registry.git
