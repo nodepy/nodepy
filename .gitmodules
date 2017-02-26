@@ -13,6 +13,3 @@
 [submodule "ppy_modules/@ppym/refstring"]
 	path = ppy_modules/@ppym/refstring
 	url = https://github.com/ppym/refstring.git
-[submodule "ppy_modules/@ppym/registry"]
-	path = ppy_modules/@ppym/registry
-	url = https://github.com/ppym/registry.git
