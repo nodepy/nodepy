@@ -209,3 +209,10 @@ class RegistryClient(object):
     response = self.api.register().POST(data=data)
     data = self._handle_response(response)
     return data.get('message')
+
+  def terms(self):
+    """
+    Downloads the Terms of Use from the registry.
+    """
+
+    return self._handle_response(self.api.terms.GET())['terms']

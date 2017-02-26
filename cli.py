@@ -34,6 +34,17 @@ _install = require('./install')
 registry = require('./registry')
 
 
+class Less(object):
+  # http://stackoverflow.com/a/3306399/791713
+  def __init__(self, num_lines):
+    self.num_lines = num_lines
+  def __ror__(self, other):
+    s = str(other).split("\n")
+    for i in range(0, len(s), self.num_lines):
+      print("\n".join(s[i:i+self.num_lines]))
+      input("Press <Enter> for more")
+
+
 @click.group()
 def cli():
   if not config['registry'].startswith('https://'):
@@ -141,19 +152,44 @@ def upload(filename, force, user, password):
 @click.option('-u', '--username')
 @click.option('-p', '--password')
 @click.option('-e', '--email')
-def register(username, password, email):
+@click.option('--agree-tos', is_flag=True)
+def register(username, password, email, agree_tos):
   """
   Register a new user on the package registry.
   """
 
-  if not username:
-    username = input('Username: ')
-  if not password:
-    password = getpass.getpass()
-  if not email:
-    email = input('E-Mail: ')
-
   reg = registry.RegistryClient(config['registry'])
+  if not agree_tos:
+    print('You have to agree to the Terms of Use before you can')
+    print('register an account. Download and display terms now? [Y/n] ')
+    reply = input().strip().lower() or 'yes'
+    if reply not in ('yes', 'y'):
+      print('Aborted.')
+      return 0
+    reg.terms() | Less(30)
+    print('Do you agree to the above terms? [Y/n]')
+    reply = input().strip().lower() or 'yes'
+    if reply not in ('yes', 'y'):
+      print('Aborted.')
+      return 0
+
+  if not username:
+    username = input('Username? ')
+    if len(username) < 3 or len(username) > 30:
+      print('Username must be 3 or more characters.')
+      return 1
+  if not password:
+    password = getpass.getpass('Password? ')
+    if len(password) < 6 or len(password) > 64:
+      print('Password must be 6 or more characters long.')
+      return 1
+  if not email:
+    email = input('E-Mail? ')
+    # TODO: Validate email.
+    if len(email) < 4:
+      print('Invalid email.')
+      return 1
+
   msg = reg.register(username, password, email)
   print(msg)
 
