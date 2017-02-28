@@ -20,6 +20,5 @@
 
 config = require.session.config
 config.defaults['registry'] = 'https://upmpy.org'
-config.defaults['bin_install_dir'] = '~/.local/bin'
 
 exports = config

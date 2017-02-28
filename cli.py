@@ -139,9 +139,11 @@ def upload(filename, force, user, password):
   if not user or not password:
     print('Credentials for', url)
   if not user:
-    user = input('Username: ')
+    user = input('Username? ')
+  else:
+    print('Username?', user)
   if not password:
-    password = getpass.getpass()
+    password = getpass.getpass('Password? ')
 
   reg = registry.RegistryClient(url, user, password)
   msg = reg.upload(mf.name, mf.version, filename, force)
@@ -209,7 +211,7 @@ def init(directory):
     ('Package Name', 'name', None),
     ('Package Version', 'version', '1.0.0'),
     ('Author (Name <Email>)', 'author', config.get('author')),
-    ('License', 'license', config,get('license'))
+    ('License', 'license', config.get('license'))
   ]
 
   results = collections.OrderedDict()

@@ -45,8 +45,11 @@ def get_package_archive_name(package_name, version):
   """
 
   # Validate the package name.
-  refstring.parse_package(package_name)
-  return '{}-{}.tar.gz'.format(package_name.replace('/', '-'), version)
+  if isinstance(package_name, str):
+    package_name = refstring.parse_package(package_name)
+  elif not isinstance(package_name, refstring.Package):
+    raise TypeError('expected str or @ppym/refstring:Package')
+  return '{}-{}.tar.gz'.format(str(package_name).replace('/', '-'), version)
 
 
 class Error(Exception):

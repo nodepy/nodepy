@@ -22,6 +22,7 @@ __all__ = ['InstallError', 'Installer', 'walk_package_files']
 
 import os
 import pip.commands
+import ppy_engine.main
 import shlex
 import shutil
 import tarfile
@@ -333,7 +334,7 @@ class Installer:
       print('  Running postinstall script "{}"...'.format(manifest.postinstall))
       filename = os.path.join(target_dir, manifest.postinstall)
       try:
-        upython.main.run(filename)
+        ppy_engine.main.cli([filename], standalone_mode=False)
       except BaseException as exc:
         print('  Error in postinstall script "{}"'.format(filename))
         traceback.print_exc()
