@@ -299,10 +299,10 @@ class Installer:
     _makedirs(target_dir)
     if develop:
       # Create a link file that contains the path to the actual package directory.
-      print('  Creating {} ...'.format(PACKAGE_LINK))
+      print('  Creating {} to "{}"...'.format(PACKAGE_LINK, directory))
       linkfn = os.path.join(target_dir, PACKAGE_LINK)
       with open(linkfn, 'w') as fp:
-        fp.write(directory)
+        fp.write(os.path.abspath(directory))
       installed_files.append(linkfn)
     else:
       for src, rel in walk_package_files(manifest):
