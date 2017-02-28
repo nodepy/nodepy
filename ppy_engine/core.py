@@ -175,7 +175,10 @@ class Session(object):
     if path is None:
       path = list(iter_module_paths(current_dir, is_main)) + self.path
 
-    filename = self.resolve_module_filename(request, current_dir, is_main, path)
+    filename = self.resolve_module_filename(
+        request=request, current_dir=current_dir, is_main=is_main,
+        path=path, is_bootstrap=False)
+
     if not filename:
       raise ResolveError(request, current_dir, path)
 
@@ -184,7 +187,8 @@ class Session(object):
       self.main_module = module
     return module
 
-  def resolve_module_filename(self, request, current_dir, is_main, path, is_bootstrap=False):
+  def resolve_module_filename(self, request, current_dir, is_main, path,
+      followed_from=None, is_bootstrap=False):
     """
     Resolves the filename for a Python module from the specified *request*
     name. This may be a relative name like `./path/to/module` in which case
@@ -193,6 +197,9 @@ class Session(object):
     in the specified *path*.
 
     If no file can be found, #None is returned.
+
+    If *followed_from* is specified, it must be a list to which the followed
+    #PackageLink#s will be appended.
     """
 
     def try_file_(filename):
@@ -218,19 +225,23 @@ class Session(object):
       # directory instead.
       link = find_package_link(request)
       if link:
-        request = os.path.join(link.dest, link.rel)
+        request = os.path.join(link.dst, link.rel)
+      if link and followed_from is not None:
+        followed_from.append(link)
       return try_abs_(request)
 
     current_dir = current_dir or os.getcwd()
     if ispurerelative(request):
       filename = os.path.normpath(os.path.join(current_dir, request))
-      return self.resolve_module_filename(filename, current_dir, is_main, path, is_bootstrap)
+      return self.resolve_module_filename(filename, current_dir, is_main, path,
+          followed_from, is_bootstrap)
 
     for directory in path:
       if not os.path.isdir(directory):
         continue
       filename = canonicalpath(os.path.join(directory, request))
-      filename = self.resolve_module_filename(filename, current_dir, is_main, path, is_bootstrap)
+      filename = self.resolve_module_filename(filename, current_dir, is_main,
+          path, followed_from, is_bootstrap)
       if filename:
         return filename
 
@@ -323,7 +334,7 @@ class Require(object):
     return self.session.main_module
 
 
-PackageLink = collections.namedtuple('PackageLink', 'dest rel')
+PackageLink = collections.namedtuple('PackageLink', 'src dst rel')
 
 
 def find_package_link(path):
@@ -343,7 +354,7 @@ def find_package_link(path):
       with open(link_file, 'r') as fp:
         dest_dir = fp.read().rstrip('\n')
       if os.path.isdir(dest_dir):
-        return PackageLink(dest_dir, os.path.relpath(path, curr))
+        return PackageLink(curr, dest_dir, os.path.relpath(path, curr))
     if dirname == curr:
       break
     curr = dirname
