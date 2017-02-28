@@ -122,18 +122,24 @@ class Installer:
     packages directory instead of all possibly inherited paths.
     """
 
-    filename = None
-    if self.strict:
-      filename = os.path.join(self.dirs['packages'], package, 'package.json')
-    else:
-      try:
-        module = require.session.resolve(package)
-        filename = os.path.join(module.directory, 'package.json')
-      except require.ResolveError:
-        pass
+    refstring.parse_package(package)
+    path = [self.dirs['packages']] if self.strict else ['.'] + require.session.path
+    followed_from = []
+    filename = require.session.resolve_module_filename(package, '.',
+        is_main=False, path=path, followed_from=followed_from)
+    if not filename:
+      raise PackageNotFound(package)
 
-    if filename and os.path.isfile(filename):
-      return require.session.get_manifest(filename)
+    if followed_from:
+      directory = followed_from[-1].src
+    else:
+      directory = os.path.dirname(filename)
+
+    filename = os.path.join(os.path.dirname(filename), 'package.json')
+    if os.path.isfile(filename):
+      manifest = require.session.get_manifest(filename)
+      manifest.directory = directory
+      return manifest
 
     raise PackageNotFound(package)
 
@@ -156,8 +162,15 @@ class Installer:
     on failure.
     """
 
+    link_fn = os.path.join(directory, PACKAGE_LINK)
+    if os.path.isfile(link_fn):
+      with open(link_fn, 'r') as fp:
+        manifest_fn = os.path.join(fp.read().rstrip('\n'), 'package.json')
+    else:
+      manifest_fn = os.path.join(directory, 'package.json')
+
     try:
-      manifest = require.session.get_manifest(os.path.join(directory, 'package.json'))
+      manifest = require.session.get_manifest(manifest_fn)
     except InvalidPackageManifest as exc:
       print('Can not uninstall: directory "{}": Invalid manifest": {}'.format(directory, ext))
       return False
@@ -177,6 +190,7 @@ class Installer:
     for fn in installed_files:
       try:
         os.remove(fn)
+        print('  Removed "{}"...'.format(fn))
       except OSError as exc:
         print('  "{}":'.format(fn), exc)
     shutil.rmtree(directory)
