@@ -100,7 +100,7 @@ class Installer:
       self.dirs = {
         'packages': os.path.join(_config['prefix'], 'ppy_modules'),
         'bin': _config['bindir'],
-        'python_modules': os.path.join(_config['prefix'], 'pymodules'),
+        'python_modules': os.path.join(_config['prefix'], 'ppy_modules', '.pymodules'),
         'reference_dir': None
       }
     else:
