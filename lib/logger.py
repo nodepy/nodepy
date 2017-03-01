@@ -18,7 +18,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-config = require.session.config
-config.defaults['registry'] = 'https://upmpy.org'
+import logging
 
-exports = config
+logger = logging.getLogger('ppym')
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
+logger.addHandler(handler)
+
+exports = logger

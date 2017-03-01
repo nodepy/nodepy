@@ -21,32 +21,32 @@
 __all__ = ['InstallError', 'Installer', 'walk_package_files']
 
 import os
+import nodepy
 import pip.commands
-import ppy_engine.main
 import shlex
 import shutil
 import tarfile
 import tempfile
 import traceback
 
-from ppy_engine.core import PACKAGE_LINK
 from fnmatch import fnmatch
 
 _registry = require('./registry')
 _config = require('./config')
-_download = require('./utils/download')
-_script = require('./utils/script')
-refstring = require('@ppym/refstring')
+_download = require('./util/download')
+_script = require('./util/script')
+refstring = require('./refstring')
 
-parse_manifest = require('@ppym/manifest').parse
-PackageManifest = require('@ppym/manifest').PackageManifest
-InvalidPackageManifest = require('@ppym/manifest').InvalidPackageManifest
+parse_manifest = require('./manifest').parse
+PackageManifest = require('./manifest').PackageManifest
+InvalidPackageManifest = require('./manifest').InvalidPackageManifest
 
+PACKAGE_LINK = '.nodepy-link'
 PPYM_INSTALLED_FILES = '.ppym-installed-files'
 
 
 default_exclude_patterns = [
-    '.DS_Store', '.svn/*', '.git', '.git/*', 'ppy_modules/*',
+    '.DS_Store', '.svn/*', '.git', '.git/*', 'nodepy_modules/*',
     '*.pyc', '*.pyo', 'dist/*']
 
 
@@ -99,16 +99,16 @@ class Installer:
     self.strict = strict
     if self.global_:
       self.dirs = {
-        'packages': os.path.join(_config['prefix'], 'ppy_modules'),
+        'packages': os.path.join(_config['prefix'], 'nodepy_modules'),
         'bin': _config['bindir'],
-        'python_modules': os.path.join(_config['prefix'], 'ppy_modules', '.pymodules'),
+        'python_modules': os.path.join(_config['prefix'], 'nodepy_modules', '.pymodules'),
         'reference_dir': None
       }
     else:
       self.dirs = {
-        'packages': 'ppy_modules',
-        'bin': 'ppy_modules/.bin',
-        'python_modules': 'ppy_modules/.pymodules',
+        'packages': 'nodepy_modules',
+        'bin': 'nodepy_modules/.bin',
+        'python_modules': 'nodepy_modules/.pymodules',
         'reference_dir': os.getcwd()
       }
 
@@ -170,7 +170,7 @@ class Installer:
       manifest_fn = os.path.join(directory, 'package.json')
 
     try:
-      manifest = require.session.get_manifest(manifest_fn)
+      manifest = parse_manifest(manifest_fn)
     except InvalidPackageManifest as exc:
       print('Can not uninstall: directory "{}": Invalid manifest": {}'.format(directory, ext))
       return False
@@ -198,7 +198,7 @@ class Installer:
 
   def install_dependencies_for(self, manifest):
     """
-    Installs the ppy and Python dependencies of a #PackageManifest.
+    Installs the Node.py and Python dependencies of a #PackageManifest.
     """
 
     if manifest.dependencies:
@@ -255,7 +255,7 @@ class Installer:
     # TODO: Skip modules we have already installed? (Pip will show a big info message)
     # TODO: This install method always behaves like `strict`, ALL modules
     #       will be installed into the target directory if they are not already
-    #       in the directory. In reality when using ppy, we take .pymodule
+    #       in the directory. In reality when using Node.py, we take .pymodule
     #       directories of a lot of paths into account.
 
     if install_modules:
@@ -278,8 +278,10 @@ class Installer:
     Returns True on success, False on failure.
     """
 
+    filename = os.path.normpath(os.path.abspath(os.path.join(directory, 'package.json')))
+
     try:
-      manifest = require.session.get_manifest(os.path.join(directory, 'package.json'))
+      manifest = parse_manifest(filename)
     except FileNotFoundError:
       print('Error: directory "{}" contains no package manifest'.format(directory))
       return False
@@ -335,7 +337,7 @@ class Installer:
     for script_name, filename in manifest.bin.items():
       print('  Installing script "{}"...'.format(script_name))
       filename = os.path.abspath(os.path.join(target_dir, filename))
-      installed_files += _script.make_ppy_runner(
+      installed_files += _script.make_nodepy_script(
           script_name, self.dirs['bin'], filename, self.dirs['reference_dir'])
 
     # Write down the names of the installed files.
@@ -348,7 +350,7 @@ class Installer:
       print('  Running postinstall script "{}"...'.format(manifest.postinstall))
       filename = os.path.join(target_dir, manifest.postinstall)
       try:
-        ppy_engine.main.cli([filename], standalone_mode=False)
+        nodepy.main([filename], standalone_mode=False)
       except BaseException as exc:
         print('  Error in postinstall script "{}"'.format(filename))
         traceback.print_exc()

@@ -1,10 +1,9 @@
-# @ppym/ppym
+<img src="http://i.imgur.com/CdzJiFi.png" align="right" width="150px"></img>
+# PPYM
 
-ppym is the package manager for the [@ppym/engine]. It is a client for the
-[@ppym/registry] server.
+PPYM is the [Node.py] package manager.
 
-  [@ppym/engine]: https://github.com/ppym/engine
-  [@ppym/registry]: https://github.com/ppym/registry
+  [Node.py]: https://github.com/nodepy/nodepy
 
 __Synopsis__
 
@@ -17,6 +16,6 @@ __Synopsis__
     ppym install [-g] <filename>
         (install a package from an archive)
     ppym install [-g] [@<scope>/]<package>
-        (install a package from the ppy registry)
+        (install a package from the PPYM package registry)
     ppym uninstall [-g] [@<scope>/]<package>
         (uninstall a previously installed package)

@@ -30,11 +30,11 @@ import json
 import os
 import requests
 
-argschema = require('@ppym/argschema')
-manifest = require('@ppym/manifest')
-semver = require('@ppym/semver')
-refstring = require('@ppym/refstring')
-text = require('./utils/text')
+argschema = require('./argschema')
+manifest = require('./manifest')
+semver = require('./semver')
+refstring = require('./refstring')
+text = require('./util/text')
 
 
 def get_package_archive_name(package_name, version):

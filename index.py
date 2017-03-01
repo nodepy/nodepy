@@ -25,13 +25,13 @@ import os
 import getpass
 import tarfile
 
-manifest = require('@ppym/manifest')
-semver = require('@ppym/semver')
-refstring = require('@ppym/refstring')
-config = require('./config')
-logger = require('./logger')
-_install = require('./install')
-registry = require('./registry')
+manifest = require('./lib/manifest')
+semver = require('./lib/semver')
+refstring = require('./lib/refstring')
+config = require('./lib/config')
+logger = require('./lib/logger')
+_install = require('./lib/install')
+registry = require('./lib/registry')
 
 
 class Less(object):
@@ -233,5 +233,8 @@ def init(directory):
     json.dump(results, fp, indent=2)
 
 
-if require.is_main:
+print(require)
+print(require.main)
+print(module)
+if require.main == module:
   cli()

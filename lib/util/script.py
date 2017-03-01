@@ -24,9 +24,8 @@ shell commands. Uses the Python #distlib package.
 
 import os
 from distlib.scripts import ScriptMaker
-from ppy_engine.core import PPY_MODULES
 
-argschema = require('@ppym/argschema')
+argschema = require('../argschema')
 
 
 def make_python_script(script_name, directory, code):
@@ -68,7 +67,7 @@ def make_command_script(script_name, directory, args):
   return make_python_script(script_name, directory, code)
 
 
-def make_ppy_runner(script_name, directory, filename, reference_dir=None):
+def make_nodepy_script(script_name, directory, filename, reference_dir=None):
   """
   Uses #make_python_script() to create a script that invokes the current
   python and ppy runtime to run the ppy module specified by *filename*.
@@ -83,13 +82,13 @@ def make_ppy_runner(script_name, directory, filename, reference_dir=None):
   args = []
   if reference_dir:
     # Find modules in the reference directory.
-    args.append('-i')
-    args.append(os.path.join(reference_dir, PPY_MODULES))
+    args.append('--current-dir')
+    args.append(reference_dir)
   args.append(filename)
 
   code = 'import sys\n'\
-         'import ppy_engine.main\n'\
+         'import nodepy\n'\
          'sys.argv = [sys.argv[0]] + {args!r} + sys.argv[1:]\n'\
-         'sys.exit(ppy_engine.main.cli())\n'.format(args=args)
+         'sys.exit(nodepy.cli())\n'.format(args=args)
 
   return make_python_script(script_name, directory, code)
