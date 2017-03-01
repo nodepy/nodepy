@@ -18,9 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """
-Ppy stands for Packaged Python, but it's actually just called "Papaya". The Ppy
-api allows Python modules to be resolved and loaded by their filename, similar
-to Node.js.
+Node.py is a loader for Python modules in the Node.js-style. Unlike standard
+Python modules, the Node.py `require()` caches modules by their filename and
+thus allows modules with the same name be loaded from multiple locations at
+the same time.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -379,20 +380,16 @@ class Context(object):
     return module
 
 
-@click.command(context_settings={'ignore_unknown_options': True})
+@click.command(help=__doc__, context_settings={'ignore_unknown_options': True})
 @click.argument('request', required=False)
 @click.argument('arguments', nargs=-1, type=click.UNPROCESSED)
 @click.option('-d', '--debug', is_flag=True,
-    help='Start the just-in-time debugger when an exception occurs.')
+    help='Enter the interactive debugger on exception.')
 @click.option('-v', '--version', is_flag=True,
-    help='Print the Ppy and Python version and exit.')
-@click.option('-c', '--exec', 'exec_string',
-    help='Evaluate the specified string.')
+    help='Print the Node.py version and exit.')
+@click.option('-c', '--exec', 'exec_string', metavar='EXPRESSION',
+    help='Evaluate an expression.')
 def main(request, arguments, debug, version, exec_string):
-  """
-  Resolves the REQUEST to a filename and executes it using the Node.py context.
-  """
-
   if version:
     print(VERSION)
     sys.exit(0)
