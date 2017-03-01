@@ -18,52 +18,40 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import os
+import setuptools
 import sys
-import pip.req
-from setuptools import setup, find_packages
-from setuptools.command.develop import develop
-from setuptools.command.install import install
 
-if sys.version_info[0] != 3:
-  raise EnvironmentError('requires Python3')
+def readme():
+  if os.path.isfile('README.md') and any('dist' in x for x in sys.argv[1:]):
+    if os.system('pandoc -s README.md -o README.rst') != 0:
+      print('-----------------------------------------------------------------')
+      print('WARNING: README.rst could not be generated, pandoc command failed')
+      print('-----------------------------------------------------------------')
+      if sys.stdout.isatty():
+        input("Enter to continue... ")
+    else:
+      print("Generated README.rst with Pandoc")
 
-parse_requirements = lambda fn: [
-    str(x.req) for x in pip.req.parse_requirements(
-      fn, session=pip.download.PipSession())]
+  if os.path.isfile('README.rst'):
+    with open('README.rst') as fp:
+      return fp.read()
+  return ''
 
-
-def postinstall(args=None):
-  if args is None: args = []
-  import ppy_engine.main
-  ppy_engine.main.cli(['postinstall.py'] + args)
-
-class PostDevelopCommand(develop):
-  def run(self):
-    super(PostDevelopCommand, self).run()
-    postinstall(['-e'])
-
-class PostInstallCommand(install):
-  def run(self):
-    super(PostInstallCommand, self).run()
-    postinstall()
-
-setup(
-  name = 'ppy-engine',
-  version = '0.0.4',
+setuptools.setup(
+  name = 'nodepy-runtime',
+  version = '0.0.5',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
-  description = '',
-  url = 'https://github.com/ppym/ppy-engine',
-  packages = find_packages(),
-  install_requires = parse_requirements('requirements.txt'),
+  description = 'Node.py Python runtime',
+  long_description = readme(),
+  url = 'https://github.com/nodepy/nodepy',
+  py_modules = ['nodepy'],
+  install_requires = ['click==6.7'],
   entry_points = {
     'console_scripts': [
-      'ppy = ppy_engine.main:cli'
+      'node.py = nodepy:main'
     ]
-  },
-  cmdclass = {
-    'develop': PostDevelopCommand,
-    'install': PostInstallCommand
   }
 )

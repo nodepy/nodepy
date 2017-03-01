@@ -1,3 +1,0 @@
-versionPatterns:
-  "ppy_engine/__init__.py": "__version__ = '$VERSION'"
-  "setup.py": "  version = '$VERSION'"

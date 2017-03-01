@@ -1,3 +1,0 @@
-include README.md
-recursive-include ppy_modules *
-prune ppy_modules/@ppym/*/dist
