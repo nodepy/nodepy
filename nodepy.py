@@ -40,6 +40,7 @@ import traceback
 import types
 
 import click
+import localimport
 import six
 
 VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_info)
@@ -230,6 +231,14 @@ class Context(object):
     self.path = list(filter(bool, os.getenv('NODEPY_PATH', '').split(os.pathsep)))
     # The main module. Will be set by #load_module().
     self.main_module = None
+    # Localimport context for .pymodules installed by PPYM.
+    self.importer = localimport.localimport(['nodepy_modules/.pymodules'], '.')
+
+  def __enter__(self):
+    self.importer.__enter__()
+
+  def __exit__(self, *args):
+    return self.importer.__exit__(*args)
 
   @contextlib.contextmanager
   def enter_module(self, module):
@@ -400,8 +409,8 @@ def main(request, arguments, debug, version, exec_string, current_dir):
     print('error: -c, --exec and request arguments conflict.')
     sys.exit(1)
 
-  with jit_debug(debug):
-    context = Context()
+  context = Context()
+  with context, jit_debug(debug):
     if request:
       filename = context.resolve(request, current_dir, is_main=True)
       sys.argv = [filename] + list(arguments)

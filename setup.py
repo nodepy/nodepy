@@ -48,7 +48,7 @@ setuptools.setup(
   long_description = readme(),
   url = 'https://github.com/nodepy/nodepy',
   py_modules = ['nodepy'],
-  install_requires = ['click==6.7'],
+  install_requires = ['click>=6.7', 'localimport>=1.5.1'],
   entry_points = {
     'console_scripts': [
       'node.py = nodepy:main'
