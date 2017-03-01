@@ -405,7 +405,7 @@ def main(request, arguments, debug, version, exec_string, current_dir):
     if request:
       filename = context.resolve(request, current_dir, is_main=True)
       sys.argv = [filename] + list(arguments)
-      module = context.load_module(filename)
+      module = context.load_module(filename, is_main=True)
     else:
       module = InteractiveSessionModule(context)
       if exec_string:
