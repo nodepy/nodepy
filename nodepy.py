@@ -324,8 +324,6 @@ class Context(object):
     elif os.path.isabs(request):
       # TODO: Support links to packages by a special link file for
       #       develop installations.
-      if os.path.isdir(request):
-        request = os.path.join(request, 'index')
       # TODO: Extension order by priority.
       filename = try_file(request)
       if filename:
@@ -334,6 +332,9 @@ class Context(object):
         filename = try_file(request + ext)
         if filename:
           return filename
+      if os.path.isdir(request):
+        request = os.path.join(request, 'index')
+        return self.resolve(request, current_dir, is_main, path)
       raise ResolveError(request, current_dir, is_main, path)
 
     if current_dir is None and is_main:
