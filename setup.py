@@ -40,7 +40,7 @@ def readme():
 
 setuptools.setup(
   name = 'node.py',
-  version = '0.0.5',
+  version = '0.0.6',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
