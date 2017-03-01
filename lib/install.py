@@ -123,25 +123,12 @@ class Installer:
     """
 
     refstring.parse_package(package)
-    path = [self.dirs['packages']] if self.strict else ['.'] + require.session.path
-    followed_from = []
-    filename = require.session.resolve_module_filename(package, '.',
-        is_main=False, path=path, followed_from=followed_from)
-    if not filename:
+    dirname = os.path.join(self.dirs['packages'], package)
+    if not os.path.isdir(dirname):
       raise PackageNotFound(package)
 
-    if followed_from:
-      directory = followed_from[-1].src
-    else:
-      directory = os.path.dirname(filename)
-
-    filename = os.path.join(os.path.dirname(filename), 'package.json')
-    if os.path.isfile(filename):
-      manifest = require.session.get_manifest(filename)
-      manifest.directory = directory
-      return manifest
-
-    raise PackageNotFound(package)
+    # TODO: Follow package links
+    return parse_manifest(os.path.join(dirname, 'package.json'))
 
   def uninstall(self, package_name):
     """
