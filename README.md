@@ -1,33 +1,35 @@
-<img src="http://i.imgur.com/Q4jjufa.png" align="left"></img>*
+<img src="http://i.imgur.com/W3652bU.png" align="right"></img>
 # @ppym/engine
 
-PPY is kind of a Node.js clone. This is the PPY engine that lays the foundation
-for loading Python modules resolved from actual filenames with a `require()`
-function.
+This is Ppy (pronounced "Papaya"), a module-loader, built **in and for Python**,
+that behaves quite similar to [Node.js]. It comes prebundled with PPYM, the
+package manager that can install and manage Ppy packages from the [Ppy registry].
+The goal of this project is to develop an environment that can execute Python
+code **without global state** and which prefers local over global dependencies.
 
-Installing the PPY engine with [Pip] will automatically install [ppym], the
-PPY package manager. The engine itself relies on some code that is contained in
-new-style Python modules and will bootstrap these modules automatically (see
-the `ppy_modules/` directory for a list of the bootstrapped modules that are
-also automatically installed with PPY).
+Unlike normal Python modules, Ppy modules are not stored in a global cache
+like `sys.modules` by their name. Instead, they are stored on a session-level
+and by their absolute filename. This allows many Ppy modules with the same
+filename to be loaded. Also, there can be an arbitrary number of Ppy sessions
+in the same process which are completely independent.
+
+The Ppy package manager (`ppym`) *does* support standard Python modules and
+can install them via Pip. Ppy uses [localimport] to restore a clean global
+state after the program leaves the session context.
 
   [Pip]: https://pypi.python.org/pypi/pip
   [ppym]: https://github.com/ppym/ppym
+  [Node.js]: https://nodejs.org/en/
+  [Ppy registry]: https://github.com/ppym/registry
+  [localimport]: https://github.com/NiklasRosenstein/py-localimport
 
-__Goal__
-
-The goal of this project is to develop a Python environment that can execute
-Python code **free from global state**.
-
-__Synopsis__
+## Synopsis
 
     ppy                         (enter interactive session)
     ppy <request>               (resolve request into a filename and run
                                  it as a Python script in the ppy environment)
 
-Requests are resolved similar to the way Node.js does it.
-
-__Example__
+## Example
 
 ```
 $ ls
@@ -49,13 +51,7 @@ Information on manifest of package "demo-app@1.0.0"
 [...]
 ```
 
-__Projects in the PPY ecosystem__
+## Additional Links
 
-- [@ppym/ppym][ppym] &ndash; PPY package manager
-- [@ppym/registry](https://github.com/ppym/registry) &ndash; Package registry server
-
----
-
-<sub>\* Original image from http://www.rcsinnovations.com/wp-content/uploads/2012/09/Popeye1.gif.
-If anyone can find or make a similar image of PopPey with specific information on copyright and
-license, that would be great.</sub>
+- [@ppym/ppym][ppym]
+- [@ppym/registry][Ppy registry]
