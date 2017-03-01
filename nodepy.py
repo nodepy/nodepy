@@ -26,7 +26,7 @@ to Node.js.
 from __future__ import absolute_import, division, print_function
 
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
-__version__ = '0.0.4'
+__version__ = '0.0.5'
 __license__ = 'MIT'
 
 import code

@@ -39,7 +39,7 @@ def readme():
   return ''
 
 setuptools.setup(
-  name = 'nodepy-runtime',
+  name = 'node.py',
   version = '0.0.5',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
