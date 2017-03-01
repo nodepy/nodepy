@@ -346,7 +346,7 @@ class Context(object):
 
     raise ResolveError(request, current_dir, is_main, path)
 
-  def load_module(self, filename, is_main=True, exec_=True):
+  def load_module(self, filename, is_main=False, exec_=True):
     """
     Loads a module by *filename*. The filename will be converted to an
     absolute path and normalized. If the module is already loaded, the
@@ -389,7 +389,9 @@ class Context(object):
     help='Print the Node.py version and exit.')
 @click.option('-c', '--exec', 'exec_string', metavar='EXPRESSION',
     help='Evaluate an expression.')
-def main(request, arguments, debug, version, exec_string):
+@click.option('--current-dir', default='.',
+    help='Change where <request> will be resolved.')
+def main(request, arguments, debug, version, exec_string, current_dir):
   if version:
     print(VERSION)
     sys.exit(0)
@@ -401,7 +403,7 @@ def main(request, arguments, debug, version, exec_string):
   with jit_debug(debug):
     context = Context()
     if request:
-      filename = context.resolve(request, is_main=True)
+      filename = context.resolve(request, current_dir, is_main=True)
       sys.argv = [filename] + list(arguments)
       module = context.load_module(filename)
     else:
