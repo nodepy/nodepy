@@ -20,26 +20,26 @@
 
 import os
 
-PPY_CONFIG = '~/.ppyrc'
+PPYM_CONFIG = '~/.ppymrc'
 
 
 class Config(object):
   """
-  Reader/writer for the p=Ppy configuration file. The file format must be in
+  Reader/writer for the PPYM configuration file. The file format must be in
   plain `key=value` format, one per line. Lines starting with a hash (`#`)
   will be ignored.
 
   # Parameters
   filename (str): The config file to parse, and optionally save to. Pass
       #NotImplemented to prevent the #Config object from actually loading any
-      configuration file. Defaults to the value of the `PPY_CONFIG` environment
-      variable or `~/.ppyrc`.
+      configuration file. Defaults to the value of the `PPYM_CONFIG` environment
+      variable or `~/.ppymrc`.
   defaults (dict): A dictionary of default values.
   """
 
   def __init__(self, filename=NotImplemented, defaults=None):
     if filename is NotImplemented:
-      filename = os.getenv('PPY_CONFIG', PPY_CONFIG)
+      filename = os.getenv('PPYM_CONFIG', PPYM_CONFIG)
     if filename:
       filename = os.path.normpath(os.path.expanduser(filename))
     if defaults is None:
