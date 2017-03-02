@@ -1,6 +1,8 @@
 <img src="http://i.imgur.com/CdzJiFi.png" align="right" width="150px"></img>
 # Node.py
 
+[![Build Status](https://travis-ci.org/nodepy/nodepy.svg?branch=master)](https://travis-ci.org/nodepy/nodepy)
+
 Node.py is a loader for Python modules in the Node.js-style. Unlike standard
 Python modules, the Node.py `require()` caches modules by their filename and
 thus allows modules with the same name be loaded from multiple locations at
@@ -19,7 +21,8 @@ Node.py has its own package ecosystem managed by [ppym] and the
 
 __Requirements__
 
-- Python 2.6+ or Python 3.3+
+- Python 2.7+ or Python 3.3+
+- Pip 6+
 
 __Installation__
 
