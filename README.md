@@ -27,3 +27,9 @@ Use the `bootstrap.py` script to install PPYM.
 
     $ git clone https://github.com/nodepy/ppym.git
     $ node.py ppym/bootstrap --install --global
+
+## Changelog
+
+### v0.0.8
+
+- add `--develop` option to `bootstrap.py`
