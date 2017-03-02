@@ -189,9 +189,9 @@ class RegistryClient(object):
     be uploaded and overwritten if it already exists in the registry.
     """
 
-    argschema.validate('package_name', package_name, {'type': str})
+    argschema.validate('package_name', package_name, {'type': six.text_type})
     argschema.validate('version', version, {'type': semver.Version})
-    argschema.validate('filename', filename, {'type': str})
+    argschema.validate('filename', filename, {'type': six.text_type})
     argschema.validate('force', force, {'type': bool})
 
     with open(filename, 'rb') as fp:
