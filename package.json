@@ -1,6 +1,6 @@
 {
   "name": "ppym",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "MIT",
   "description": "The Node.py Package Manager",
   "repository": "https://github.com/nodepy/ppym",
