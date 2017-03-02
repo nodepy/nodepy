@@ -18,9 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import json
 import os
+import nodepy
 import setuptools
 import sys
+
+from setuptools.command.develop import develop as _develop
+from setuptools.command.install import install as _install
 
 def readme():
   if os.path.isfile('README.md') and any('dist' in x for x in sys.argv[1:]):
@@ -38,6 +43,20 @@ def readme():
       return fp.read()
   return ''
 
+class develop(_develop):
+  def run(self):
+    # TODO: Install PPYM in develop mode.
+    _develop.run(self)
+    nodepy.main(['ppym/bootstrap', '--no-bootstrap', '--install', '--global'])
+
+class install(_install):
+  def run(self):
+    _install.run(self)
+    nodepy.main(['ppym/bootstrap', '--no-bootstrap', '--install', '--global'])
+
+with open('ppym/package.json') as fp:
+  ppym_deps = [a+b for a, b in json.load(fp)['python-dependencies'].items()]
+
 setuptools.setup(
   name = 'node.py',
   version = '0.0.6',
@@ -48,10 +67,14 @@ setuptools.setup(
   long_description = readme(),
   url = 'https://github.com/nodepy/nodepy',
   py_modules = ['nodepy'],
-  install_requires = ['click>=6.7', 'localimport>=1.5.1'],
+  install_requires = ['click>=6.7', 'localimport>=1.5.1'] + ppym_deps,
   entry_points = {
     'console_scripts': [
       'node.py = nodepy:main'
     ]
+  },
+  cmdclass = {
+    'develop': develop,
+    'install': install
   }
 )
