@@ -233,8 +233,5 @@ def init(directory):
     json.dump(results, fp, indent=2)
 
 
-print(require)
-print(require.main)
-print(module)
 if require.main == module:
   cli()
