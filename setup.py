@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import atexit
+import contextlib
+import distlib.scripts
 import json
 import os
 import pip
@@ -101,17 +102,50 @@ def install_ppym(develop=False):
       raise
 
 
+@contextlib.contextmanager
+def hook_distlib_scriptmaker():
+  """
+  Hooks the #distlib.scripts.ScriptMaker._write_script() function, which in
+  turn hooks the #os.path.splitext() function, to prevent the function from
+  stripping the `.py` suffix from the `node.py` script.
+  """
+
+  ScriptMaker = distlib.scripts.ScriptMaker
+  write_script = ScriptMaker._write_script
+  splitext = os.path.splitext
+
+  def new_splitext(path):
+    if os.path.basename(path).startswith('node.py'):
+      return path, '.py'
+    return splitext(path)
+
+  def new_write_script(self, *args, **kwargs):
+    os.path.splitext = new_splitext
+    try:
+      return write_script(self, *args, **kwargs)
+    finally:
+      os.path.splitext = splitext
+
+  ScriptMaker._write_script = new_write_script
+  try:
+    yield
+  finally:
+    ScriptMaker._write_script = write_script
+
+
 class develop(_develop):
   def run(self):
     install_deps()
-    _develop.run(self)
+    with hook_distlib_scriptmaker():
+      _develop.run(self)
     install_ppym(develop=True)
 
 
 class install(_install):
   def run(self):
     install_deps()
-    _install.run(self)
+    with hook_distlib_scriptmaker():
+      _install.run(self)
     install_ppym()
 
 
@@ -128,6 +162,8 @@ setuptools.setup(
   install_requires = install_requires,
   entry_points = {
     'console_scripts': [
+      # Note: We hook ScriptMaker._write_script to prevent it from
+      # stripping the .py suffix.
       'node.py = nodepy:main'
     ]
   },
