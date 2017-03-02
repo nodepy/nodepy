@@ -25,6 +25,7 @@ import nodepy
 import pip.commands
 import shlex
 import shutil
+import six
 import sys
 import tarfile
 import tempfile
@@ -108,21 +109,21 @@ class Installer:
           'packages': os.path.join(sys.prefix, 'share', 'nodepy_modules'),
           'bin': os.path.join(sys.prefix, 'Scripts' if os.name == 'nt' else 'bin'),
           'python_modules': os.path.join(sys.prefix, 'share', 'nodepy_modules', '.pymodules'),
-          'reference_dir': os.path.join(sys.prefix, 'share').decode()
+          'reference_dir': six.text_type(os.path.join(sys.prefix, 'share'))
         }
       else:
         self.dirs = {
           'packages': os.path.join(_config['prefix'], 'nodepy_modules'),
           'bin': os.path.join(_config['prefix'], 'bin'),
           'python_modules': os.path.join(_config['prefix'], 'nodepy_modules', '.pymodules'),
-          'reference_dir': _config['prefix'].decode()
+          'reference_dir': six.text_type(_config['prefix'])
         }
     else:
       self.dirs = {
         'packages': 'nodepy_modules',
         'bin': 'nodepy_modules/.bin',
         'python_modules': 'nodepy_modules/.pymodules',
-        'reference_dir': os.getcwd()
+        'reference_dir': six.text_type(os.getcwd())
       }
 
   def find_package(self, package):
