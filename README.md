@@ -1,4 +1,5 @@
-<img src="http://i.imgur.com/CdzJiFi.png" align="right" width="150px"></img>
+<img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img>
+
 # Node.py
 
 [![Build Status](https://travis-ci.org/nodepy/nodepy.svg?branch=master)](https://travis-ci.org/nodepy/nodepy)
