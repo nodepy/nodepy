@@ -18,8 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import appdirs
 import errno
 import os
+import sys
 
 PPYM_CONFIG = '~/.ppymrc'
 
@@ -139,6 +141,15 @@ class Config(object):
 
 
 config = Config()
+
+# The user's preferred directory to install global Node.py packages and
+# scripts to. Note that global installs inside a virtual environment will
+# ignore this option and instead place the packages under the virtualenv's
+# prefix.
+config.defaults['prefix'] = appdirs.user_data_dir(sys.version[:3], 'nodepy')
+
+# The URL of the PPYM registry from which packages should be downloaded
+# from and uploaded to.
 config.defaults['registry'] = 'https://ppym.org'
 
 exports = config

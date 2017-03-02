@@ -25,6 +25,7 @@ import nodepy
 import pip.commands
 import shlex
 import shutil
+import sys
 import tarfile
 import tempfile
 import traceback
@@ -67,6 +68,10 @@ def _check_include_file(filename, include_patterns, exclude_patterns):
   return _match_any_pattern(filename, include_patterns)
 
 
+def is_virtualenv():
+  return hasattr(sys, 'real_prefix') or (sys.prefix == sys.base_prefix)
+
+
 class PackageNotFound(Exception):
   pass
 
@@ -98,12 +103,20 @@ class Installer:
     self.global_ = global_
     self.strict = strict
     if self.global_:
-      self.dirs = {
-        'packages': os.path.join(_config['prefix'], 'nodepy_modules'),
-        'bin': _config['bindir'],
-        'python_modules': os.path.join(_config['prefix'], 'nodepy_modules', '.pymodules'),
-        'reference_dir': None
-      }
+      if is_virtualenv():
+        self.dirs = {
+          'packages': os.path.join(sys.prefix, 'share', 'nodepy_modules'),
+          'bin': os.path.join(sys.prefix, 'Scripts' if os.name == 'nt' else 'bin'),
+          'python_modules': os.path.join(sys.prefix, 'share', 'nodepy_modules', '.pymodules'),
+          'reference_dir': os.path.join(sys.prefix, 'share')
+        }
+      else:
+        self.dirs = {
+          'packages': os.path.join(_config['prefix'], 'nodepy_modules'),
+          'bin': os.path.join(_config['prefix'], 'bin'),
+          'python_modules': os.path.join(_config['prefix'], 'nodepy_modules', '.pymodules'),
+          'reference_dir': _config['prefix']
+        }
     else:
       self.dirs = {
         'packages': 'nodepy_modules',

@@ -23,6 +23,7 @@ shell commands. Uses the Python #distlib package.
 """
 
 import os
+import six
 from distlib.scripts import ScriptMaker
 
 argschema = require('../argschema')
@@ -60,7 +61,7 @@ def make_command_script(script_name, directory, args):
   """
 
   argschema.validate('args', args, {'type': [list, tuple],
-      'items': {'type': str}})
+      'items': {'type': six.text_type}})
   code = 'import subprocess\n'\
          'import sys\n'\
          'sys.exit(subprocess.call({!r}))\n'.format(args)
@@ -76,8 +77,8 @@ def make_nodepy_script(script_name, directory, filename, reference_dir=None):
   instead of the current working directory.
   """
 
-  argschema.validate('filename', filename, {'type': str})
-  argschema.validate('reference_dir', reference_dir, {'type': [str, None]})
+  argschema.validate('filename', filename, {'type': six.text_type})
+  argschema.validate('reference_dir', reference_dir, {'type': [six.text_type, None]})
 
   args = []
   if reference_dir:
