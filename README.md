@@ -1,4 +1,5 @@
-<img src="http://i.imgur.com/CdzJiFi.png" align="right" width="150px"></img>
+<img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img>
+
 # PPYM
 
 PPYM is the [Node.py] package manager.
