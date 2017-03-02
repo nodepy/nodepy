@@ -18,8 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+try:
+  import distlib.scripts
+except ImportError:
+  import pip._vendor.distlib.scripts
+  distlib = pip._vendor.distlib
+
 import contextlib
-import distlib.scripts
 import json
 import os
 import pip
