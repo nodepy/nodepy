@@ -96,11 +96,14 @@ def install_ppym(develop=False):
   Executes the PPYM `bootstrap` module to install PPYM globally.
   """
 
-  # TODO: The bootstrap install script must support a develop-mode installation.
+  cmd = ['ppym/bootstrap', '--no-bootstrap', '--install', '--global', '--upgrade']
+  if develop:
+    cmd.append('--develop')
+
   sys.path_importer_cache.clear()
   import nodepy
   try:
-    nodepy.main(['ppym/bootstrap', '--no-bootstrap', '--install', '--global', '--upgrade'])
+    nodepy.main(cmd)
   except SystemExit as exc:
     if exc.code != 0:
       raise

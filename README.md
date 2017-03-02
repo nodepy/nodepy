@@ -58,6 +58,8 @@ __Todo__
 - add `-v, --verbose` argument for debug prints when resolving module filenames
 - use `argparse` instead of `click` due to problem with known arguments
   being consumed and not passed to the Node.py main module
+- upgrade bundled PPYM to v0.0.8
+- `setup.py develop` now passes `--develop` to `ppym/bootstrap`
 
 ### v0.0.9
 
