@@ -22,6 +22,7 @@ import json
 import jsonschema
 import os
 import re
+import six
 
 semver = require('./semver')
 refstring = require('./refstring')
@@ -240,7 +241,8 @@ def parse_dict(data, filename=None, directory=None, copy=True):
       engine_props[key] = data.pop(key)
 
   data['python_dependencies'] = data.pop('python-dependencies', None)
+  data['engine_props'] = engine_props
   try:
-    return PackageManifest(filename, directory, **data, engine_props=engine_props)
+    return PackageManifest(filename, directory, **data)
   except ValueError as exc:
-    raise InvalidPackageManifest(filename, exc) from exc
+    six.raise_from(InvalidPackageManifest(filename, exc), exc)

@@ -20,6 +20,7 @@
 
 import functools
 import re
+import six
 
 
 @functools.total_ordering
@@ -32,18 +33,20 @@ class Version(object):
   major (int):
   minor (int):
   patch (int):
-  extension (str):
-  build (str):
+  extension (six.text_type):
+  build (six.text_type):
   """
 
   def __init__(self, value):
+    if isinstance(value, six.binary_type):
+      value = six.text_type(value)
     if isinstance(value, Version):
       self.major = value.major
       self.minor = value.minor
       self.patch = value.patch
       self.extension = value.extension
       self.build = value.build
-    elif isinstance(value, str):
+    elif isinstance(value, six.text_type):
       match = re.match(r'^(\d+(\.\d+){0,2})(\-[A-z\-][A-z0-9\-]*)?(\+[A-z\-][A-z0-9\-]*)?$', value)
       if not match:
         raise ValueError("invalid version string: {0!r}".format(value))
@@ -60,7 +63,7 @@ class Version(object):
       raise TypeError("unexpected type: {0!r}".format(type(value)))
 
   def __str__(self):
-    result = '.'.join(map(str, self.mmp))
+    result = '.'.join(map(six.text_type, self.mmp))
     if self.extension:
       result += '-' + self.extension
     if self.build:
@@ -101,7 +104,7 @@ class Version(object):
       return NotImplemented
 
   def __hash__(self):
-    return hash(str(self))
+    return hash(six.text_type(self))
 
   @property
   def mmp(self):
@@ -112,10 +115,10 @@ class Version(object):
     return (self.major, self.minor, self.patch, self.extension, self.build)
 
   def satisfies(self, selector):
-    if isinstance(selector, str):
+    if isinstance(selector, six.text_type):
       selector = Selector(selector)
     elif not callable(selector):
-      raise TypeError("selector: expected str or callable")
+      raise TypeError("selector: expected unicode or callable")
     return selector(self)
 
 
@@ -135,7 +138,9 @@ class SingleSelector(object):
   }
 
   def __init__(self, value, version=None):
-    if isinstance(value, str) and '-x' not in value:
+    if isinstance(value, six.binary_type):
+      value = six.text_type(value)
+    if isinstance(value, six.text_type) and '-x' not in value:
       try:
         value = Version(value)
       except ValueError as exc:
@@ -147,7 +152,7 @@ class SingleSelector(object):
       self.version = version(value.version)
       self.version_min = None
 
-    elif isinstance(value, str):
+    elif isinstance(value, six.text_type):
       # Split into parts to check if its a range selector.
       parts = re.sub('\s+', ' ', value).split(' ')
       if len(parts) == 3 and parts[1] == '-':
@@ -223,7 +228,7 @@ class SingleSelector(object):
         self.version_min = Version(version)
 
     else:
-      raise TypeError("value: expected SingleSelector, Version or str")
+      raise TypeError("value: expected SingleSelector, Version or unicode")
 
   def __str__(self):
     if self.op == '*':
@@ -232,7 +237,7 @@ class SingleSelector(object):
       return '{0} - {1}'.format(self.version_min, self.version)
     elif self.op == 'x':
       mmp, ext = self.parts[:3], self.parts[3:]
-      result = '.'.join(map(str, self.parts[:3]))
+      result = '.'.join(map(six.text_type, self.parts[:3]))
       if ext:
         result += '-' + ext[0]
       return result
@@ -292,23 +297,25 @@ class Selector(object):
   """
 
   def __init__(self, value):
+    if isinstance(value, six.binary_type):
+      value = six.text_type(value)
     if isinstance(value, Selector):
       self.criteria = [SingleSelector(x) for x in value.criteria]
     elif isinstance(value, Version):
       self.criteria = [SingleSelector(value)]
-    elif isinstance(value, str):
+    elif isinstance(value, six.text_type):
       items = filter(bool, value.split('||'))
       self.criteria = [SingleSelector(x.strip()) for x in items]
     else:
-      raise TypeError('value: expected Selector or str')
+      raise TypeError('value: expected Selector or unicode')
     if not self.criteria:
       raise ValueError('invalid Selector: {!r}'.format(value))
 
   def __str__(self):
-    return ' || '.join(map(str, self.criteria))
+    return ' || '.join(map(six.text_type, self.criteria))
 
   def __repr__(self):
-    return '<%s %s>' % (type(self).__name__, str(self))
+    return '<%s %s>' % (type(self).__name__, six.text_type(self))
 
   def __call__(self, version):
     return any(c(version) for c in self.criteria)

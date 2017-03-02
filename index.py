@@ -23,6 +23,7 @@ import collections
 import json
 import os
 import getpass
+import six
 import tarfile
 
 manifest = require('./lib/manifest')
@@ -39,7 +40,7 @@ class Less(object):
   def __init__(self, num_lines):
     self.num_lines = num_lines
   def __ror__(self, other):
-    s = str(other).split("\n")
+    s = six.text_type(other).split("\n")
     for i in range(0, len(s), self.num_lines):
       print("\n".join(s[i:i+self.num_lines]))
       input("Press <Enter> for more")
@@ -74,7 +75,7 @@ def install(packages, develop, strict, upgrade, global_):
     else:
       ref = refstring.parse(package)
       selector = ref.version or semver.Selector('*')
-      success = installer.install_from_registry(str(ref.package), selector)
+      success = installer.install_from_registry(six.text_type(ref.package), selector)
     if not success:
       print('Installation failed')
       return 1

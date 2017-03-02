@@ -82,6 +82,9 @@ class Ref(object):
       result += ':' + self.member
     return result
 
+  def __unicode__(self):
+    return unicode(str(self))
+
 
 class Package(object):
   """
@@ -98,6 +101,9 @@ class Package(object):
     if self.scope:
       return '@{}/{}'.format(self.scope, self.name)
     return self.name
+
+  def __unicode__(self):
+    return unicode(str(self))
 
   def __iter__(self):
     yield self.scope

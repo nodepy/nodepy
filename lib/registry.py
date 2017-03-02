@@ -29,6 +29,7 @@ import hammock
 import json
 import os
 import requests
+import six
 
 argschema = require('./argschema')
 manifest = require('./manifest')
@@ -44,12 +45,12 @@ def get_package_archive_name(package_name, version):
   files.
   """
 
-  # Validate the package name.
-  if isinstance(package_name, str):
+  argschema.validate('package_name', package_name,
+      {'type': [six.text_type, refstring.Package]})
+  if isinstance(package_name, six.text_type):
     package_name = refstring.parse_package(package_name)
-  elif not isinstance(package_name, refstring.Package):
-    raise TypeError('expected str or @ppym/refstring:Package')
-  return '{}-{}.tar.gz'.format(str(package_name).replace('/', '-'), version)
+
+  return u'{}-{}.tar.gz'.format(six.text_type(package_name).replace('/', '-'), version)
 
 
 class Error(Exception):
@@ -144,9 +145,9 @@ class RegistryClient(object):
     response must be checked!
     """
 
-    argschema.validate('package_name', package_name, {'type': str})
+    argschema.validate('package_name', package_name, {'type': six.text_type})
     argschema.validate('version', version, {'type': semver.Version})
-    argschema.validate('filename', filename, {'type': [str, None]})
+    argschema.validate('filename', filename, {'type': [six.text_type, None]})
 
     if not filename:
       filename = get_package_archive_name(package_name, version)
@@ -162,7 +163,7 @@ class RegistryClient(object):
     a #PackageNotFound exception, otherwise it returns #PackageInfo.
     """
 
-    argschema.validate('package_name', package_name, {'type': str})
+    argschema.validate('package_name', package_name, {'type': six.text_type})
     argschema.validate('version_selector', version_selector,
         {'type': semver.Selector})
 

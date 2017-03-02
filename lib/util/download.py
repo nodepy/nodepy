@@ -20,9 +20,10 @@
 
 import posixpath
 import requests
-import urllib.parse
 import sys
 import time
+
+from six.moves import urllib
 
 
 def get_response_filename(response):
