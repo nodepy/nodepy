@@ -83,7 +83,6 @@ class PackageManifest:
       "author": {"type": "string"},
       "repository": {"type": "string"},
       "license": {"type": "string"},
-      "main": {"type": "string"},
       "dependencies": {
         "type": "object",
         "additionalProperties": {"type": "string"}
@@ -117,8 +116,8 @@ class PackageManifest:
     "additionalProperties": {"type": "object"}
   }
 
-  def __init__(self, filename, directory, name, version, description=None, author=None,
-      license=None, main='index.py', dependencies=None, python_dependencies=None,
+  def __init__(self, filename, directory, name, version, description=None,
+      author=None, license=None, dependencies=None, python_dependencies=None,
       script=None, bin=None, engines=None, engine_props=None, dist=None,
       postinstall=None, repository=None):
     if repository is not None and not url_regex.match(repository):
@@ -131,7 +130,6 @@ class PackageManifest:
     self.repository = repository
     self.description = description
     self.license = license
-    self.main = main
     self.dependencies = {} if dependencies is None else dependencies
     self.python_dependencies = {} if python_dependencies is None else python_dependencies
     self.script = {} if script is None else script

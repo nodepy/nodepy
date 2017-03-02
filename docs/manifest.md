@@ -60,15 +60,6 @@ package source code.
   "license": "MIT"
 ```
 
-### `main`
-
-*Optional.* The main Python module to run when the package is loaded.
-Defaults to `index`.
-
-```json
-  "main": "cli"
-```
-
 ### `bin`
 
 *Optional.* An object that associates script names with a request string
