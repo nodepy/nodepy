@@ -404,7 +404,6 @@ class Context(object):
 
 
 @click.command(help=__doc__, context_settings={'ignore_unknown_options': True})
-@click.argument('request', required=False)
 @click.argument('arguments', nargs=-1, type=click.UNPROCESSED)
 @click.option('-d', '--debug', is_flag=True,
     help='Enter the interactive debugger on exception.')
@@ -414,28 +413,26 @@ class Context(object):
     help='Evaluate an expression.')
 @click.option('--current-dir', default='.',
     help='Change where <request> will be resolved.')
-def main(request, arguments, debug, version, exec_string, current_dir):
+def main(arguments, debug, version, exec_string, current_dir):
   if version:
     print(VERSION)
     sys.exit(0)
 
-  if request and exec_string:
-    print('error: -c, --exec and request arguments conflict.')
-    sys.exit(1)
-
+  arguments = list(arguments)
   context = Context(current_dir)
   with context, jit_debug(debug):
-    if request:
-      filename = context.resolve(request, current_dir, is_main=True)
-      sys.argv = [filename] + list(arguments)
-      module = context.load_module(filename, is_main=True)
-    else:
-      sys.argv = [sys.argv[0]] + list(arguments)
+    if exec_string or not arguments:
+      sys.argv = [sys.argv[0]] + arguments
       module = InteractiveSessionModule(context)
       if exec_string:
         exec(exec_string, vars(module.namespace))
       else:
         code.interact(VERSION, local=vars(module.namespace))
+    else:
+      request = arguments.pop(0)
+      filename = context.resolve(request, current_dir, is_main=True)
+      sys.argv = [filename] + list(arguments)
+      module = context.load_module(filename, is_main=True)
 
   sys.exit(0)
 
