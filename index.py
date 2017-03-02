@@ -47,13 +47,13 @@ class Less(object):
 
 
 @click.group()
-def cli():
+def main():
   if not config['registry'].startswith('https://'):
     logger.warning('config value `registry` is not an HTTPS url ({})'
         .format(config['registry']))
 
 
-@cli.command()
+@main.command()
 @click.argument('packages', nargs=-1)
 @click.option('-e', '--develop', is_flag=True)
 @click.option('-S', '--strict', is_flag=True)
@@ -82,7 +82,7 @@ def install(packages, develop, strict, upgrade, global_):
   return 0
 
 
-@cli.command()
+@main.command()
 @click.argument('package')
 @click.option('-g', '--global', 'global_', is_flag=True)
 def uninstall(package, global_):
@@ -96,7 +96,7 @@ def uninstall(package, global_):
   installer.uninstall(package)
 
 
-@cli.command()
+@main.command()
 def dist():
   """
   Create a .tar.gz distribution from the package.
@@ -117,7 +117,7 @@ def dist():
   print('Done!')
 
 
-@cli.command()
+@main.command()
 @click.argument('filename')
 @click.option('-f', '--force', is_flag=True)
 @click.option('-u', '--user')
@@ -151,7 +151,7 @@ def upload(filename, force, user, password):
   print(msg)
 
 
-@cli.command()
+@main.command()
 @click.option('--agree-tos', is_flag=True)
 @click.option('--save', is_flag=True, help='Save username in configuration.')
 def register(agree_tos, save):
@@ -200,7 +200,7 @@ def register(agree_tos, save):
     print('Username saved in', config.filename)
 
 
-@cli.command()
+@main.command()
 @click.argument('directory', default='.')
 def init(directory):
   filename = os.path.join(directory, 'package.json')
@@ -235,4 +235,4 @@ def init(directory):
 
 
 if require.main == module:
-  cli()
+  main()
