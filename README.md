@@ -52,6 +52,7 @@ __Todo__
 - the `.py` loader now loads the respective bytecache file if appropriate
 - `Context.register_binding()` now accepts arbitrary objects, not just
   `BaseModule` instances
+- add `require.current` and `Context.current_module` properties
 
 ### v0.0.9
 

@@ -213,6 +213,10 @@ class Require(object):
       raise TypeError('main must be None or BaseModule')
     self.module.context.main_module = None
 
+  @property
+  def current(self):
+    return self.context.current_module
+
   def __call__(self, request):
     current_dir = self.module.directory
     filename = self.context.resolve(request, current_dir)
@@ -301,6 +305,10 @@ class Context(object):
 
   def __exit__(self, *args):
     return self.importer.__exit__(*args)
+
+  @property
+  def current_module(self):
+    return self._module_stack[-1] if self._module_stack else None
 
   @contextlib.contextmanager
   def enter_module(self, module):
