@@ -30,6 +30,10 @@ Use the `bootstrap.py` script to install PPYM.
 
 ## Changelog
 
+### v0.0.9
+
+- add `ppym bin [-g]` which will print the path to the bin directory
+
 ### v0.0.8
 
 - add `--develop` option to `bootstrap.py`

@@ -234,5 +234,12 @@ def init(directory):
     json.dump(results, fp, indent=2)
 
 
+@main.command()
+@click.option('-g', '--global', 'global_', is_flag=True)
+def bin(global_):
+  installer = _install.Installer(global_=global_)
+  print(installer.dirs['bin'])
+
+
 if require.main == module:
   main()
