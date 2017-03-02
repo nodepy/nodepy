@@ -223,7 +223,7 @@ class Context(object):
   central unit to control the finding, caching and loading of Python modules.
   """
 
-  def __init__(self):
+  def __init__(self, current_dir='.'):
     # Container for internal modules that can be bound to the context
     # explicitly with the #register_binding() method.
     self._bindings = {}
@@ -244,7 +244,8 @@ class Context(object):
     # The main module. Will be set by #load_module().
     self.main_module = None
     # Localimport context for .pymodules installed by PPYM.
-    self.importer = localimport.localimport(['nodepy_modules/.pymodules'], '.')
+    self.importer = localimport.localimport([
+        os.path.join(current_dir, 'nodepy_modules/.pymodules')], '.')
 
   def __enter__(self):
     self.importer.__enter__()
@@ -422,13 +423,14 @@ def main(request, arguments, debug, version, exec_string, current_dir):
     print('error: -c, --exec and request arguments conflict.')
     sys.exit(1)
 
-  context = Context()
+  context = Context(current_dir)
   with context, jit_debug(debug):
     if request:
       filename = context.resolve(request, current_dir, is_main=True)
       sys.argv = [filename] + list(arguments)
       module = context.load_module(filename, is_main=True)
     else:
+      sys.argv = [sys.argv[0]] + list(arguments)
       module = InteractiveSessionModule(context)
       if exec_string:
         exec(exec_string, vars(module.namespace))
