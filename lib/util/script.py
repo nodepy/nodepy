@@ -89,6 +89,6 @@ def make_nodepy_script(script_name, directory, filename, reference_dir=None):
   code = 'import sys\n'\
          'import nodepy\n'\
          'sys.argv = [sys.argv[0]] + {args!r} + sys.argv[1:]\n'\
-         'sys.exit(nodepy.cli())\n'.format(args=args)
+         'sys.exit(nodepy.main())\n'.format(args=args)
 
   return make_python_script(script_name, directory, code)
