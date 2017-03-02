@@ -17,8 +17,8 @@ loading process.
 Node.py has its own package ecosystem managed by [ppym] and the
 [PPYM package registry].
 
-  [ppym]: https://github.com/ppym/ppym
-  [PPYM package registry]: https://github.com/ppym/registry
+  [ppym]: https://github.com/nodepy/ppym
+  [PPYM package registry]: https://github.com/nodepy/ppym-registry
 
 __Requirements__
 
