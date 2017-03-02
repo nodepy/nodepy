@@ -45,6 +45,10 @@ __Todo__
 
 ## Changelog
 
+### v0.0.10
+
+- extensions are now checked in the order they are registered
+
 ### v0.0.9
 
 - `setup.py` -- Fix generation `node.py` script on Windows by hooking

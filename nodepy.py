@@ -236,6 +236,7 @@ class Context(object):
     # Loaders for file extensions. The default loader for `.py` files is
     # automatically registered.
     self._extensions = {}
+    self._extensions_order = []
     self.register_extension('.py', NodepyModule)
     # Container for cached modules. The keys are the absolute and normalized
     # filenames of the module so that the same file will not be loaded multiple
@@ -313,6 +314,7 @@ class Context(object):
     if not callable(loader):
       raise TypeError('loader must be a callable')
     self._extensions[ext] = loader
+    self._extensions_order.append(ext)
 
   def resolve(self, request, current_dir=None, is_main=False, path=None):
     """
@@ -343,11 +345,10 @@ class Context(object):
     elif os.path.isabs(request):
       # TODO: Support links to packages by a special link file for
       #       develop installations.
-      # TODO: Extension order by priority.
       filename = try_file(request)
       if filename:
         return filename
-      for ext in self._extensions:
+      for ext in self._extensions_order:
         filename = try_file(request + ext)
         if filename:
           return filename
