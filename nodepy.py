@@ -301,7 +301,7 @@ class Context(object):
   central unit to control the finding, caching and loading of Python modules.
   """
 
-  def __init__(self, current_dir='.'):
+  def __init__(self, current_dir='.', verbose=False):
     # Container for internal modules that can be bound to the context
     # explicitly with the #register_binding() method.
     self._bindings = {}
@@ -326,12 +326,17 @@ class Context(object):
     # Localimport context for .pymodules installed by PPYM.
     self.importer = localimport.localimport([
         os.path.join(current_dir, 'nodepy_modules/.pymodules')], '.')
+    self.verbose = verbose
 
   def __enter__(self):
     self.importer.__enter__()
 
   def __exit__(self, *args):
     return self.importer.__exit__(*args)
+
+  def debug(self, *msg):
+    if self.verbose:
+      print('debug:', *msg, file=sys.stderr)
 
   @property
   def current_module(self):
@@ -350,6 +355,7 @@ class Context(object):
     if module in self._module_stack:
       raise RuntimeError('a module can only appear once in the module stack')
     self._module_stack.append(module)
+    self.debug('loading module:', module.filename)
     try:
       yield
     finally:
@@ -421,6 +427,8 @@ class Context(object):
     elif os.path.isabs(request):
       link = get_package_link(request)
       if link:
+        self.debug('follow .nodepy-link \'{}\''.format(link.src))
+        self.debug('  maps to \'{}\''.format(link.dst))
         request = os.path.join(link.dst, os.path.relpath(request, link.src))
       filename = try_file(request)
       if filename:
@@ -490,19 +498,20 @@ class Context(object):
 @click.argument('arguments', nargs=-1, type=click.UNPROCESSED)
 @click.option('-d', '--debug', is_flag=True,
     help='Enter the interactive debugger on exception.')
-@click.option('-v', '--version', is_flag=True,
+@click.option('--version', is_flag=True,
     help='Print the Node.py version and exit.')
 @click.option('-c', '--exec', 'exec_string', metavar='EXPRESSION',
     help='Evaluate an expression.')
 @click.option('--current-dir', default='.',
     help='Change where <request> will be resolved.')
-def main(arguments, debug, version, exec_string, current_dir):
+@click.option('-v', '--verbose', is_flag=True)
+def main(arguments, debug, version, exec_string, current_dir, verbose):
   if version:
     print(VERSION)
     sys.exit(0)
 
   arguments = list(arguments)
-  context = Context(current_dir)
+  context = Context(current_dir, verbose)
   with context, jit_debug(debug):
     if exec_string or not arguments:
       sys.argv = [sys.argv[0]] + arguments

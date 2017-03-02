@@ -55,6 +55,7 @@ __Todo__
   `BaseModule` instances
 - add `require.current` and `Context.current_module` properties
 - support for `.nodepy-link` files as created by `ppym install -e`
+- add `-v, --verbose` argument for debug prints when resolving module filenames
 
 ### v0.0.9
 
