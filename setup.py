@@ -101,7 +101,7 @@ def install_ppym(develop=False):
   sys.path_importer_cache.clear()
   import nodepy
   try:
-    nodepy.main(['ppym/bootstrap', '--no-bootstrap', '--install', '--global'])
+    nodepy.main(['ppym/bootstrap', '--no-bootstrap', '--install', '--global', '--upgrade'])
   except SystemExit as exc:
     if exc.code != 0:
       raise
@@ -156,7 +156,7 @@ class install(_install):
 
 setuptools.setup(
   name = 'node.py',
-  version = '0.0.8',
+  version = '0.0.9',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',

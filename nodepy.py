@@ -27,7 +27,7 @@ the same time.
 from __future__ import absolute_import, division, print_function
 
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
-__version__ = '0.0.8'
+__version__ = '0.0.9'
 __license__ = 'MIT'
 
 import code

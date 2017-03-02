@@ -42,3 +42,13 @@ __Todo__
 - Support package links for ppym develop installs
 - Support many of Node.js's original command-line arguments
 - Testcases for Python 2 and 3
+
+## Changelog
+
+### v0.0.9
+
+- `setup.py` -- Fix generation `node.py` script on Windows by hooking
+  `distlib.scripts.ScriptMaker` (see issue #11)
+- `require.main` property can now be set
+- update bundled PPYM to v0.0.7
+- `setup.py` now always upgrades to the bundled PPYM installation
