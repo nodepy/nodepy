@@ -68,6 +68,18 @@ def _get_name(x):
   return type(x).__name__
 
 
+def new_module(name):
+  """
+  Creates a new #types.ModuleType object from the specified *name*. In Python
+  2, the constructor accepts only normal strings and not unicode (which is what
+  we get from #click though).
+  """
+
+  if six.PY2 and isinstance(name, unicode):
+    name = name.encode()
+  return types.ModuleType(name)
+
+
 class ResolveError(Exception):
   def __init__(self, request, current_dir, is_main, path):
     self.request = request
@@ -92,7 +104,7 @@ class BaseModule(object):
     self.filename = filename
     self.directory = directory
     self.name = name
-    self.namespace = types.ModuleType(filename)
+    self.namespace = new_module(name)
     self.executed = False
     self.init_namespace()
 
