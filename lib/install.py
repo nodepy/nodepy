@@ -366,7 +366,7 @@ class Installer:
 
     # Check if the package already exists.
     try:
-      package = self.find_package(package_name,)
+      package = self.find_package(package_name)
     except PackageNotFound:
       pass
     else:

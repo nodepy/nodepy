@@ -74,7 +74,7 @@ def install(packages, develop, strict, upgrade, global_):
     else:
       ref = refstring.parse(package)
       selector = ref.version or semver.Selector('*')
-      success = installer.install_from_registry(ref.package, selector)
+      success = installer.install_from_registry(str(ref.package), selector)
     if not success:
       print('Installation failed')
       return 1
