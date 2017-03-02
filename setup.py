@@ -59,7 +59,7 @@ with open('ppym/package.json') as fp:
 
 setuptools.setup(
   name = 'node.py',
-  version = '0.0.6',
+  version = nodepy.__version__,
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
