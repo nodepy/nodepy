@@ -36,7 +36,6 @@ from setuptools.command.install import install as _install
 
 # These are the dependencies required by Node.py.
 install_requires = {
-  'click': '>=6.7',
   'localimport': '>=1.5.1',
   'six': '>=1.10.0'
 }

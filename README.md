@@ -56,6 +56,8 @@ __Todo__
 - add `require.current` and `Context.current_module` properties
 - support for `.nodepy-link` files as created by `ppym install -e`
 - add `-v, --verbose` argument for debug prints when resolving module filenames
+- use `argparse` instead of `click` due to problem with known arguments
+  being consumed and not passed to the Node.py main module
 
 ### v0.0.9
 

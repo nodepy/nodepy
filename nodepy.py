@@ -30,6 +30,7 @@ __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 __version__ = '0.0.9'
 __license__ = 'MIT'
 
+import argparse
 import code
 import collections
 import contextlib
@@ -41,7 +42,6 @@ import sys
 import traceback
 import types
 
-import click
 import localimport
 import six
 
@@ -494,40 +494,44 @@ class Context(object):
     return module
 
 
-@click.command(help=__doc__, context_settings={'ignore_unknown_options': True})
-@click.argument('arguments', nargs=-1, type=click.UNPROCESSED)
-@click.option('-d', '--debug', is_flag=True,
-    help='Enter the interactive debugger on exception.')
-@click.option('--version', is_flag=True,
-    help='Print the Node.py version and exit.')
-@click.option('-c', '--exec', 'exec_string', metavar='EXPRESSION',
-    help='Evaluate an expression.')
-@click.option('--current-dir', default='.',
-    help='Change where <request> will be resolved.')
-@click.option('-v', '--verbose', is_flag=True)
-def main(arguments, debug, version, exec_string, current_dir, verbose):
-  if version:
+def main(argv=None):
+  parser = argparse.ArgumentParser(description=__doc__)
+  parser.add_argument('arguments', nargs='...')
+  parser.add_argument('-d', '--debug', action='store_true',
+      help='Enter the interactive debugger when an exception would cause '
+        'the application to exit.')
+  parser.add_argument('-v', '--verbose', action='store_true',
+      help='Be verbose about what\'s happening in the Node.py context.')
+  parser.add_argument('-c', '--exec', dest='exec_', metavar='EXPR',
+      help='Evaluate a Python expression.')
+  parser.add_argument('--current-dir', default='.', metavar='DIR',
+      help='Change where the initial request will be resolved in.')
+  parser.add_argument('--version', action='store_true',
+      help='Print the Node.py version and exit.')
+  args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+
+  if args.version:
     print(VERSION)
     sys.exit(0)
 
-  arguments = list(arguments)
-  context = Context(current_dir, verbose)
-  with context, jit_debug(debug):
-    if exec_string or not arguments:
+  arguments = args.arguments[:]
+  context = Context(args.current_dir, args.verbose)
+  with context, jit_debug(args.debug):
+    if args.exec_ or not arguments:
       sys.argv = [sys.argv[0]] + arguments
       module = InteractiveSessionModule(context)
-      if exec_string:
-        exec(exec_string, vars(module.namespace))
+      if args.exec_:
+        exec(args.exec_, vars(module.namespace))
       else:
         code.interact(VERSION, local=vars(module.namespace))
     else:
       request = arguments.pop(0)
-      filename = context.resolve(request, current_dir, is_main=True)
-      sys.argv = [filename] + list(arguments)
+      filename = context.resolve(request, args.current_dir, is_main=True)
+      sys.argv = [filename] + arguments
       module = context.load_module(filename, is_main=True)
 
   sys.exit(0)
 
 
 if ('require' in globals() and require.main == module) or __name__ == '__main__':
-  main()
+  sys.exit(main())
