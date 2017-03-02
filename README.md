@@ -33,6 +33,8 @@ __Synopsis__
 
 __Todo__
 
-- Suppot package links for ppym develop installs
+- Alternative script names for `node.py` depending on the Python version it is installed into
+- Automatically install [ppym] together with Node.py
+- Support package links for ppym develop installs
 - Support many of Node.js's original command-line arguments
 - Testcases for Python 2 and 3
