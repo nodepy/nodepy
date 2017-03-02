@@ -166,6 +166,12 @@ class Require(object):
   def main(self):
     return self.module.context.main_module
 
+  @main.setter
+  def main(self, module):
+    if module is not None and not isinstance(module, BaseModule):
+      raise TypeError('main must be None or BaseModule')
+    self.module.context.main_module = None
+
   def __call__(self, request):
     current_dir = self.module.directory
     filename = self.context.resolve(request, current_dir)
