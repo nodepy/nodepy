@@ -50,6 +50,8 @@ __Todo__
 - extensions are now checked in the order they are registered
 - support loading bytecache files with the suffix `.cpython-XY.pyc`
 - the `.py` loader now loads the respective bytecache file if appropriate
+- `Context.register_binding()` now accepts arbitrary objects, not just
+  `BaseModule` instances
 
 ### v0.0.9
 

@@ -327,20 +327,19 @@ class Context(object):
     to a Context using the #register_binding() method.
     """
 
-    return get_exports(self._bindings[binding_name])
+    return self._bindings[binding_name]
 
-  def register_binding(self, binding_name, module):
+  def register_binding(self, binding_name, obj):
     """
     Registers a binding to the Context under the specified *binding_name*. The
-    *module* must be a #BaseModule instance. If a binding with the specified
-    name already exists, a #ValueError is raised.
+    object can be arbitrary, but there can only be one binding under the one
+    specified name at a atime. If the *binding_name* is already allocated, a
+    #ValueError is raised.
     """
 
-    if not isinstance(module, BaseModule):
-      raise TypeError('module must be a BaseModule instance')
     if binding_name in self._bindings:
       raise ValueError('binding {!r} already exists'.format(binding_name))
-    self._bindings[binding_name] = module
+    self._bindings[binding_name] = obj
 
   def register_extension(self, ext, loader):
     """
