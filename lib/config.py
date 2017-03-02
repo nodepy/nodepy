@@ -81,7 +81,7 @@ class Config(object):
             value = (value or '').strip()
             self._values[key] = value
             self._values_ordered.append([key, value])
-    except OSError as exc:
+    except (OSError, IOError) as exc:
       if exc.errno != errno.ENOENT or not ignore_not_exists:
         raise
 
