@@ -19,3 +19,10 @@ __Synopsis__
         (install a package from the PPYM package registry)
     ppym uninstall [-g] [@<scope>/]<package>
         (uninstall a previously installed package)
+
+__Installation__
+
+Use the `bootstrap.py` script to install PPYM.
+
+    $ git clone https://github.com/nodepy/ppym.git
+    $ node.py ppym/bootstrap --install --global
