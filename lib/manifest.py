@@ -18,7 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import json
 import jsonschema
 import os
 import re
@@ -26,6 +25,7 @@ import six
 
 semver = require('./semver')
 refstring = require('./refstring')
+json = require('./util/json')
 
 # Django's URL validation regex.
 url_regex = re.compile(

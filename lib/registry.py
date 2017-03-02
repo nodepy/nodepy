@@ -36,6 +36,7 @@ manifest = require('./manifest')
 semver = require('./semver')
 refstring = require('./refstring')
 text = require('./util/text')
+json = require('./util/json')
 
 
 def get_package_archive_name(package_name, version):
