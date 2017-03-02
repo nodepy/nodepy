@@ -108,14 +108,14 @@ class Installer:
           'packages': os.path.join(sys.prefix, 'share', 'nodepy_modules'),
           'bin': os.path.join(sys.prefix, 'Scripts' if os.name == 'nt' else 'bin'),
           'python_modules': os.path.join(sys.prefix, 'share', 'nodepy_modules', '.pymodules'),
-          'reference_dir': os.path.join(sys.prefix, 'share')
+          'reference_dir': os.path.join(sys.prefix, 'share').decode()
         }
       else:
         self.dirs = {
           'packages': os.path.join(_config['prefix'], 'nodepy_modules'),
           'bin': os.path.join(_config['prefix'], 'bin'),
           'python_modules': os.path.join(_config['prefix'], 'nodepy_modules', '.pymodules'),
-          'reference_dir': _config['prefix']
+          'reference_dir': _config['prefix'].decode()
         }
     else:
       self.dirs = {
