@@ -38,8 +38,9 @@ import sys
 @click.option('--install', is_flag=True, help="Install PPYM after bootstrapping "
     "and clean up the bootstrapped nodepy_modules/ directory.")
 @click.option('-g', '--global', 'global_', is_flag=True, help="Install PPYM globally.")
-@click.option('-U', '--upgrade', is_flag=True)
-def main(bootstrap, install, global_, upgrade):
+@click.option('-U', '--upgrade', is_flag=True, help="Uninstall previous versions instead of skipping the new version.")
+@click.option('--develop', is_flag=True, help="If --install, install in development mode.")
+def main(bootstrap, install, global_, upgrade, develop):
   """
   Bootstrap the PPYM installation.
   """
@@ -71,6 +72,8 @@ def main(bootstrap, install, global_, upgrade):
       cmd.append('--upgrade')
     if global_:
       cmd.append('--global')
+    if develop:
+      cmd.append('--develop')
     cmd.append(__directory__)
     require('./index').main(cmd, standalone_mode=False)
 
