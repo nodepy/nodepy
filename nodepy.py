@@ -31,6 +31,7 @@ __version__ = '0.0.9'
 __license__ = 'MIT'
 
 import code
+import collections
 import contextlib
 import itertools
 import marshal
@@ -51,6 +52,8 @@ except ImportError:
 
 
 VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_info)
+
+PackageLink = collections.namedtuple('PackageLink', 'src dst')
 
 
 @contextlib.contextmanager
@@ -256,6 +259,30 @@ def find_nearest_modules_directory(current_dir):
   return None
 
 
+def get_package_link(path):
+  """
+  Finds a `.nodepy-link` file in *path* or any of its parent directories,
+  stopping at the first encounter of a `nodepy_modules/` directory. Returns
+  a #PackageLink tuple or #None if no link was found.
+  """
+
+  while True:
+    dirname, base = os.path.split(path)
+    if not base.startswith('@') and base != 'nodepy_modules':
+      # Avoid resolving package links inside scope or nodepy_modules/
+      # directories (such links don't belon there anyway).
+      link_file = os.path.join(path, '.nodepy-link')
+      if os.path.isfile(link_file):
+        with open(link_file) as fp:
+          dst = fp.read().rstrip('\n')
+        return PackageLink(path, dst)
+    if dirname == path:
+      # Can happen on Windows for drive letters.
+      break
+    path = dirname
+  return None
+
+
 def try_file(filename, preserve_symlinks=True):
   """
   Returns *filename* if it exists, otherwise #None.
@@ -392,8 +419,9 @@ class Context(object):
       except ResolveError as exc:
         raise ResolveError(request, current_dir, is_main, path)
     elif os.path.isabs(request):
-      # TODO: Support links to packages by a special link file for
-      #       develop installations.
+      link = get_package_link(request)
+      if link:
+        request = os.path.join(link.dst, os.path.relpath(request, link.src))
       filename = try_file(request)
       if filename:
         return filename

@@ -41,7 +41,6 @@ __Todo__
 
 - Alternative script names for `node.py` and `ppym` depending on the Python
   version it is installed into
-- Support package links for ppym develop installs
 - Support many of Node.js's original command-line arguments
 - Testcases for Python 2 and 3
 
@@ -55,6 +54,7 @@ __Todo__
 - `Context.register_binding()` now accepts arbitrary objects, not just
   `BaseModule` instances
 - add `require.current` and `Context.current_module` properties
+- support for `.nodepy-link` files as created by `ppym install -e`
 
 ### v0.0.9
 
