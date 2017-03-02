@@ -340,10 +340,16 @@ class Selector(object):
     #None will be returned instead.
     """
 
-    if key is None:
-      key = lambda x: x
+    key = (lambda x: x) if key is None else key
+    if not callable(key):
+      raise TypeError('key must be callable')
+
     best = None
-    for version in versions:
-      if not best or (version > best and self(key(version))):
-        best = version
+    best_version = None
+    for obj in versions:
+      obj_version = key(obj)
+      if self(obj_version) and (best_version is None or obj_version > best_version):
+        best = obj
+        best_version = obj_version
+
     return best
