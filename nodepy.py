@@ -33,6 +33,7 @@ __license__ = 'MIT'
 import code
 import contextlib
 import itertools
+import marshal
 import os
 import pdb
 import sys
@@ -42,6 +43,12 @@ import types
 import click
 import localimport
 import six
+
+try:
+  import importlib._bootstrap_external
+except ImportError:
+  importlib = None
+
 
 VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_info)
 
@@ -144,10 +151,44 @@ class NodepyModule(BaseModule):
     if self.executed:
       raise RuntimeError('already executed')
     self.executed = True
-    with open(self.filename, 'r') as fp:
-      code = fp.read()
     with self.context.enter_module(self):
-      exec(compile(code, self.filename, 'exec'), vars(self.namespace))
+      exec(self._load_code(), vars(self.namespace))
+
+  def _load_code(self):
+    with open(self.filename, 'r') as fp:
+      return compile(fp.read(), self.filename, 'exec')
+
+
+class NodepyByteModule(NodepyModule):
+  """
+  Represents a `.cpython-XY.pyc` file where X and Y stand for the major and
+  minor versio of the Python version that the bytecode was compiled with.
+  """
+
+  pyc_suffix = '.cpython-{}{}.pyc'.format(*sys.version_info)
+
+  def _load_code(self):
+    with open(self.filename, 'rb') as fp:
+      if six.PY3:
+        importlib._bootstrap_external._validate_bytecode_header(fp.read(12))
+      else:
+        fp.read(8)
+      return marshal.load(fp)
+
+
+def _py_loader(context, filename):
+  """
+  Loader for `.py` files. Before the file is loaded, it checks if there is
+  bytecache file with the same name and a timestamp that is at least as new
+  and loads that file instead.
+  """
+
+  assert filename.endswith('.py')
+  bytecache_file = os.path.splitext(filename)[0] + NodepyByteModule.pyc_suffix
+  if os.path.isfile(bytecache_file) and os.path.isfile(filename) \
+      and os.path.getmtime(bytecache_file) >= os.path.getmtime(filename):
+    return NodepyByteModule(context, bytecache_file)
+  return NodepyModule(context, filename)
 
 
 class Require(object):
@@ -237,7 +278,8 @@ class Context(object):
     # automatically registered.
     self._extensions = {}
     self._extensions_order = []
-    self.register_extension('.py', NodepyModule)
+    self.register_extension('.py', _py_loader)
+    self.register_extension(NodepyByteModule.pyc_suffix, NodepyByteModule)
     # Container for cached modules. The keys are the absolute and normalized
     # filenames of the module so that the same file will not be loaded multiple
     # times.
@@ -401,7 +443,6 @@ class Context(object):
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
           'but instead a {!r} object'.format(_get_name(loader), _get_name(module)))
-    assert module.filename == filename
     self._module_cache[filename] = module
     if is_main:
       self.main_module = module

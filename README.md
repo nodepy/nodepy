@@ -48,10 +48,12 @@ __Todo__
 ### v0.0.10
 
 - extensions are now checked in the order they are registered
+- support loading bytecache files with the suffix `.cpython-XY.pyc`
+- the `.py` loader now loads the respective bytecache file if appropriate
 
 ### v0.0.9
 
-- `setup.py` -- Fix generation `node.py` script on Windows by hooking
+- `setup.py` -- Fix creation of `node.py` script on Windows by hooking
   `distlib.scripts.ScriptMaker` (see issue #11)
 - `require.main` property can now be set
 - update bundled PPYM to v0.0.7
