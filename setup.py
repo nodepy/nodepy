@@ -117,7 +117,7 @@ class install(_install):
 
 setuptools.setup(
   name = 'node.py',
-  version = '0.0.7',
+  version = '0.0.8',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
