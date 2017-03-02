@@ -34,29 +34,31 @@ import sys
 
 
 @click.command()
+@click.option('--bootstrap/--no-bootstrap', default=True, help="Don't bootstrap Python dependencies")
 @click.option('--install', is_flag=True, help="Install PPYM after bootstrapping "
     "and clean up the bootstrapped nodepy_modules/ directory.")
 @click.option('-g', '--global', 'global_', is_flag=True, help="Install PPYM globally.")
 @click.option('-U', '--upgrade', is_flag=True)
-def main(install, global_, upgrade):
+def main(bootstrap, install, global_, upgrade):
   """
   Bootstrap the PPYM installation.
   """
 
   existed_before = os.path.isdir('nodepy_modules')
 
-  print("Bootstrapping PPYM dependencies with Pip ...")
-  with open(os.path.join(__directory__, 'package.json')) as fp:
-    package = json.load(fp)
+  if bootstrap:
+    print("Bootstrapping PPYM dependencies with Pip ...")
+    with open(os.path.join(__directory__, 'package.json')) as fp:
+      package = json.load(fp)
 
-  cmd = ['--target', 'nodepy_modules/.pymodules']
-  for key, value in package['python-dependencies'].items():
-    cmd.append(key + value)
+    cmd = ['--target', 'nodepy_modules/.pymodules']
+    for key, value in package['python-dependencies'].items():
+      cmd.append(key + value)
 
-  res = pip.commands.InstallCommand().main(cmd)
-  if res != 0:
-    print('error: Pip installation failed')
-    sys.exit(res)
+    res = pip.commands.InstallCommand().main(cmd)
+    if res != 0:
+      print('error: Pip installation failed')
+      sys.exit(res)
 
   if install:
     # This is necessary on Python 2.7 (and possibly other versions) as
