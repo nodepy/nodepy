@@ -3,6 +3,8 @@
 # Node.py
 
 [![Build Status](https://travis-ci.org/nodepy/nodepy.svg?branch=master)](https://travis-ci.org/nodepy/nodepy)
+[![GitHub version](https://badge.fury.io/gh/nodepy%2Fnodepy.svg)](https://badge.fury.io/gh/nodepy%2Fnodepy)
+[![PyPI version](https://badge.fury.io/py/node.py.svg)](https://badge.fury.io/py/node.py)
 
 Node.py is a loader for Python modules in the Node.js-style. Unlike standard
 Python modules, the Node.py `require()` caches modules by their filename and
