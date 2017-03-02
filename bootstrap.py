@@ -74,7 +74,7 @@ def main(bootstrap, install, global_, upgrade):
     cmd.append(__directory__)
     require('./index').main(cmd, standalone_mode=False)
 
-    if not existed_before:
+    if not existed_before and bootstrap:
       print('Cleaning up bootstrap modules directory ...')
       shutil.rmtree('nodepy_modules')
 
