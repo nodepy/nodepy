@@ -25,7 +25,8 @@ __Synopsis__
 
 __Installation__
 
-Use the `bootstrap.py` script to install PPYM.
+PPYM is automatically installed with [Node.py]. If for some reason you have
+Node.py installed without PPYM, use the `bootstrap.py` script.
 
     $ git clone https://github.com/nodepy/ppym.git
     $ node.py ppym/bootstrap --install --global
