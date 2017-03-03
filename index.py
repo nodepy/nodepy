@@ -20,9 +20,10 @@
 
 import click
 import collections
+import getpass
 import json
 import os
-import getpass
+import nodepy
 import six
 import tarfile
 
@@ -298,13 +299,17 @@ def init(directory):
 
 @main.command()
 @click.option('-g', '--global', 'global_', is_flag=True)
-def bin(global_):
+@click.option('--pip', is_flag=True)
+def bin(global_, pip):
   """
   Print the path to the bin directory.
   """
 
-  installer = _install.Installer(global_=global_)
-  print(installer.dirs['bin'])
+  dirs = _install.get_directories(global_)
+  if pip:
+    print(dirs.pip_bindir)
+  else:
+    print(dirs.bindir)
 
 
 if require.main == module:

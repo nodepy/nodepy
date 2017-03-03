@@ -20,6 +20,7 @@
 
 __all__ = ['InstallError', 'Installer', 'walk_package_files']
 
+import nodepy
 import os
 import pip.commands
 import shlex
@@ -49,6 +50,14 @@ PPYM_INSTALLED_FILES = '.ppym-installed-files'
 default_exclude_patterns = [
     '.DS_Store', '.svn/*', '.git', '.git/*', 'nodepy_modules/*',
     '*.pyc', '*.pyo', 'dist/*']
+
+
+def get_directories(global_):
+  if global_:
+    base = os.path.join(sys.prefix, 'share') if is_virtualenv() else config['prefix']
+  else:
+    base = '.'
+  return nodepy.Directories(base)
 
 
 def _makedirs(path):
@@ -102,28 +111,14 @@ class Installer:
     self.upgrade = upgrade
     self.global_ = global_
     self.strict = strict
-    if self.global_:
-      if is_virtualenv():
-        self.dirs = {
-          'packages': os.path.join(sys.prefix, 'share', 'nodepy_modules'),
-          'bin': os.path.join(sys.prefix, 'Scripts' if os.name == 'nt' else 'bin'),
-          'python_modules': os.path.join(sys.prefix, 'share', 'nodepy_modules', '.pymodules'),
-          'reference_dir': six.text_type(os.path.join(sys.prefix, 'share'))
-        }
-      else:
-        self.dirs = {
-          'packages': os.path.join(_config['prefix'], 'nodepy_modules'),
-          'bin': os.path.join(_config['prefix'], 'bin'),
-          'python_modules': os.path.join(_config['prefix'], 'nodepy_modules', '.pymodules'),
-          'reference_dir': six.text_type(_config['prefix'])
-        }
-    else:
-      self.dirs = {
-        'packages': 'nodepy_modules',
-        'bin': 'nodepy_modules/.bin',
-        'python_modules': 'nodepy_modules/.pymodules',
-        'reference_dir': six.text_type(os.getcwd())
-      }
+
+    dirs = get_directories(global_)
+    self.dirs = {
+      'packages': dirs.prefix,
+      'bin': dirs.bindir,
+      'pip_prefix': dirs.pip_prefix,
+      'reference_dir': six.text_type(dirs.base)
+    }
 
   def find_package(self, package):
     """
@@ -262,12 +257,12 @@ class Installer:
     # TODO: Skip modules we have already installed? (Pip will show a big info message)
     # TODO: This install method always behaves like `strict`, ALL modules
     #       will be installed into the target directory if they are not already
-    #       in the directory. In reality when using Node.py, we take .pymodule
+    #       in the directory. In reality when using Node.py, we take .pip
     #       directories of a lot of paths into account.
 
     if install_modules:
       print('  Installing Python dependencies via Pip:', ' '.join(install_modules))
-      cmd = ['--target', self.dirs['python_modules']] + install_modules
+      cmd = ['--prefix', self.dirs['pip_prefix']] + install_modules
       res = pip.commands.install.InstallCommand().main(cmd)
       if res != 0:
         print('Error: `pip install` failed with exit-code', res)
