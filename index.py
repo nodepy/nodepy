@@ -103,6 +103,7 @@ def dist():
   """
 
   mf = manifest.parse('package.json')
+  mf.run_script('pre-dist')
   filename = registry.get_package_archive_name(mf.name, mf.version)
   filename = os.path.join('dist', filename)
 
@@ -114,6 +115,7 @@ def dist():
   for filename, rel in _install.walk_package_files(mf):
     print('  Adding "{}"...'.format(rel))
     archive.add(filename, rel)
+  mf.run_script('post-dist')
   print('Done!')
 
 

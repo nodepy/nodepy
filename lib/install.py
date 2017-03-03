@@ -21,7 +21,6 @@
 __all__ = ['InstallError', 'Installer', 'walk_package_files']
 
 import os
-import nodepy
 import pip.commands
 import shlex
 import shutil
@@ -179,6 +178,13 @@ class Installer:
     print('Uninstalling "{}" from "{}"{}...'.format(manifest.identifier,
         directory, ' before upgrade' if self.upgrade else ''))
 
+    try:
+      manifest.run_script('pre-uninstall')
+    except:
+      traceback.print_exc()
+      print('Error: pre-uninstall script failed.')
+      return False
+
     filelist_fn = os.path.join(directory, PPYM_INSTALLED_FILES)
     installed_files = []
     if not os.path.isfile(filelist_fn):
@@ -307,6 +313,13 @@ class Installer:
       if not self.uninstall_directory(target_dir):
         return False
 
+    try:
+      manifest.run_script('pre-install')
+    except:
+      traceback.print_exc()
+      print('Error: pre-install script failed.')
+      return False
+
     # Install dependencies.
     if not self.install_dependencies_for(manifest):
       return False
@@ -330,11 +343,7 @@ class Installer:
         shutil.copyfile(src, dst)
         installed_files.append(dst)
 
-    # Create scripts for the 'scripts' and 'bin' fields in the package manifest.
-    for script_name, command in manifest.script.items():
-      print('  Installing script "{}"...'.format(script_name))
-      installed_files += _script.make_command_script(
-          script_name, self.dirs['bin'], shlex.split(command))
+    # Create scripts for the 'bin' field in the package manifest.
     for script_name, filename in manifest.bin.items():
       print('  Installing script "{}"...'.format(script_name))
       filename = os.path.abspath(os.path.join(target_dir, filename))
@@ -347,15 +356,12 @@ class Installer:
         fp.write(fn)
         fp.write('\n')
 
-    if manifest.postinstall:
-      print('  Running postinstall script "{}"...'.format(manifest.postinstall))
-      filename = os.path.join(target_dir, manifest.postinstall)
-      try:
-        nodepy.main([filename], standalone_mode=False)
-      except BaseException as exc:
-        print('  Error in postinstall script "{}"'.format(filename))
-        traceback.print_exc()
-        return False
+    try:
+      manifest.run_script('post-install')
+    except:
+      traceback.print_exc()
+      print('Error: post-install script failed.')
+      return False
 
     return True
 

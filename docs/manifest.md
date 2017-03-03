@@ -71,16 +71,36 @@ that is then executed as the main module when the script is executed.
   }
 ```
 
-### `script`
+### `scripts`
 
-*Optional.* Similar to the `bin` field, only that it maps script names to
-shell commands.
+*Optional.* An object that associates event names with Node.py modules
+which are executed during various events of the package lifecycle.
 
 ```json
-  "script": {
-    "say-hello": "echo \"Hello $USER\""
+{
+  "scripts": {
+    "post-install": "./bin/install.py",
+    "pre-uninstall": "./bin/uninstall.py",
+    "pre-dist": "./bin/dist.py"
   }
+}
 ```
+
+Currently supported fields are:
+
+- pre-install, post-install
+- pre-uninstall
+- pre-dist, post-dist
+
+__Todo__
+
+- post-uninstall
+- pre-publish, post-publish
+- pre-version, post-version
+- pre-test, test, post-test
+- pre-stop, stop, post-stop
+- pre-start, start, post-start
+- pre-restart, restart, post-restart
 
 ### `dependencies`
 

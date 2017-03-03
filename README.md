@@ -33,6 +33,13 @@ Use the `bootstrap.py` script to install PPYM.
 ### v0.0.9
 
 - add `ppym bin [-g]` which will print the path to the bin directory
+- add `PackageManifest.run_script()`
+- change `PackageManifest` constructor now validates the `name` parameter
+- renamed `package.json` `"script"` field to `"scripts"` and change
+  usecase for package lifecycle events instead of installing command-line
+  scripts
+- implement package lifecycle event scripts `pre-dist`, `post-dist`,
+  `pre-install`, `post-install` and `post-uninstall`
 
 ### v0.0.8
 

@@ -22,6 +22,7 @@ import jsonschema
 import os
 import re
 import six
+import string
 
 semver = require('./semver')
 refstring = require('./refstring')
@@ -91,7 +92,7 @@ class PackageManifest:
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
-      "script": {
+      "scripts": {
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
@@ -116,10 +117,19 @@ class PackageManifest:
     "additionalProperties": {"type": "object"}
   }
 
+  valid_characters = frozenset(string.ascii_lowercase + string.digits + '-._@/')
+
   def __init__(self, filename, directory, name, version, description=None,
       author=None, license=None, dependencies=None, python_dependencies=None,
-      script=None, bin=None, engines=None, engine_props=None, dist=None,
+      scripts=None, bin=None, engines=None, engine_props=None, dist=None,
       postinstall=None, repository=None):
+    if len(name) < 2 or len(name) > 127:
+      raise ValueError('packag name must be at least 2 and maximum 127 characters')
+    if name.startswith('_') or name.startswith('.'):
+      raise ValueError('package name can not start with _ or .')
+    if set(name).difference(self.valid_characters):
+      raise ValueError('package name contains invalid characters')
+    refstring.parse_package(name)
     if repository is not None and not url_regex.match(repository):
       raise ValueError('invalid repository: "{}" is not a URL'.format(repository))
     self.filename = filename
@@ -132,7 +142,7 @@ class PackageManifest:
     self.license = license
     self.dependencies = {} if dependencies is None else dependencies
     self.python_dependencies = {} if python_dependencies is None else python_dependencies
-    self.script = {} if script is None else script
+    self.scripts = {} if scripts is None else scripts
     self.bin = {} if bin is None else bin
     self.engine_props = {} if engine_props is None else engine_props
     self.dist = {} if dist is None else dist
@@ -153,6 +163,16 @@ class PackageManifest:
   @property
   def identifier(self):
     return '{}@{}'.format(self.name, self.version)
+
+  def run_script(self, event, argv=None):
+    """
+    Invoke a script for the specified *event* name. Does nothing if no script
+    for the specified event is specified.
+    """
+
+    if event not in self.scripts:
+      return
+    require.exec_main(self.scripts[event], self.directory, argv=argv)
 
 
 class InvalidPackageManifest(Exception):
