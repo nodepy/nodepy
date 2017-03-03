@@ -102,6 +102,13 @@ __Todo__
 - pre-start, start, post-start
 - pre-restart, restart, post-restart
 
+### `private`
+
+Prevent publication of the package with `ppym publish`. This is used for
+packages that want to take advantage of the PPYM dependency management but
+are not actuall supposed to be placed into the public registry. An example
+of this would be a package that generates the documentation of another project.
+
 ### `dependencies`
 
 *Optional.*: An object that specifies the dependencies of the package.

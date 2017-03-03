@@ -84,6 +84,7 @@ class PackageManifest:
       "author": {"type": "string"},
       "repository": {"type": "string"},
       "license": {"type": "string"},
+      "private": {"type": "boolean"},
       "dependencies": {
         "type": "object",
         "additionalProperties": {"type": "string"}
@@ -111,8 +112,7 @@ class PackageManifest:
           "exclude_files": {"type": "array", "items": {"type": "string"}},
         },
         "additionalProperties": False
-      },
-      "postinstall": {"type": "string"}
+      }
     },
     "additionalProperties": {"type": "object"}
   }
@@ -122,7 +122,7 @@ class PackageManifest:
   def __init__(self, filename, directory, name, version, description=None,
       author=None, license=None, dependencies=None, python_dependencies=None,
       scripts=None, bin=None, engines=None, engine_props=None, dist=None,
-      postinstall=None, repository=None):
+      repository=None, private=False):
     if len(name) < 2 or len(name) > 127:
       raise ValueError('packag name must be at least 2 and maximum 127 characters')
     if name.startswith('_') or name.startswith('.'):
@@ -146,7 +146,7 @@ class PackageManifest:
     self.bin = {} if bin is None else bin
     self.engine_props = {} if engine_props is None else engine_props
     self.dist = {} if dist is None else dist
-    self.postinstall = postinstall
+    self.private = private
 
   def __eq__(self, other):
     if isinstance(other, PackageManifest):

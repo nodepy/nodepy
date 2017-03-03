@@ -61,6 +61,9 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   `.py` if they don't already end it `.py` or `.pyw`. This is to prevent
   `distlib` from stripping any extension that is intended to be in the scripts
   call name. (Windows only)
+- add `"private"` field to the manifest specification
+- remove `"postinstall"` field from the manifest specification (backwards
+  incompatible)
 
 ### v0.0.8
 
