@@ -14,7 +14,7 @@ __Synopsis__
     ppym publish                 (create a package distro and upload to the registry)
     ppym upload <filename>       (upload a file to the package registry)
     ppym install [-g]            (install all dependencies of the current package)
-    ppym install [-g] .          (install a package from a directory)
+    ppym install [-g] [-e] <dir> (install a package from a directory)
     ppym install [-g] <filename>
         (install a package from an archive)
     ppym install [-g] [@<scope>/]<package>
