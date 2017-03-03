@@ -220,11 +220,20 @@ class Require(object):
   def current(self):
     return self.context.current_module
 
-  def __call__(self, request):
-    current_dir = self.module.directory
-    filename = self.context.resolve(request, current_dir)
-    module = self.context.load_module(filename)
+  def __call__(self, request, current_dir=None, is_main=False, cache=True):
+    current_dir = current_dir or self.module.directory
+    filename = self.context.resolve(request, current_dir, is_main=is_main)
+    module = self.context.load_module(filename, is_main=is_main, cache=cache)
     return get_exports(module)
+
+  def exec_main(self, request, current_dir=None, argv=None, cache=True):
+    main, self.main = self.main, None
+    argv, sys.argv = sys.argv, sys.argv if argv is None else argv
+    try:
+      self(request, current_dir, is_main=True, cache=cache)
+    finally:
+      sys.argv = argv
+      self.main = main
 
 
 def get_exports(module):
@@ -461,7 +470,7 @@ class Context(object):
 
     raise ResolveError(request, current_dir, is_main, path)
 
-  def load_module(self, filename, is_main=False, exec_=True):
+  def load_module(self, filename, is_main=False, exec_=True, cache=True):
     """
     Loads a module by *filename*. The filename will be converted to an
     absolute path and normalized. If the module is already loaded, the
@@ -475,7 +484,7 @@ class Context(object):
       raise RuntimeError('context already has a main module')
 
     filename = os.path.normpath(os.path.abspath(filename))
-    if filename in self._module_cache:
+    if cache and filename in self._module_cache:
       return self._module_cache[filename]
     for ext, loader in six.iteritems(self._extensions):
       if filename.endswith(ext):
@@ -486,7 +495,8 @@ class Context(object):
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
           'but instead a {!r} object'.format(_get_name(loader), _get_name(module)))
-    self._module_cache[filename] = module
+    if cache:
+      self._module_cache[filename] = module
     if is_main:
       self.main_module = module
     if exec_ and not module.executed:

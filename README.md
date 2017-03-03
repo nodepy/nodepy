@@ -46,6 +46,12 @@ __Todo__
 
 ## Changelog
 
+### v0.0.11
+
+- add `Require.__call__(current_dir=None, is_main=False, cache=True)` arguments\
+- add `Require.exec_module()` method
+- add `Session.load_module(cache=True)` argument
+
 ### v0.0.10
 
 - extensions are now checked in the order they are registered
