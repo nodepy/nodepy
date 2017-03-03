@@ -51,6 +51,8 @@ __Todo__
 - add `Require.__call__(current_dir=None, is_main=False, cache=True)` arguments\
 - add `Require.exec_module()` method
 - add `Session.load_module(cache=True)` argument
+- add `Directories` class which generates the paths to look for Python modules
+  installed via Pip through PPYM and more
 
 ### v0.0.10
 

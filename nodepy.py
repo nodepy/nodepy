@@ -56,6 +56,29 @@ VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_in
 PackageLink = collections.namedtuple('PackageLink', 'src dst')
 
 
+class Directories(object):
+  """
+  Helper class that generates the paths where stuff is usually installed to
+  by PPYM (and through it, by Pip).
+  """
+
+  def __init__(self, base):
+    self.base = base
+    self.prefix = os.path.join(base, 'nodepy_modules')
+    self.bindir = os.path.join(self.prefix, '.bin')
+    self.pip_prefix = os.path.join(self.prefix, '.pip')
+
+    pip_bindir_name = 'Scripts' if os.name == 'nt' else 'bin'
+    self.pip_bindir = os.path.join(self.pip_prefix, pip_bindir_name)
+    self.binpath = [self.bindir, self.pip_bindir]
+    self.libpath = [
+        os.path.join(self.prefix, '.pip', 'Lib'),
+        os.path.join(self.prefix, '.pip', 'Lib', 'site-packages')]
+
+  def __str__(self):
+    return "<Directories '{}'>".format(self.prefix)
+
+
 @contextlib.contextmanager
 def jit_debug(debug=True):
   """
@@ -332,9 +355,9 @@ class Context(object):
     self.path = list(filter(bool, os.getenv('NODEPY_PATH', '').split(os.pathsep)))
     # The main module. Will be set by #load_module().
     self.main_module = None
-    # Localimport context for .pymodules installed by PPYM.
-    self.importer = localimport.localimport([
-        os.path.join(current_dir, 'nodepy_modules/.pymodules')], '.')
+    # Localimport context for Python modules installed via Pip through PPYM.
+    dirs = Directories(current_dir)
+    self.importer = localimport.localimport(dirs.libpath, parent_dir='.')
     self.verbose = verbose
 
   def __enter__(self):
