@@ -293,7 +293,7 @@ class Installer:
           script_name = fn
 
         print('  Creating', script_name, '...')
-        fn = os.path.join(self._dirs.pip_bindir, fn)
+        fn = os.path.abspath(os.path.join(self._dirs.pip_bindir, fn))
         _script.make_environment_wrapped_script(script_name, self.dirs['bin'],
             fn, path=self._dirs.binpath, pythonpath=self._dirs.libpath)
 
