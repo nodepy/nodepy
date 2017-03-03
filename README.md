@@ -53,6 +53,8 @@ __Todo__
 - add `Session.load_module(cache=True)` argument
 - add `Directories` class which generates the paths to look for Python modules
   installed via Pip through PPYM and more
+- entering the Node.py `Context` now adds the local `nodepy_modules/.bin`
+  directory to the `PATH` environment variable
 
 ### v0.0.10
 

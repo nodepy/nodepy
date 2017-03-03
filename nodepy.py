@@ -356,14 +356,17 @@ class Context(object):
     # The main module. Will be set by #load_module().
     self.main_module = None
     # Localimport context for Python modules installed via Pip through PPYM.
-    dirs = Directories(current_dir)
-    self.importer = localimport.localimport(dirs.libpath, parent_dir='.')
+    self._dirs = Directories(current_dir)
+    self.importer = localimport.localimport(self._dirs.libpath, parent_dir='.')
     self.verbose = verbose
 
   def __enter__(self):
+    self._oldpath = os.getenv('PATH', '')
+    os.environ['PATH'] = self._dirs.bindir + os.pathsep + self._oldpath
     self.importer.__enter__()
 
   def __exit__(self, *args):
+    os.environ['PATH'] = self._oldpath
     return self.importer.__exit__(*args)
 
   def debug(self, *msg):
