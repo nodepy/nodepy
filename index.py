@@ -26,6 +26,8 @@ import getpass
 import six
 import tarfile
 
+from six.moves import input
+
 manifest = require('./lib/manifest')
 semver = require('./lib/semver')
 refstring = require('./lib/refstring')
@@ -46,6 +48,73 @@ class Less(object):
       input("Press <Enter> for more")
 
 
+class PackageLifecycle(object):
+
+  def __init__(self, directory='.', dist_dir=None):
+    if not dist_dir:
+      dist_dir = os.path.join(directory, 'dist')
+    self.manifest = manifest.parse(os.path.join(directory, 'package.json'))
+    self.dist_dir = dist_dir
+
+  def dist(self):
+    self.manifest.run_script('pre-dist')
+    filename = registry.get_package_archive_name(self.manifest.name,
+        self.manifest.version)
+    filename = os.path.join(self.dist_dir, filename)
+    if not os.path.isdir(self.dist_dir):
+      os.makedirs(self.dist_dir)
+
+    print('Creating archive "{}"...'.format(filename))
+    archive = tarfile.open(filename, 'w:gz')
+    for filename, rel in _install.walk_package_files(self.manifest):
+      print('  Adding "{}"...'.format(rel))
+      archive.add(filename, rel)
+    self.manifest.run_script('post-dist')
+    print('Done!')
+    return filename
+
+  def upload(self, filename, user, password, force, dry):
+    if not os.path.isfile(filename):
+      print('error: "{}" does not exist'.format(filename))
+      exit(1)
+
+    # If the file looks like a package distribution archive of a different
+    # version, let the user confirm that he/she really wants to upload the file.
+    basename = os.path.basename(filename)
+    if basename.startswith(self.manifest.identifier) and basename \
+        != registry.get_package_archive_name(self.manifest.name, self.manifest.version):
+      print('This looks a like a package distribution archive, but it ')
+      print('does not match with the package\'s current version. Do you ')
+      print('really want to upload this file? [y/n] ')
+      reply = input().lower().strip()
+      if reply not in ('y', 'yes'):
+        exit(1)
+
+    url = config['registry']
+    user = user or config.get('username')
+    if not user or not password:
+      print('Credentials for', url)
+    if not user:
+      user = input('Username? ')
+    else:
+      print('Username?', user)
+    if not password:
+      password = getpass.getpass('Password? ')
+
+    if dry:
+      print('Not actually uploading things... (dry mode)')
+    else:
+      reg = registry.RegistryClient(url, user, password)
+      msg = reg.upload(self.manifest.name, self.manifest.version, filename, force)
+      print(msg)
+
+  def publish(self, user, password, force, dry):
+    self.manifest.run_script('pre-publish')
+    filename = self.dist()
+    self.upload(filename, user, password, force, dry)
+    self.manifest.run_script('post-publish')
+
+
 @click.group()
 def main():
   if not config['registry'].startswith('https://'):
@@ -60,6 +129,10 @@ def main():
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
 def install(packages, develop, strict, upgrade, global_):
+  """
+  Installs one or more packages.
+  """
+
   installer = _install.Installer(upgrade=upgrade, global_=global_, strict=strict)
   if not packages:
     success = installer.install_dependencies_for(manifest.parse('package.json'))
@@ -102,21 +175,7 @@ def dist():
   Create a .tar.gz distribution from the package.
   """
 
-  mf = manifest.parse('package.json')
-  mf.run_script('pre-dist')
-  filename = registry.get_package_archive_name(mf.name, mf.version)
-  filename = os.path.join('dist', filename)
-
-  if not os.path.isdir('dist'):
-    os.mkdir('dist')
-
-  print('Creating archive "{}"...'.format(filename))
-  archive = tarfile.open(filename, 'w:gz')
-  for filename, rel in _install.walk_package_files(mf):
-    print('  Adding "{}"...'.format(rel))
-    archive.add(filename, rel)
-  mf.run_script('post-dist')
-  print('Done!')
+  PackageLifecycle().dist()
 
 
 @main.command()
@@ -124,7 +183,8 @@ def dist():
 @click.option('-f', '--force', is_flag=True)
 @click.option('-u', '--user')
 @click.option('-p', '--password')
-def upload(filename, force, user, password):
+@click.option('--dry', is_flag=True)
+def upload(filename, force, user, password, dry):
   """
   Upload a file to the current version to the registry. If the package does
   not already exist on the registry, it will be added to your account
@@ -132,25 +192,21 @@ def upload(filename, force, user, password):
   source distribution that can be created with 'ppym dist'.
   """
 
-  if not os.path.isfile(filename):
-    print('error: "{}" does not exist'.format(filename))
-    exit(1)
-  mf = manifest.parse('package.json')
+  PackageLifecycle().upload(filename, force, user, password, dry)
 
-  url = config['registry']
-  user = user or config.get('username')
-  if not user or not password:
-    print('Credentials for', url)
-  if not user:
-    user = input('Username? ')
-  else:
-    print('Username?', user)
-  if not password:
-    password = getpass.getpass('Password? ')
 
-  reg = registry.RegistryClient(url, user, password)
-  msg = reg.upload(mf.name, mf.version, filename, force)
-  print(msg)
+@main.command()
+@click.option('-f', '--force', is_flag=True)
+@click.option('-u', '--user')
+@click.option('-p', '--password')
+@click.option('--dry', is_flag=True)
+def publish(force, user, password, dry):
+  """
+  Combination of `ppym dist` and `ppym upload`. Also invokes the `pre-publish`
+  and `post-publish` scripts.
+  """
+
+  PackageLifecycle().publish(force, user, password, dry)
 
 
 @main.command()
@@ -205,6 +261,10 @@ def register(agree_tos, save):
 @main.command()
 @click.argument('directory', default='.')
 def init(directory):
+  """
+  Initialize a new package.json.
+  """
+
   filename = os.path.join(directory, 'package.json')
   if os.path.isfile(filename):
     print('error: "{}" already exists'.format(filename))
@@ -239,6 +299,10 @@ def init(directory):
 @main.command()
 @click.option('-g', '--global', 'global_', is_flag=True)
 def bin(global_):
+  """
+  Print the path to the bin directory.
+  """
+
   installer = _install.Installer(global_=global_)
   print(installer.dirs['bin'])
 

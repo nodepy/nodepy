@@ -91,11 +91,11 @@ Currently supported fields are:
 - pre-install, post-install
 - pre-uninstall
 - pre-dist, post-dist
+- pre-publish, post-publish
 
 __Todo__
 
 - post-uninstall
-- pre-publish, post-publish
 - pre-version, post-version
 - pre-test, test, post-test
 - pre-stop, stop, post-stop

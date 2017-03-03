@@ -172,7 +172,7 @@ class PackageManifest:
 
     if event not in self.scripts:
       return
-    require.exec_main(self.scripts[event], self.directory, argv=argv)
+    require.exec_main(self.scripts[event], self.directory, argv=argv, cache=False)
 
 
 class InvalidPackageManifest(Exception):
