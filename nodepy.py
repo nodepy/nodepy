@@ -68,12 +68,13 @@ class Directories(object):
     self.bindir = os.path.join(self.prefix, '.bin')
     self.pip_prefix = os.path.join(self.prefix, '.pip')
 
+    pip_libdir_name = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version_info)
     pip_bindir_name = 'Scripts' if os.name == 'nt' else 'bin'
     self.pip_bindir = os.path.join(self.pip_prefix, pip_bindir_name)
     self.binpath = [self.bindir, self.pip_bindir]
     self.libpath = [
-        os.path.join(self.prefix, '.pip', 'Lib'),
-        os.path.join(self.prefix, '.pip', 'Lib', 'site-packages')]
+        os.path.join(self.prefix, '.pip', pip_libdir_name),
+        os.path.join(self.prefix, '.pip', pip_libdir_name, 'site-packages')]
 
   def __str__(self):
     return "<Directories '{}'>".format(self.prefix)
