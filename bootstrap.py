@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 """
 Bootstrap the installation of the PPYM, installing all Python dependencies
-into `nodepy_modules/.pymodules`.
+into `nodepy_modules/.pip`.
 """
 
 if require.main != module:
@@ -52,7 +52,7 @@ def main(bootstrap, install, global_, upgrade, develop):
     with open(os.path.join(__directory__, 'package.json')) as fp:
       package = json.load(fp)
 
-    cmd = ['--target', 'nodepy_modules/.pymodules']
+    cmd = ['--prefix', 'nodepy_modules/.pip']
     for key, value in package['python-dependencies'].items():
       cmd.append(key + value)
 
