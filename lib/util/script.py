@@ -46,6 +46,12 @@ def make_python_script(script_name, directory, code):
   bash-script on Windows).
   """
 
+  if not script_name.endswith('.py') or not script_name.endswith('.pyw'):
+    # ScriptMaker._write_script() will split the extension from the script
+    # name, thus if there is an extension, we should add another suffix so
+    # the extension doesn't get lost.
+    script_name += '.py'
+
   maker = ScriptMaker(None, directory)
   maker.clobber = True
   maker.variants = set(('',))

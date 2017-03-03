@@ -57,6 +57,10 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - PPYM will now attempt to wrap scripts installed by Pip into the Pip bin
   directory (see `ppym bin --pip [--global]`) and create a proxy in the
   `nodepy_modules/.bin` directory
+- Scripts instaled via the `"bin"` field are now automatically appended with
+  `.py` if they don't already end it `.py` or `.pyw`. This is to prevent
+  `distlib` from stripping any extension that is intended to be in the scripts
+  call name.
 
 ### v0.0.8
 
