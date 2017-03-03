@@ -112,12 +112,13 @@ class Installer:
     self.global_ = global_
     self.strict = strict
 
-    dirs = get_directories(global_)
+    self._dirs = get_directories(global_)
     self.dirs = {
-      'packages': dirs.prefix,
-      'bin': dirs.bindir,
-      'pip_prefix': dirs.pip_prefix,
-      'reference_dir': six.text_type(dirs.base)
+      'packages': self._dirs.prefix,
+      'bin': self._dirs.bindir,
+      'pip_prefix': self._dirs.pip_prefix,
+      'pip_bindir': self._dirs.pip_bindir,
+      'reference_dir': six.text_type(self._dirs.base)
     }
 
   def find_package(self, package):
@@ -246,7 +247,8 @@ class Installer:
 
   def install_python_dependencies(self, deps):
     """
-    Install all Python dependencies specified in *deps* using Pip.
+    Install all Python dependencies specified in *deps* using Pip. Make sure
+    to call #relink_pip_scripts().
     """
 
     install_modules = []
@@ -254,11 +256,6 @@ class Installer:
       install_modules.append(name + version)
 
     # TODO: Upgrade strategy?
-    # TODO: Skip modules we have already installed? (Pip will show a big info message)
-    # TODO: This install method always behaves like `strict`, ALL modules
-    #       will be installed into the target directory if they are not already
-    #       in the directory. In reality when using Node.py, we take .pip
-    #       directories of a lot of paths into account.
 
     if install_modules:
       print('  Installing Python dependencies via Pip:', ' '.join(install_modules))
@@ -269,6 +266,27 @@ class Installer:
         return False
 
     return True
+
+  def relink_pip_scripts(self):
+    """
+    Re-link scripts from the Pip bin directory to the Node.py bin directory.
+    These scripts will extend the PYTHONPATH before they are executed to make
+    sure that the respective modules can be found.
+    """
+
+    if os.path.isdir(self._dirs.pip_bindir):
+      print('Relinking Pip-installed proxy scripts ...')
+      for fn in os.listdir(self._dirs.pip_bindir):
+        if os.name == 'nt':
+          script_name, ext = os.path.splitext(fn)
+          if not ext: continue  # Bash script for Git-Bash..?
+        else:
+          script_name = fn
+
+        print('  Creating', script_name, '...')
+        fn = os.path.join(self._dirs.pip_bindir, fn)
+        _script.make_environment_wrapped_script(script_name, self.dirs['bin'],
+            fn, path=self._dirs.binpath, pythonpath=self._dirs.libpath)
 
   def install_from_directory(self, directory, develop=False, expect=None):
     """

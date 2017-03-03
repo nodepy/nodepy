@@ -48,6 +48,15 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   appears to be a package distribution archive but does not match the
   current version of your project
 - add `ppym publish` command
+- PPYM no longer installs scripts into the Bin directory of the Python prefix
+  in virtual envs, but instead always into `nodepy_modules/.bin` (see the
+  output of `ppym bin` or `ppym bin --global` for information on what that
+  path is)
+- add `script:make_environment_wrapped_script()`
+- add `Installer.relink_pip_scripts()`
+- PPYM will now attempt to wrap scripts installed by Pip into the Pip bin
+  directory (see `ppym bin --pip [--global]`) and create a proxy in the
+  `nodepy_modules/.bin` directory
 
 ### v0.0.8
 

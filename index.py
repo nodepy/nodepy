@@ -25,6 +25,7 @@ import json
 import os
 import nodepy
 import six
+import sys
 import tarfile
 
 from six.moves import input
@@ -139,6 +140,7 @@ def install(packages, develop, strict, upgrade, global_):
     success = installer.install_dependencies_for(manifest.parse('package.json'))
     if not success:
       return 1
+    installer.relink_pip_scripts()
     return 0
 
   for package in packages:
@@ -153,6 +155,8 @@ def install(packages, develop, strict, upgrade, global_):
     if not success:
       print('Installation failed')
       return 1
+
+  installer.relink_pip_scripts()
   return 0
 
 
