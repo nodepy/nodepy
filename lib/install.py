@@ -42,6 +42,7 @@ refstring = require('./refstring')
 parse_manifest = require('./manifest').parse
 PackageManifest = require('./manifest').PackageManifest
 InvalidPackageManifest = require('./manifest').InvalidPackageManifest
+PackageLifecycle = require('./package-lifecycle')
 
 PACKAGE_LINK = '.nodepy-link'
 PPYM_INSTALLED_FILES = '.ppym-installed-files'
@@ -174,8 +175,9 @@ class Installer:
     print('Uninstalling "{}" from "{}"{}...'.format(manifest.identifier,
         directory, ' before upgrade' if self.upgrade else ''))
 
+    plc = PackageLifecycle(manifest=manifest)
     try:
-      manifest.run_script('pre-uninstall')
+      plc.run('pre-uninstall', [])
     except:
       traceback.print_exc()
       print('Error: pre-uninstall script failed.')
@@ -346,8 +348,9 @@ class Installer:
       if not self.uninstall_directory(target_dir):
         return False
 
+    plc = PackageLifecycle(manifest=manifest)
     try:
-      manifest.run_script('pre-install')
+      plc.run('pre-install', [])
     except:
       traceback.print_exc()
       print('Error: pre-install script failed.')
@@ -390,7 +393,7 @@ class Installer:
         fp.write('\n')
 
     try:
-      manifest.run_script('post-install')
+      plc.run('post-install', [])
     except:
       traceback.print_exc()
       print('Error: post-install script failed.')
