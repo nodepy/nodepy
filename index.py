@@ -133,14 +133,21 @@ def main():
 @click.option('-S', '--strict', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
-def install(packages, develop, strict, upgrade, global_):
+@click.option('--dev/--production', 'dev', default=None,
+    help='Specify whether to install development dependencies or not. The '
+      'default value depends on the installation type (--dev when no packages '
+      'are specified, --production otherwise).')
+def install(packages, develop, strict, upgrade, global_, dev):
   """
   Installs one or more packages.
   """
 
+  if dev is None:
+    dev = not packages
+
   installer = _install.Installer(upgrade=upgrade, global_=global_, strict=strict)
   if not packages:
-    success = installer.install_dependencies_for(manifest.parse('package.json'))
+    success = installer.install_dependencies_for(manifest.parse('package.json'), dev=dev)
     if not success:
       return 1
     installer.relink_pip_scripts()
@@ -148,13 +155,13 @@ def install(packages, develop, strict, upgrade, global_):
 
   for package in packages:
     if os.path.isdir(package):
-      success = installer.install_from_directory(package, develop)
+      success = installer.install_from_directory(package, develop, dev=dev)
     elif os.path.isfile(package):
-      success = installer.install_from_archive(package)
+      success = installer.install_from_archive(package, dev=dev)
     else:
       ref = refstring.parse(package)
       selector = ref.version or semver.Selector('*')
-      success = installer.install_from_registry(six.text_type(ref.package), selector)
+      success = installer.install_from_registry(six.text_type(ref.package), selector, dev=dev)
     if not success:
       print('Installation failed')
       return 1

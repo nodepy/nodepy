@@ -199,18 +199,27 @@ class Installer:
     shutil.rmtree(directory)
     return True
 
-  def install_dependencies_for(self, manifest):
+  def install_dependencies_for(self, manifest, dev=False):
     """
     Installs the Node.py and Python dependencies of a #PackageManifest.
     """
 
-    if manifest.dependencies:
-      print('Installing dependencies for "{}"...'.format(manifest.identifier))
-      if not self.install_dependencies(manifest.dependencies):
+    deps = dict(manifest.dependencies)
+    if dev:
+      deps.update(manifest.dev_dependencies)
+    if deps:
+      print('Installing dependencies for "{}"{}...'.format(manifest.identifier,
+          ' (dev) ' if dev else ''))
+      if not self.install_dependencies(deps):
         return False
-    if manifest.python_dependencies:
-      print('Installing Python dependencies for "{}"...'.format(manifest.identifier))
-      if not self.install_python_dependencies(manifest.python_dependencies):
+
+    deps = dict(manifest.python_dependencies)
+    if dev:
+      deps.update(manifest.python_dependencies)
+    if deps:
+      print('Installing Python dependencies for "{}"{}...'.format(
+          manifest.identifier, ' (dev) ' if dev else ''))
+      if not self.install_python_dependencies(deps):
         return False
 
     return True
@@ -288,7 +297,7 @@ class Installer:
         _script.make_environment_wrapped_script(script_name, self.dirs['bin'],
             fn, path=self._dirs.binpath, pythonpath=self._dirs.libpath)
 
-  def install_from_directory(self, directory, develop=False, expect=None):
+  def install_from_directory(self, directory, develop=False, dev=False, expect=None):
     """
     Installs a package from a directory. The directory must have a
     `package.json` file. If *expect* is specified, it must be a tuple of
@@ -296,6 +305,17 @@ class Installer:
     The argument is used by #install_from_registry().
 
     Returns True on success, False on failure.
+
+    # Parameters
+    directory (str): The directory to install from.
+    develop (bool): True to install only a link to the package directory.
+    dev (bool): True to install development dependencies.
+    expect (None, (str, semver.Version)): If specified, a tuple of the
+      name and version of the package that we expect to install from this
+      directory.
+
+    # Returns
+    False if the installation failed.
     """
 
     filename = os.path.normpath(os.path.abspath(os.path.join(directory, 'package.json')))
@@ -334,7 +354,7 @@ class Installer:
       return False
 
     # Install dependencies.
-    if not self.install_dependencies_for(manifest):
+    if not self.install_dependencies_for(manifest, dev=dev):
       return False
 
     installed_files = []
@@ -378,7 +398,7 @@ class Installer:
 
     return True
 
-  def install_from_archive(self, archive, expect=None):
+  def install_from_archive(self, archive, dev=False, expect=None):
     """
     Install a package from an archive.
     """
@@ -388,11 +408,11 @@ class Installer:
     try:
       with tarfile.open(archive) as tar:
         tar.extractall(directory)
-      return self.install_from_directory(directory, expect=expect)
+      return self.install_from_directory(directory, dev=dev, expect=expect)
     finally:
       shutil.rmtree(directory)
 
-  def install_from_registry(self, package_name, selector):
+  def install_from_registry(self, package_name, selector, dev=False):
     """
     Install a package from a registry.
     """
@@ -424,7 +444,7 @@ class Installer:
       with tempfile.NamedTemporaryFile(suffix='_' + filename, delete=False) as tmp:
         progress = _download.DownloadProgress(30, prefix='  ')
         _download.download_to_fileobj(response, tmp, progress=progress)
-      return self.install_from_archive(tmp.name, expect=(package_name, info.version))
+      return self.install_from_archive(tmp.name, dev=dev, expect=(package_name, info.version))
     finally:
       if tmp and os.path.isfile(tmp.name):
         os.remove(tmp.name)

@@ -20,7 +20,7 @@ of the format `@scope/package-name`, or simply `package-name`. Allowed
 characters for the scope and package name are digits, ASCII letters and `-_.`.
 
 ```json
-  "name": "@ppym/manifest"
+{ "name": "@ppym/manifest" }
 ```
 
 ### `version`
@@ -28,7 +28,7 @@ characters for the scope and package name are digits, ASCII letters and `-_.`.
 *Required.* A [SemVer] of the package's version.
 
 ```json
-  "version": "0.0.1-security"
+{ "version": "0.0.1-security" }
 ```
 
 ### `engines`
@@ -41,9 +41,11 @@ is `python` which compares against the Python version number.
 TODO: PyPy, JPython, Stackless, etc. should match to different engine names.
 
 ```json
+{
   "engines": {
     "python": ">=3.0.0"
   }
+}
 ```
 
 ### `repository`
@@ -51,13 +53,17 @@ TODO: PyPy, JPython, Stackless, etc. should match to different engine names.
 *Optional*. URL to the source code repository where the package is developed.
 If specified, the URL must be valid.
 
+```json
+{ "repository": "https://github.com/nodepy/nodepy" }
+```
+
 ### `license`
 
 *Required when publishing a package on the registry.* The license of the
 package source code.
 
 ```json
-  "license": "MIT"
+{ "license": "MIT" }
 ```
 
 ### `bin`
@@ -66,9 +72,11 @@ package source code.
 that is then executed as the main module when the script is executed.
 
 ```json
+{
   "bin": {
     "manifest": "cli"
   }
+}
 ```
 
 ### `scripts`
@@ -104,21 +112,44 @@ __Todo__
 
 ### `private`
 
-Prevent publication of the package with `ppym publish`. This is used for
-packages that want to take advantage of the PPYM dependency management but
+*Optional*. Prevent publication of the package with `ppym publish`. This is used
+for packages that want to take advantage of the PPYM dependency management but
 are not actuall supposed to be placed into the public registry. An example
 of this would be a package that generates the documentation of another project.
+
+```json
+{ "private": true }
+```
 
 ### `dependencies`
 
 *Optional.*: An object that specifies the dependencies of the package.
-All values must be valid `@ppym/semver:Selector` syntax.
+All values must be valid `ppym/lib/semver:Selector` syntax. Dependencies
+declared here will be installed transitively.
 
 ```json
+{
   "dependencies": {
-    "@ppym/refstring": "~0.0.1",
-    "@ppym/semver": "~0.0.1"
+    "ppym": "~0.0.8",
+    "ppym-registry": "~0.0.3"
   }
+}
+```
+
+### `dev-dependencies`
+
+*Optional*. Dependencies that are listed here are required only for developing
+a package, thus they will only be installed when using `ppym install` without
+additional arguments in the directory where the `package.json` file lives,
+unless `--production` is specified. Also, development dependencies will not be
+installed transitively.
+
+```json
+{
+  "dev-dependencies": {
+    "js-nodepy": "~0.0.2"
+  }
+}
 ```
 
 ### `python-dependencies`
@@ -128,11 +159,27 @@ Python modules that the package requires. These modules can be installed
 by [ppym] using [Pip].
 
 ```json
+{
   "python-dependencies": {
     "Flask": "==0.12",
     "Flask-HTTPAuth": "==3.2.2",
     "mongoengine": "==0.11.0"
   }
+}
+```
+
+### `dev-python-dependencies`
+
+*Optional*. Python dependencies that are required for developing the package.
+See the `dev-dependencies` field for when development dependencies are
+installed.
+
+```json
+{
+  "dev-python-dependencies": {
+    "mkdocs": ">=0.16.1"
+  }
+}
 ```
 
 ### `dist`

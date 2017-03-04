@@ -64,6 +64,7 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - add `"private"` field to the manifest specification
 - remove `"postinstall"` field from the manifest specification (backwards
   incompatible)
+- add `"dev-dependencies"` and `"dev-python-dependencies"` fields to manifest
 
 ### v0.0.8
 

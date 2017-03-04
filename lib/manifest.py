@@ -89,7 +89,15 @@ class PackageManifest:
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
+      "dev-dependencies": {
+        "type": "object",
+        "additionalProperties": {"type": "string"}
+      },
       "python-dependencies": {
+        "type": "object",
+        "additionalProperties": {"type": "string"}
+      },
+      "dev-python-dependencies": {
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
@@ -120,9 +128,10 @@ class PackageManifest:
   valid_characters = frozenset(string.ascii_lowercase + string.digits + '-._@/')
 
   def __init__(self, filename, directory, name, version, description=None,
-      author=None, license=None, dependencies=None, python_dependencies=None,
-      scripts=None, bin=None, engines=None, engine_props=None, dist=None,
-      repository=None, private=False):
+      author=None, license=None, dependencies=None, dev_dependencies=None,
+      python_dependencies=None, dev_python_dependencies=None, scripts=None,
+      bin=None, engines=None, engine_props=None, dist=None, repository=None,
+      private=False):
     if len(name) < 2 or len(name) > 127:
       raise ValueError('packag name must be at least 2 and maximum 127 characters')
     if name.startswith('_') or name.startswith('.'):
@@ -141,7 +150,9 @@ class PackageManifest:
     self.description = description
     self.license = license
     self.dependencies = {} if dependencies is None else dependencies
+    self.dev_dependencies = {} if dev_dependencies is None else dev_dependencies
     self.python_dependencies = {} if python_dependencies is None else python_dependencies
+    self.dev_python_dependencies = {} if dev_python_dependencies is None else dev_python_dependencies
     self.scripts = {} if scripts is None else scripts
     self.bin = {} if bin is None else bin
     self.engine_props = {} if engine_props is None else engine_props
@@ -244,6 +255,11 @@ def parse_dict(data, filename=None, directory=None, copy=True):
     dependencies[dep] = semver.Selector(sel)
   data['dependencies'] = dependencies
 
+  dev_dependencies = {}
+  for dep, sel in data.get('dev-dependencies', {}).items():
+    dev_dependencies[dep] = semver.Selector(sel)
+  data['dev-dependencies'] = dev_dependencies
+
   engines = {}
   for eng, sel in data.get('engines', {}).items():
     engines[eng] = semver.Selector(sel)
@@ -258,7 +274,9 @@ def parse_dict(data, filename=None, directory=None, copy=True):
         raise InvalidPackageManifest(filename, msg.format(key))
       engine_props[key] = data.pop(key)
 
+  data['dev_dependencies'] = data.pop('dev-dependencies')
   data['python_dependencies'] = data.pop('python-dependencies', None)
+  data['dev_python_dependencies'] = data.pop('dev-python-dependencies', None)
   data['engine_props'] = engine_props
   try:
     return PackageManifest(filename, directory, **data)
