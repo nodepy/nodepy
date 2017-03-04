@@ -52,10 +52,36 @@ class Less(object):
 
 class PackageLifecycle(object):
 
+  @staticmethod
+  def find_package_json(path):
+    """
+    Finds the first `package.json` file in *path* or any of its parent
+    directories and returns it. Returns #None if no file can be found.
+    """
+
+    curr = os.path.abspath(path)
+    while True:
+      dirname, base = os.path.split(curr)
+      if base != 'nodepy_modules' and not base.startswith('@'):
+        # Avoid looking in nodepy_modules/ or a package-scope directory.
+        fn = os.path.join(curr, 'package.json')
+        if os.path.isfile(fn):
+          return fn
+      if dirname == curr:
+        # Can happen on Windows for drive letters.
+        break
+      curr = dirname
+    return None
+
+
   def __init__(self, directory='.', dist_dir=None):
     if not dist_dir:
       dist_dir = os.path.join(directory, 'dist')
-    self.manifest = manifest.parse(os.path.join(directory, 'package.json'))
+    fn = self.find_package_json(directory)
+    if not fn:
+      print('Error: package.json not found')
+      exit(1)
+    self.manifest = manifest.parse(fn)
     self.dist_dir = dist_dir
 
   def dist(self):

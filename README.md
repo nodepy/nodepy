@@ -65,6 +65,10 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - remove `"postinstall"` field from the manifest specification (backwards
   incompatible)
 - add `"dev-dependencies"` and `"dev-python-dependencies"` fields to manifest
+- add `ppym run <script>` command
+- all commands that are based on information provided in `package.json` now
+  search for it in parent-directories, thus you can now use `ppym run`,
+  `ppym dist`, `ppym publish` etc. from sub-directories in your project
 
 ### v0.0.8
 
