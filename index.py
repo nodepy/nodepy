@@ -34,7 +34,7 @@ from six.moves import input
 
 try:
   from shlex import quote as shlex_quote
-except ImportErorr:
+except ImportError:
   from pipes import quote as shlex_quote
 
 manifest = require('./lib/manifest')
