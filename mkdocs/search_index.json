@@ -2,13 +2,28 @@
     "docs": [
         {
             "location": "/",
-            "text": "Node.py v0.0.10 Documentation",
+            "text": "Node.py v0.0.10 Documentation\n\n\nNode.py is a loader for Python modules that offers a \nrequire()\n function.\nUnlike standard Python modules, Node.py modules are cached by their filename,\nthus multiple modules with the same name but from different locations can be\nloaded without collisions.\n\n\nSynopsis\n\n\nnode.py            (enter interactive session)\nnode.py <request>  (resolve request into a filename and run it as a\n                    Python script in Node.py environment)",
             "title": "Home"
         },
         {
             "location": "/#nodepy-v0010-documentation",
-            "text": "",
+            "text": "Node.py is a loader for Python modules that offers a  require()  function.\nUnlike standard Python modules, Node.py modules are cached by their filename,\nthus multiple modules with the same name but from different locations can be\nloaded without collisions.",
             "title": "Node.py v0.0.10 Documentation"
+        },
+        {
+            "location": "/#synopsis",
+            "text": "node.py            (enter interactive session)\nnode.py <request>  (resolve request into a filename and run it as a\n                    Python script in Node.py environment)",
+            "title": "Synopsis"
+        },
+        {
+            "location": "/require/",
+            "text": "require()\n\n\nTODO",
+            "title": "Require"
+        },
+        {
+            "location": "/require/#require",
+            "text": "TODO",
+            "title": "require()"
         },
         {
             "location": "/ppym/",
