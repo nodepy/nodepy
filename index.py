@@ -32,6 +32,11 @@ import tarfile
 
 from six.moves import input
 
+try:
+  from shlex import quote as shlex_quote
+except ImportErorr:
+  from pipes import quote as shlex_quote
+
 manifest = require('./lib/manifest')
 semver = require('./lib/semver')
 refstring = require('./lib/refstring')
@@ -138,7 +143,6 @@ class PackageLifecycle(object):
     self.manifest.run_script('post-publish')
 
   def run(self, script, args):
-
     bindir = nodepy.Directories(self.manifest.directory).bindir
     os.environ['PATH'] = bindir + os.pathsep + os.getenv('PATH', '')
     if script not in self.manifest.scripts:
@@ -163,11 +167,12 @@ class PackageLifecycle(object):
     if request.startswith('!'):
       # Execute as a shell command instead.
       # TODO: On Windows, fall back to CMD.exe if SHELL is not defined.
-      command = [os.environ['SHELL'], '-c', request[1:]] + args
+      cmd = request[1: ] + ' ' + ' '.join(map(shlex_quote, args))
+      command = [os.environ['SHELL'], '-c', cmd]
       try:
         return subprocess.call(command)
       except (OSError, IOError):
-        print('Error: script "{}" could not be run'.format(request[1:]))
+        print('Error: can not run "{}"'.format(cmd))
         return 1
     else:
       require.exec_main(request, self.directory, argv=args, cache=False)
