@@ -2,26 +2,10 @@
 
 # PPYM
 
-PPYM is the [Node.py] package manager.
+PPYM is the [Node.py] package manager. Check out the [Docs].
 
   [Node.py]: https://github.com/nodepy/nodepy
-
-__Synopsis__
-
-    ppym init                    (initialize a package.json)
-    ppym dist                    (create a .tar.gz archive from the current package)
-    ppym register                (register a new account on the package registry)
-    ppym publish                 (create a package distro and upload to the registry)
-    ppym upload <filename>       (upload a file to the package registry)
-    ppym install [-g]            (install all dependencies of the current package)
-    ppym install [-g] [-e] <dir> (install a package from a directory)
-    ppym install [-g] <filename>
-        (install a package from an archive)
-    ppym install [-g] [@<scope>/]<package>
-        (install a package from the PPYM package registry)
-    ppym uninstall [-g] [@<scope>/]<package>
-        (uninstall a previously installed package)
-    ppym bin                      (print the path to the bin directory)
+  [Docs]: https://nodepy.github.io/nodepy/ppym/
 
 __Installation__
 
