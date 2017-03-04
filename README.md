@@ -33,6 +33,12 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
+### v0.0.10
+
+- fix `ppym run` for actual Node.py scripts, using `nodepy.main()` over
+  `Require.exec_main()` to create a new Context with the correct `sys.path`
+  setup
+
 ### v0.0.9
 
 - add `ppym bin [-g]` which will print the path to the bin directory

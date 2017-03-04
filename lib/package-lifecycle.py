@@ -164,7 +164,7 @@ class PackageLifecycle(object):
         print('Error: can not run "{}"'.format(cmd))
         return 1
     else:
-      require.exec_main(request, self.directory, argv=args, cache=False)
+      nodepy.main([request, '--current-dir', self.manifest.directory] + args)
 
 
 exports = PackageLifecycle
