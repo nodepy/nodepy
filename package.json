@@ -12,9 +12,6 @@
     "python": ">=2.7.0 || >=3.3.0"
   },
   "dependencies": {},
-  "dev-dependencies": {
-    "ppym-registry": "*"
-  },
   "python-dependencies": {
     "appdirs": ">=1.4.2",
     "click": ">=6.7",
