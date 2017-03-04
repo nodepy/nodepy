@@ -75,9 +75,9 @@ class PackageLifecycle(object):
 
     print('Creating archive "{}"...'.format(filename))
     archive = tarfile.open(filename, 'w:gz')
-    for filename, rel in _install.walk_package_files(self.manifest):
+    for name, rel in _install.walk_package_files(self.manifest):
       print('  Adding "{}"...'.format(rel))
-      archive.add(filename, rel)
+      archive.add(name, rel)
     self.run('post-dist', [])
     print('Done!')
     return filename
@@ -123,6 +123,7 @@ class PackageLifecycle(object):
       exit(1)
     self.run('pre-publish', [])
     filename = self.dist()
+    print('Uploading "{}" ...'.format(filename))
     self.upload(filename, user, password, force, dry)
     self.run('post-publish', [])
 
