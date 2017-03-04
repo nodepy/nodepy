@@ -6,21 +6,17 @@
 [![GitHub version](https://badge.fury.io/gh/nodepy%2Fnodepy.svg)](https://badge.fury.io/gh/nodepy%2Fnodepy)
 [![PyPI version](https://badge.fury.io/py/node.py.svg)](https://badge.fury.io/py/node.py)
 
-Node.py is a loader for Python modules in the Node.js-style. Unlike standard
-Python modules, the Node.py `require()` caches modules by their filename and
-thus allows modules with the same name be loaded from multiple locations at
-the same time.
+Node.py is a loader for Python modules that offers a `require()` function.
+Unlike standard Python modules, Node.py modules are cached by their filename,
+thus multiple modules with the same name but from different locations can be
+loaded without collisions.
 
-The goal of this project is to develop a Python environment that can execute
-without module collisions (resulting in one component in the process recieving
-the wrong module) and a more sophisticated approach to the module finding and
-loading process.
-
-Node.py has its own package ecosystem managed by [ppym] and the
-[PPYM package registry].
+Node.py has its own package ecosystem managed by [PPYM] and the
+[PPYM package registry]. Check out the [Documentation].
 
   [ppym]: https://github.com/nodepy/ppym
   [PPYM package registry]: https://github.com/nodepy/ppym-registry
+  [Documentation]: https://nodepy.github.io/nodepy/
 
 __Requirements__
 
@@ -31,18 +27,22 @@ __Installation__
 
     pip install node.py
 
-__Synopsis__
-
-    node.py            (enter interactive session)
-    node.py <request>  (resolve request into a filename and run it as a
-                        Python script in Node.py environment)
-
 __Todo__
 
 - Alternative script names for `node.py` and `ppym` depending on the Python
   version it is installed into
 - Support many of Node.js's original command-line arguments
 - Testcases for Python 2 and 3
+
+## Building the Documentation
+
+The documentation can be found in the `docs/` directory. It is based on MkDocs
+and can be built by using the PPYM package manager by first installing the
+dependencies and then running the `build` script.
+
+    $ cd docs
+    $ ppym install
+    $ ppym run build
 
 ## Changelog
 
