@@ -1,0 +1,13 @@
+site_name: 'Node.py Documentation'
+docs_dir: 'source'
+theme: 'material'
+extra:
+  palette:
+    primary: 'blue grey'
+    accent: 'indigo'
+  logo: 'img/nodepy.png'
+  social:
+  - type: 'github'
+    link: 'https://github.com/NiklasRosenstein'
+markdown_extensions:
+- codehilite

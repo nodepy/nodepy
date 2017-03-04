@@ -1,0 +1,20 @@
+{
+  "name": "nodepy-docs",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "!mkdocs build",
+    "serve": "!mkdocs serve",
+    "gh-deploy": "!mkdocs gh-deploy",
+    "pre-script": "!scripts/inject-ppym-docs"
+  },
+  "engines": {
+    "nodepy": ">=0.0.10",
+    "ppym": ">=0.0.9"
+  },
+  "python-dependencies": {
+    "mkdocs": ">=0.16.1",
+    "mkdocs-material": ">=1.2.0",
+    "Pygments": ""
+  }
+}
