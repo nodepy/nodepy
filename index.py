@@ -24,7 +24,9 @@ import getpass
 import json
 import os
 import nodepy
+import shlex
 import six
+import subprocess
 import sys
 import tarfile
 
@@ -136,13 +138,39 @@ class PackageLifecycle(object):
     self.manifest.run_script('post-publish')
 
   def run(self, script, args):
+
     bindir = nodepy.Directories(self.manifest.directory).bindir
     os.environ['PATH'] = bindir + os.pathsep + os.getenv('PATH', '')
     if script not in self.manifest.scripts:
       print('error: no such script:', script)
       exit(1)
-    self.manifest.run_script(script, argv=args)
+    self._run_script(script, args=args)
 
+  def _run_script(self, script, args):
+    """
+    Invoke a script for the specified *event* name. Does nothing if no script
+    for the specified event is specified.
+    """
+
+    if script not in self.manifest.scripts:
+      return
+    args = shlex.split(self.manifest.scripts[script]) + list(args)
+    request = args.pop(0)
+
+    if script != 'pre-script':
+      self._run_script('pre-script', [script] + args)
+
+    if request.startswith('!'):
+      # Execute as a shell command instead.
+      # TODO: On Windows, fall back to CMD.exe if SHELL is not defined.
+      command = [os.environ['SHELL'], '-c', request[1:]] + args
+      try:
+        return subprocess.call(command)
+      except (OSError, IOError):
+        print('Error: script "{}" could not be run'.format(request[1:]))
+        return 1
+    else:
+      require.exec_main(request, self.directory, argv=args, cache=False)
 
 
 @click.group()
