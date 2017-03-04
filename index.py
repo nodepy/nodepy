@@ -122,11 +122,10 @@ class PackageLifecycle(object):
   def run(self, script, args):
     bindir = nodepy.Directories(self.manifest.directory).bindir
     os.environ['PATH'] = bindir + os.pathsep + os.getenv('PATH', '')
-    mf = manifest.parse('package.json')
-    if script not in mf.scripts:
+    if script not in self.manifest.scripts:
       print('error: no such script:', script)
       exit(1)
-    mf.run_script(script, argv=args)
+    self.manifest.run_script(script, argv=args)
 
 
 
