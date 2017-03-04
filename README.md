@@ -27,13 +27,6 @@ __Installation__
 
     pip install node.py
 
-__Todo__
-
-- Alternative script names for `node.py` and `ppym` depending on the Python
-  version it is installed into
-- Support many of Node.js's original command-line arguments
-- Testcases for Python 2 and 3
-
 ## Building the Documentation
 
 The documentation can be found in the `docs/` directory. It is based on MkDocs
