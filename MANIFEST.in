@@ -3,4 +3,5 @@ include README.rst
 include LICENSE.txt
 recursive-include ppym *
 prune ppym/dist
+prune ppym/nodepy_modules
 exclude ppym/.git

@@ -21,7 +21,7 @@ Node.py has its own package ecosystem managed by [PPYM] and the
 __Requirements__
 
 - Python 2.7+ or Python 3.3+
-- Pip 6+
+- Pip 8+ for PPYM (uses `--prefix`)
 
 __Installation__
 

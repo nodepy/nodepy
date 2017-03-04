@@ -359,8 +359,9 @@ class Context(object):
     # The main module. Will be set by #load_module().
     self.main_module = None
     # Localimport context for Python modules installed via Pip through PPYM.
-    current_dir = os.path.dirname(find_nearest_modules_directory(current_dir))
-    self._dirs = Directories(current_dir)
+    nearest_modules = find_nearest_modules_directory(current_dir)
+    self._dirs = Directories(
+        os.path.dirname(nearest_modules) if nearest_modules else current_dir)
     self.importer = localimport.localimport(self._dirs.libpath, parent_dir='.')
     self.verbose = verbose
 
