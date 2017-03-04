@@ -119,6 +119,6 @@ def make_environment_wrapped_script(script_name, directory, target_program,
   code = 'import os, subprocess, sys\n'\
          'os.environ["PATH"] = os.pathsep.join({path!r}) + os.pathsep + os.environ.get("PATH", "")\n'\
          'os.environ["PYTHONPATH"] = os.pathsep.join({pythonpath!r}) + os.pathsep + os.environ.get("PYTHONPATH", "")\n'\
-         'sys.exit(subprocess.call([{program!r}]))\n'.format(path=path, pythonpath=pythonpath, program=target_program)
+         'sys.exit(subprocess.call([{program!r}] + sys.argv[1:]))\n'.format(path=path, pythonpath=pythonpath, program=target_program)
 
   return make_python_script(script_name, directory, code)

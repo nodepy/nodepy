@@ -21,8 +21,10 @@
 import jsonschema
 import os
 import re
+import shlex
 import six
 import string
+import subprocess
 
 semver = require('./semver')
 refstring = require('./refstring')
@@ -183,7 +185,26 @@ class PackageManifest:
 
     if event not in self.scripts:
       return
-    require.exec_main(self.scripts[event], self.directory, argv=argv, cache=False)
+    args = shlex.split(self.scripts[event])
+    request = args.pop(0)
+    if argv is not None:
+      args.extend(argv)
+    if request.startswith('!'):
+      # Execute as a shell command instead.
+      request = request[1:]
+      cmd = [request] + args
+      try:
+        # Note that when the command that is executed is inside the
+        # `nodepy_modules/.bin` directory and the user did not manually
+        # add that path to his/her PATH, it only works because the Node.py
+        # Context.__enter__() adds it to the PATH environment variable.
+        return subprocess.call(cmd)
+      except (OSError, IOError):
+        print('Error: script "{}" could not be started')
+        print('  $', cmd)
+        raise
+    else:
+      require.exec_main(request, self.directory, argv=args, cache=False)
 
 
 class InvalidPackageManifest(Exception):

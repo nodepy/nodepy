@@ -119,6 +119,16 @@ class PackageLifecycle(object):
     self.upload(filename, user, password, force, dry)
     self.manifest.run_script('post-publish')
 
+  def run(self, script, args):
+    bindir = nodepy.Directories(self.manifest.directory).bindir
+    os.environ['PATH'] = bindir + os.pathsep + os.getenv('PATH', '')
+    mf = manifest.parse('package.json')
+    if script not in mf.scripts:
+      print('error: no such script:', script)
+      exit(1)
+    mf.run_script(script, argv=args)
+
+
 
 @click.group()
 def main():
@@ -324,6 +334,13 @@ def bin(global_, pip):
     print(dirs.pip_bindir)
   else:
     print(dirs.bindir)
+
+
+@main.command(context_settings={'ignore_unknown_options': True})
+@click.argument('script')
+@click.argument('args', nargs=-1, type=click.UNPROCESSED)
+def run(script, args):
+  PackageLifecycle().run(script, args)
 
 
 if require.main == module:
