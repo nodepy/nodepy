@@ -59,20 +59,10 @@ class PackageLifecycle(object):
     directories and returns it. Returns #None if no file can be found.
     """
 
-    curr = os.path.abspath(path)
-    while True:
-      dirname, base = os.path.split(curr)
-      if base != 'nodepy_modules' and not base.startswith('@'):
-        # Avoid looking in nodepy_modules/ or a package-scope directory.
-        fn = os.path.join(curr, 'package.json')
-        if os.path.isfile(fn):
-          return fn
-      if dirname == curr:
-        # Can happen on Windows for drive letters.
-        break
-      curr = dirname
-    return None
-
+    for directory in nodepy.upiter_directory(path):
+      fn = os.path.join(directory, 'package.json')
+      if os.path.isfile(fn):
+        return fn
 
   def __init__(self, directory='.', dist_dir=None):
     if not dist_dir:
