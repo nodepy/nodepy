@@ -271,48 +271,50 @@ def get_exports(module):
   return getattr(module.namespace, 'exports', module.namespace)
 
 
+def upiter_directory(current_dir):
+  """
+  A helper function to iterate over the directory *current_dir* and all of
+  its parent directories, excluding `nodepy_modules/` and package-scope
+  directories (starting with `@`).
+  """
+
+  current_dir = os.path.abspath(current_dir)
+  while True:
+    dirname, base = os.path.split(current_dir)
+    if not base.startswith('@') and base != 'nodepy_modules':
+      yield current_dir
+    if dirname == current_dir:
+      # Can happen on Windows for drive letters.
+      break
+    current_dir = dirname
+  return
+
 def find_nearest_modules_directory(current_dir):
   """
   Finds the nearest `nodepy_modules/` directory to *current_dir* and returns
   it. If no such directory exists, #None is returned.
   """
 
-  while True:
-    dirname, base = os.path.split(current_dir)
-    if not base.startswith('@') and base != 'nodepy_modules':
-      # Avoid returning paths like `nodepy_modules/nodepy_modules` and
-      # paths inside a scoped package.
-      result = os.path.join(current_dir, 'nodepy_modules')
-      if os.path.isdir(result):
-        return result
-    if dirname == current_dir:
-      # Can happen on Windows for drive letters.
-      break
-    current_dir = dirname
+  for directory in upiter_directory(current_dir):
+    result = os.path.join(directory, 'nodepy_modules')
+    if os.path.isdir(result):
+      return result
   return None
 
 
-def get_package_link(path):
+def get_package_link(current_dir):
   """
   Finds a `.nodepy-link` file in *path* or any of its parent directories,
   stopping at the first encounter of a `nodepy_modules/` directory. Returns
   a #PackageLink tuple or #None if no link was found.
   """
 
-  while True:
-    dirname, base = os.path.split(path)
-    if not base.startswith('@') and base != 'nodepy_modules':
-      # Avoid resolving package links inside scope or nodepy_modules/
-      # directories (such links don't belon there anyway).
-      link_file = os.path.join(path, '.nodepy-link')
-      if os.path.isfile(link_file):
-        with open(link_file) as fp:
-          dst = fp.read().rstrip('\n')
-        return PackageLink(path, dst)
-    if dirname == path:
-      # Can happen on Windows for drive letters.
-      break
-    path = dirname
+  for directory in upiter_directory(current_dir):
+    link_file = os.path.join(directory, '.nodepy-link')
+    if os.path.isfile(link_file):
+      with open(link_file) as fp:
+        dst = fp.read().rstrip('\n')
+      return PackageLink(directory, dst)
   return None
 
 
