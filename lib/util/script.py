@@ -116,6 +116,9 @@ def make_environment_wrapped_script(script_name, directory, target_program,
   if not os.path.isabs(target_program):
     raise ValueError('target_program must be an absolute path')
 
+  path = [os.path.abspath(x) for x in path]
+  pythonpath = [os.path.abspath(x) for x in pythonpath]
+
   code = 'import os, subprocess, sys\n'\
          'os.environ["PATH"] = os.pathsep.join({path!r}) + os.pathsep + os.environ.get("PATH", "")\n'\
          'os.environ["PYTHONPATH"] = os.pathsep.join({pythonpath!r}) + os.pathsep + os.environ.get("PYTHONPATH", "")\n'\
