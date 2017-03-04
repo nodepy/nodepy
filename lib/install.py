@@ -215,7 +215,7 @@ class Installer:
 
     deps = dict(manifest.python_dependencies)
     if dev:
-      deps.update(manifest.python_dependencies)
+      deps.update(manifest.dev_python_dependencies)
     if deps:
       print('Installing Python dependencies for "{}"{}...'.format(
           manifest.identifier, ' (dev) ' if dev else ''))
