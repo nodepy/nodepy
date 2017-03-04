@@ -189,6 +189,10 @@ class PackageManifest:
     request = args.pop(0)
     if argv is not None:
       args.extend(argv)
+
+    if event != 'pre-script':
+      self.run_script('pre-script', [event] + args)
+
     if request.startswith('!'):
       # Execute as a shell command instead.
       request = request[1:]

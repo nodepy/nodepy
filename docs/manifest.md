@@ -11,6 +11,8 @@ except (FileNotFoundError, manifest.InvalidPackageManifest) as exc:
   m = None
 ```
 
+  [SemVer]: http://semver.org/
+
 ## Specification
 
 ### `name`
@@ -96,6 +98,7 @@ which are executed during various events of the package lifecycle.
 
 Currently supported fields are:
 
+- pre-script
 - pre-install, post-install
 - pre-uninstall
 - pre-dist, post-dist

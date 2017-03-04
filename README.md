@@ -42,8 +42,8 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   usecase for package lifecycle events instead of installing command-line
   scripts
 - implement package lifecycle event scripts `pre-dist`, `post-dist`,
-  `pre-install`, `post-install`, `post-uninstall`, `pre-publish` and
-  `post-publish`
+  `pre-install`, `post-install`, `post-uninstall`, `pre-publish`,
+  `post-publish` and `pre-script`
 - `ppym upload` commamnd now warns you if you attempt to upload a file that
   appears to be a package distribution archive but does not match the
   current version of your project
