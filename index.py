@@ -137,7 +137,7 @@ def upload(filename, force, user, password, dry):
   source distribution that can be created with 'ppym dist'.
   """
 
-  PackageLifecycle().upload(filename, force, user, password, dry)
+  PackageLifecycle().upload(filename, user, password, force, dry)
 
 
 @main.command()
@@ -151,7 +151,7 @@ def publish(force, user, password, dry):
   and `post-publish` scripts.
   """
 
-  PackageLifecycle().publish(force, user, password, dry)
+  PackageLifecycle().publish(user, password, force, dry)
 
 
 @main.command()
