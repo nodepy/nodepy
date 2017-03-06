@@ -35,9 +35,6 @@ import sys
 
 def main(args=None):
   parser = argparse.ArgumentParser(description='Bootstrap the PPYM installation.')
-  parser.add_argument('--no-bootstrap', dest='bootstrap', action='store_false',
-      help='Disable bootstrap installing Python dependencies into the '
-        'local nodepy_modules/ directory.')
   parser.add_argument('--root', action='store_true',
       help='Install PPYM into the Python root prefix.')
   parser.add_argument('--global', dest='global_', action='store_true',
@@ -50,19 +47,18 @@ def main(args=None):
   args = parser.parse_args(sys.argv[1:] if args is None else args)
 
   existed_before = os.path.isdir('nodepy_modules')
-  if args.bootstrap:
-    print("Bootstrapping PPYM dependencies with Pip ...")
-    with open(os.path.join(__directory__, 'package.json')) as fp:
-      package = json.load(fp)
+  print("Bootstrapping PPYM dependencies with Pip ...")
+  with open(os.path.join(__directory__, 'package.json')) as fp:
+    package = json.load(fp)
 
-    cmd = ['--prefix', 'nodepy_modules/.pip']
-    for key, value in package['python-dependencies'].items():
-      cmd.append(key + value)
+  cmd = ['--prefix', 'nodepy_modules/.pip']
+  for key, value in package['python-dependencies'].items():
+    cmd.append(key + value)
 
-    res = pip.commands.InstallCommand().main(cmd)
-    if res != 0:
-      print('error: Pip installation failed')
-      sys.exit(res)
+  res = pip.commands.InstallCommand().main(cmd)
+  if res != 0:
+    print('error: Pip installation failed')
+    sys.exit(res)
 
   # This is necessary on Python 2.7 (and possibly other versions) as
   # otherwise importing the newly installed Python modules will fail.
@@ -88,7 +84,7 @@ def main(args=None):
   require('./index').main(cmd, standalone_mode=False)
 
   local = (not args.global_ and not args.root)
-  if not local and not existed_before and args.bootstrap and os.path.isdir('nodepy_modules'):
+  if not local and not existed_before and os.path.isdir('nodepy_modules'):
     print('Cleaning up bootstrap modules directory ...')
     shutil.rmtree('nodepy_modules')
 
