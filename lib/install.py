@@ -60,12 +60,12 @@ def get_directories(location, config=_config):
 
   - packages
   - bin
+  - pip_bin
 
   Only when *location* is `'local'` or `'global'`, the following keys are
   available:
 
   - pip_prefix
-  - pip_bin
   - pip_lib
   """
 
@@ -94,7 +94,8 @@ def get_directories(location, config=_config):
     prefix = os.path.join(os.path.normpath(sys.prefix))
     return {
       'packages': os.path.join(prefix, 'share', 'nodepy_modules'),
-      'bin': os.path.join(prefix, pip_bin_base)
+      'bin': os.path.join(prefix, pip_bin_base),
+      'pip_bin': os.path.join(prefix, pip_bin_base),
     }
   else:
     raise ValueError('invalid location: {!r}'.format(location))

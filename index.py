@@ -268,17 +268,19 @@ def init(directory):
 
 @main.command()
 @click.option('-g', '--global', 'global_', is_flag=True)
+@click.option('--root', is_flag=True)
 @click.option('--pip', is_flag=True)
-def bin(global_, pip):
+def bin(global_, root, pip):
   """
   Print the path to the bin directory.
   """
 
-  dirs = _install.get_directories(global_)
+  location = get_install_location(global_, root)
+  dirs = _install.get_directories(location)
   if pip:
-    print(dirs.pip_bindir)
+    print(dirs['pip_bin'])
   else:
-    print(dirs.bindir)
+    print(dirs['bin'])
 
 
 @main.command(context_settings={'ignore_unknown_options': True})
