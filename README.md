@@ -13,7 +13,7 @@ PPYM is automatically installed with [Node.py]. If for some reason you have
 Node.py installed without PPYM, use the `bootstrap.py` script.
 
     $ git clone https://github.com/nodepy/ppym.git
-    $ node.py ppym/bootstrap --install --global
+    $ node.py ppym/bootstrap --root --upgrade
 
 ## Changelog
 
@@ -25,6 +25,7 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - update install locations and add `--root` flag to `ppym install` and
   `ppym uninstall`
 - `-g,--global` will be upgraded to `--root` when inside a virtual env
+- rebuilt `bootstrap.py` to use `argparse` instead of third-party `click` library
 
 ### v0.0.9
 

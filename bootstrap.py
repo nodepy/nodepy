@@ -25,7 +25,7 @@ into `nodepy_modules/.pip`.
 if require.main != module:
   raise RuntimeError('bootstrap must not be required')
 
-import click
+import argparse
 import json
 import os
 import pip.commands
@@ -33,20 +33,24 @@ import shutil
 import sys
 
 
-@click.command()
-@click.option('--bootstrap/--no-bootstrap', default=True, help="Don't bootstrap Python dependencies")
-@click.option('-g', '--global', 'global_', is_flag=True, help="Install PPYM globally.")
-@click.option('--root', is_flag=True, help="Install PPYM in the Python root folder.")
-@click.option('-U', '--upgrade', is_flag=True, help="Uninstall previous versions instead of skipping the new version.")
-@click.option('--develop', is_flag=True, help="If --install, install in development mode.")
-def main(bootstrap, global_, root, upgrade, develop):
-  """
-  Bootstrap the PPYM installation.
-  """
+def main(args=None):
+  parser = argparse.ArgumentParser(description='Bootstrap the PPYM installation.')
+  parser.add_argument('--no-bootstrap', dest='bootstrap', action='store_false',
+      help='Disable bootstrap installing Python dependencies into the '
+        'local nodepy_modules/ directory.')
+  parser.add_argument('--root', action='store_true',
+      help='Install PPYM into the Python root prefix.')
+  parser.add_argument('--global', dest='global_', action='store_true',
+      help='Install PPYM into the user-local prefix directory.')
+  parser.add_argument('--upgrade', action='store_true',
+      help='Overwrite an existing PPYM installation.')
+  parser.add_argument('--develop', action='store_true',
+      help='Install PPYM in develop mode, creating a .nodepy-link instead '
+        'of copying the PPYM package files.')
+  args = parser.parse_args(sys.argv[1:] if args is None else args)
 
   existed_before = os.path.isdir('nodepy_modules')
-
-  if bootstrap:
+  if args.bootstrap:
     print("Bootstrapping PPYM dependencies with Pip ...")
     with open(os.path.join(__directory__, 'package.json')) as fp:
       package = json.load(fp)
@@ -65,13 +69,13 @@ def main(bootstrap, global_, root, upgrade, develop):
   sys.path_importer_cache.clear()
 
   cmd = ['install']
-  if upgrade:
+  if args.upgrade:
     cmd.append('--upgrade')
-  if global_:
+  if args.global_:
     cmd.append('--global')
-  if root:
+  if args.root:
     cmd.append('--root')
-  if develop:
+  if args.develop:
     cmd.append('--develop')
 
   # We need to set this option as otherwise the dependencies that we JUST
@@ -83,8 +87,8 @@ def main(bootstrap, global_, root, upgrade, develop):
   cmd.append(__directory__)
   require('./index').main(cmd, standalone_mode=False)
 
-  local = (not global_ and not root)
-  if not local and not existed_before and bootstrap and os.path.isdir('nodepy_modules'):
+  local = (not args.global_ and not args.root)
+  if not local and not existed_before and args.bootstrap and os.path.isdir('nodepy_modules'):
     print('Cleaning up bootstrap modules directory ...')
     shutil.rmtree('nodepy_modules')
 
