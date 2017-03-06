@@ -39,6 +39,14 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.12
+
+- remove `nodepy.Directories` class again, we only need to compute the
+  local `nodepy_modules/.pip` library directory
+- entering `Context` no longer adds to `PATH`
+- upgrade bundled PPYM to v0.0.10
+- `setup.py` no longer installs PPYM dependencies
+
 ### v0.0.11
 
 - add `Require.__call__(current_dir=None, is_main=False, cache=True)` arguments\

@@ -27,7 +27,7 @@ the same time.
 from __future__ import absolute_import, division, print_function
 
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
-__version__ = '0.0.11'
+__version__ = '0.0.12'
 __license__ = 'MIT'
 
 import argparse
@@ -54,30 +54,6 @@ except ImportError:
 VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_info)
 
 PackageLink = collections.namedtuple('PackageLink', 'src dst')
-
-
-class Directories(object):
-  """
-  Helper class that generates the paths where stuff is usually installed to
-  by PPYM (and through it, by Pip).
-  """
-
-  def __init__(self, base):
-    self.base = base
-    self.prefix = os.path.join(base, 'nodepy_modules')
-    self.bindir = os.path.join(self.prefix, '.bin')
-    self.pip_prefix = os.path.join(self.prefix, '.pip')
-
-    pip_libdir_name = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version_info)
-    pip_bindir_name = 'Scripts' if os.name == 'nt' else 'bin'
-    self.pip_bindir = os.path.join(self.pip_prefix, pip_bindir_name)
-    self.binpath = [self.bindir, self.pip_bindir]
-    self.libpath = [
-        os.path.join(self.prefix, '.pip', pip_libdir_name),
-        os.path.join(self.prefix, '.pip', pip_libdir_name, 'site-packages')]
-
-  def __str__(self):
-    return "<Directories '{}'>".format(self.prefix)
 
 
 @contextlib.contextmanager
@@ -358,20 +334,21 @@ class Context(object):
     self.path = list(filter(bool, os.getenv('NODEPY_PATH', '').split(os.pathsep)))
     # The main module. Will be set by #load_module().
     self.main_module = None
+
     # Localimport context for Python modules installed via Pip through PPYM.
     nearest_modules = find_nearest_modules_directory(current_dir)
-    self._dirs = Directories(
-        os.path.dirname(nearest_modules) if nearest_modules else current_dir)
-    self.importer = localimport.localimport(self._dirs.libpath, parent_dir='.')
+    if not nearest_modules:
+      nearest_modules = os.path.join(current_dir, 'nodepy_modules')
+    pip_bin_base = 'Scripts' if os.name == 'nt' else 'bin'
+    pip_lib_base = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version_info)
+    self.importer = localimport.localimport(parent_dir=nearest_modules,
+        path=['.pip/' + pip_lib_base, '.pip/' + pip_lib_base + '/site-packages'])
     self.verbose = verbose
 
   def __enter__(self):
-    self._oldpath = os.getenv('PATH', '')
-    os.environ['PATH'] = self._dirs.bindir + os.pathsep + self._oldpath
     self.importer.__enter__()
 
   def __exit__(self, *args):
-    os.environ['PATH'] = self._oldpath
     return self.importer.__exit__(*args)
 
   def debug(self, *msg):
