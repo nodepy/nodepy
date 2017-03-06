@@ -64,7 +64,6 @@ def main(bootstrap, global_, root, upgrade, develop):
   # otherwise importing the newly installed Python modules will fail.
   sys.path_importer_cache.clear()
 
-  print("Installing PPYM {} ...".format('globally' if global_ else 'locally'))
   cmd = ['install']
   if upgrade:
     cmd.append('--upgrade')
@@ -74,6 +73,13 @@ def main(bootstrap, global_, root, upgrade, develop):
     cmd.append('--root')
   if develop:
     cmd.append('--develop')
+
+  # We need to set this option as otherwise the dependencies that we JUST
+  # bootstrapped will be considered as already satsified, even though they
+  # will not be after PPYM was installed in root or global level.
+  cmd.append('--pip-separate-process')
+
+  print("Installing PPYM ({}) ...".format(' '.join(cmd)))
   cmd.append(__directory__)
   require('./index').main(cmd, standalone_mode=False)
 

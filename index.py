@@ -78,13 +78,14 @@ def main():
 @click.option('-S', '--strict', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
+@click.option('--pip-separate-process', is_flag=True)
 @click.option('--root', is_flag=True)
 @click.option('--info', is_flag=True)
 @click.option('--dev/--production', 'dev', default=None,
     help='Specify whether to install development dependencies or not. The '
       'default value depends on the installation type (--dev when no packages '
       'are specified, --production otherwise).')
-def install(packages, develop, strict, upgrade, global_, root, info, dev):
+def install(packages, develop, strict, upgrade, global_, root, info, dev, pip_separate_process):
   """
   Installs one or more packages.
   """
@@ -93,7 +94,8 @@ def install(packages, develop, strict, upgrade, global_, root, info, dev):
     dev = not packages
 
   location = get_install_location(global_, root)
-  installer = _install.Installer(upgrade=upgrade, install_location=location)
+  installer = _install.Installer(upgrade=upgrade, install_location=location,
+      pip_separate_process=pip_separate_process)
   if info:
     for key in sorted(installer.dirs):
       print('{}: {}'.format(key, installer.dirs[key]))

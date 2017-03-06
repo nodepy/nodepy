@@ -26,6 +26,7 @@ import pip.commands
 import shlex
 import shutil
 import six
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -147,11 +148,13 @@ class Installer:
   This class manages the installation/uninstallation procedure.
   """
 
-  def __init__(self, registry=None, upgrade=False, install_location='local'):
+  def __init__(self, registry=None, upgrade=False, install_location='local',
+      pip_separate_process=False):
     assert install_location in ('local', 'global', 'root')
     self.reg = registry or _registry.RegistryClient(_config['registry'])
     self.upgrade = upgrade
     self.install_location = install_location
+    self.pip_separate_process = pip_separate_process
     self.dirs = get_directories(install_location)
     self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
     self.script = _script.ScriptMaker(self.dirs['bin'])
@@ -318,13 +321,17 @@ class Installer:
     if self.install_location in ('local', 'global'):
       cmd = ['--prefix', self.dirs['pip_prefix']]
     elif self.install_location == 'root':
-      cmd = []
+      cmd = ['--prefix', sys.prefix]
     else:
       raise RuntimeError('unexpected install location: {!r}'.format(self.install_location))
     cmd.extend(install_modules)
 
-    print('  Installing Python dependencies via Pip:', ' '.join(install_modules))
-    res = pip.commands.install.InstallCommand().main(cmd)
+    print('  Installing Python dependencies via Pip:', ' '.join(cmd),
+        '(as a separate process)' if self.pip_separate_process else '')
+    if self.pip_separate_process:
+      res = subprocess.call([sys.executable, '-m', 'pip', 'install'] + cmd)
+    else:
+      res = pip.commands.install.InstallCommand().main(cmd)
     if res != 0:
       print('Error: `pip install` failed with exit-code', res)
       return False
