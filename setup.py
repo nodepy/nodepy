@@ -34,18 +34,7 @@ import sys
 from setuptools.command.develop import develop as _develop
 from setuptools.command.install import install as _install
 
-# These are the dependencies required by Node.py.
-install_requires = {
-  'localimport': '>=1.5.1',
-  'six': '>=1.10.0'
-}
-
-# Add to these dependencies the ones needed by PPYM.
-with open('ppym/package.json') as fp:
-  install_requires.update(json.load(fp)['python-dependencies'])
-
-# Join the dependencies into Pip install arguments.
-install_requires = [a+b for a, b in install_requires.items()]
+install_requires = ['localimport>=1.5.1', 'six>=1.10.0']
 
 
 def readme():
@@ -73,30 +62,14 @@ def readme():
   return ''
 
 
-def install_deps():
-  """
-  Installs the dependencies of Node.py and PPYM in a separate invokation
-  of Pip. This is necessary so that we can install PPYM after Node.py, because
-  older versions of Pip do not establish a proper dependency installation
-  order.
-  """
-
-  cmd = ['install'] + install_requires
-  print('Installing Node.py and PPYM dependencies in a separate context ...')
-  print("  Command: pip {}".format(' '.join(cmd)))
-
-  res = pip.main(cmd)
-  if res != 0:
-    print("  Error: 'pip install' returned {}".format(res))
-    sys.exit(res)
-
-
 def install_ppym(develop=False):
   """
   Executes the PPYM `bootstrap` module to install PPYM globally.
   """
 
-  cmd = ['ppym/bootstrap', '--no-bootstrap', '--install', '--global', '--upgrade']
+  # TODO: Determine if Node.py is installed into the User or global
+  #       directory and pass --global for the user directory instead.
+  cmd = ['ppym/bootstrap', '--no-bootstrap', '--root', '--upgrade']
   if develop:
     cmd.append('--develop')
 
@@ -142,7 +115,6 @@ def hook_distlib_scriptmaker():
 
 class develop(_develop):
   def run(self):
-    install_deps()
     with hook_distlib_scriptmaker():
       _develop.run(self)
     install_ppym(develop=True)
@@ -150,7 +122,6 @@ class develop(_develop):
 
 class install(_install):
   def run(self):
-    install_deps()
     with hook_distlib_scriptmaker():
       _install.run(self)
     install_ppym()
