@@ -129,4 +129,4 @@ class ScriptMaker:
     code = 'import subprocess, sys\n'\
            'sys.exit(subprocess.call([{program!r}] + sys.argv[1:]))\n'\
              .format(program=target_program)
-    return self.make_python(script_name, directory, code)
+    return self.make_python(script_name, code)

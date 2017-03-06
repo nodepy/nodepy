@@ -128,7 +128,7 @@ class PackageLifecycle(object):
     self.run('post-publish', [])
 
   def run(self, script, args):
-    bindir = nodepy.Directories(self.manifest.directory).bindir
+    bindir = _install.get_directories('local')['bin']
     oldpath = os.environ.get('PATH', '')
     os.environ['PATH'] = bindir + os.pathsep + oldpath
     try:
