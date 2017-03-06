@@ -46,6 +46,8 @@ dependencies and then running the `build` script.
 - entering `Context` no longer adds to `PATH`
 - upgrade bundled PPYM to v0.0.10
 - `setup.py` no longer installs PPYM dependencies
+- 12a: Re-add `install_deps()` to `setup.py`, we need to make sure our
+  dependencies are installed before PPYM can be bootstrapped
 
 ### v0.0.11
 

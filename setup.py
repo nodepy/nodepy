@@ -62,6 +62,24 @@ def readme():
   return ''
 
 
+def install_deps():
+  """
+  Installs the dependencies of Node.py and PPYM in a separate invokation
+  of Pip. This is necessary so that we can install PPYM after Node.py, because
+  older versions of Pip do not establish a proper dependency installation
+  order.
+  """
+
+  cmd = ['install'] + install_requires
+  print('Installing Node.py and PPYM dependencies in a separate context ...')
+  print("  Command: pip {}".format(' '.join(cmd)))
+
+  res = pip.main(cmd)
+  if res != 0:
+    print("  Error: 'pip install' returned {}".format(res))
+    sys.exit(res)
+
+
 def install_ppym(develop=False):
   """
   Executes the PPYM `bootstrap` module to install PPYM globally.
@@ -115,6 +133,7 @@ def hook_distlib_scriptmaker():
 
 class develop(_develop):
   def run(self):
+    install_deps()
     with hook_distlib_scriptmaker():
       _develop.run(self)
     install_ppym(develop=True)
@@ -122,6 +141,7 @@ class develop(_develop):
 
 class install(_install):
   def run(self):
+    install_deps()
     with hook_distlib_scriptmaker():
       _install.run(self)
     install_ppym()
@@ -129,7 +149,7 @@ class install(_install):
 
 setuptools.setup(
   name = 'node.py',
-  version = '0.0.12',
+  version = '0.0.12a',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
