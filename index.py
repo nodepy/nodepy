@@ -289,6 +289,9 @@ def bin(global_, root, pip):
 @click.argument('script')
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 def run(script, args):
+  """
+  Run a script that is specified in the package.json.
+  """
   if not PackageLifecycle().run(script, args):
     print("Error: no script '{}'".format(script))
     exit(1)
