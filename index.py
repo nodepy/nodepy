@@ -50,6 +50,21 @@ class Less(object):
       input("Press <Enter> for more")
 
 
+def get_install_location(global_, root):
+  if global_ and root:
+    print('Error: -g,--global and --root can not be used together')
+    exit(1)
+  elif global_:
+    if _install.is_virtualenv():
+      print('Note: detected virtual environment, upgrading -g,--global to --root')
+      return 'root'
+    return 'global'
+  elif root:
+    return 'root'
+  else:
+    return 'local'
+
+
 @click.group()
 def main():
   if not config['registry'].startswith('https://'):
@@ -63,11 +78,13 @@ def main():
 @click.option('-S', '--strict', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
+@click.option('--root', is_flag=True)
+@click.option('--info', is_flag=True)
 @click.option('--dev/--production', 'dev', default=None,
     help='Specify whether to install development dependencies or not. The '
       'default value depends on the installation type (--dev when no packages '
       'are specified, --production otherwise).')
-def install(packages, develop, strict, upgrade, global_, dev):
+def install(packages, develop, strict, upgrade, global_, root, info, dev):
   """
   Installs one or more packages.
   """
@@ -75,7 +92,13 @@ def install(packages, develop, strict, upgrade, global_, dev):
   if dev is None:
     dev = not packages
 
-  installer = _install.Installer(upgrade=upgrade, global_=global_, strict=strict)
+  location = get_install_location(global_, root)
+  installer = _install.Installer(upgrade=upgrade, install_location=location)
+  if info:
+    for key in sorted(installer.dirs):
+      print('{}: {}'.format(key, installer.dirs[key]))
+    return 0
+
   if not packages:
     success = installer.install_dependencies_for(manifest.parse('package.json'), dev=dev)
     if not success:
@@ -103,14 +126,16 @@ def install(packages, develop, strict, upgrade, global_, dev):
 @main.command()
 @click.argument('package')
 @click.option('-g', '--global', 'global_', is_flag=True)
-def uninstall(package, global_):
+@click.option('--root', is_flag=True)
+def uninstall(package, global_, root):
   """
   Uninstall a module with the specified name from the local package directory.
   To uninstall the module from the global package directory, specify
   -g/--global.
   """
 
-  installer = _install.Installer(global_=global_)
+  location = get_install_location(global_, root)
+  installer = _install.Installer(install_location=location)
   installer.uninstall(package)
 
 

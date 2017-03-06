@@ -84,6 +84,9 @@ def make_nodepy_script(script_name, directory, filename, reference_dir=None):
   instead of the current working directory.
   """
 
+  if isinstance(reference_dir, six.binary_type):
+    reference_dir = reference_dir.decode()
+
   argschema.validate('filename', filename, {'type': six.text_type})
   argschema.validate('reference_dir', reference_dir, {'type': [six.text_type, None]})
 

@@ -53,12 +53,51 @@ default_exclude_patterns = [
     '*.pyc', '*.pyo', 'dist/*']
 
 
-def get_directories(global_):
-  if global_:
-    base = os.path.join(sys.prefix, 'share') if is_virtualenv() else config['prefix']
+def get_directories(location, config=_config):
+  """
+  Returns a dictionary that contains information on the install location of
+  Node.py packages. The dictionary contains the following keys:
+
+  - packages
+  - bin
+
+  Only when *location* is `'local'` or `'global'`, the following keys are
+  available:
+
+  - pip_prefix
+  - pip_bin
+  - pip_lib
+  """
+
+  pip_bin_base = 'Scripts' if os.name == 'nt' else 'bin'
+  pip_lib_base = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version)
+  if location == 'local':
+    pip_lib_dir = 'nodepy_modules/.pip/' + pip_lib_base
+    return {
+      'packages': 'nodepy_modules',
+      'bin': 'nodepy_modules/.bin',
+      'pip_prefix': 'nodepy_modules/.pip',
+      'pip_bin': 'nodepy_modules/.pip/' + pip_bin_base,
+      'pip_lib': [pip_lib_dir, pip_lib_dir + '/site-packages']
+    }
+  elif location == 'global':
+    prefix = os.path.expanduser(config['prefix'])
+    return {
+      'packages': os.path.join(prefix, 'nodepy_modules'),
+      'bin': os.path.join(prefix, pip_bin_base),
+      'pip_prefix': prefix,
+      'pip_bin': os.path.join(prefix, pip_bin_base),
+      'pip_lib': [os.path.join(prefix, pip_lib_base),
+                  os.path.join(prefix, pip_lib_base, 'site-packages')]
+    }
+  elif location == 'root':
+    prefix = os.path.join(os.path.normpath(sys.prefix))
+    return {
+      'packages': os.path.join(prefix, 'share', 'nodepy_modules'),
+      'bin': os.path.join(prefix, pip_bin_base)
+    }
   else:
-    base = '.'
-  return nodepy.Directories(base)
+    raise ValueError('invalid location: {!r}'.format(location))
 
 
 def _makedirs(path):
@@ -107,20 +146,13 @@ class Installer:
   This class manages the installation/uninstallation procedure.
   """
 
-  def __init__(self, registry=None, upgrade=False, global_=False, strict=False):
+  def __init__(self, registry=None, upgrade=False, install_location='local'):
+    assert install_location in ('local', 'global', 'root')
     self.reg = registry or _registry.RegistryClient(_config['registry'])
     self.upgrade = upgrade
-    self.global_ = global_
-    self.strict = strict
-
-    self._dirs = get_directories(global_)
-    self.dirs = {
-      'packages': self._dirs.prefix,
-      'bin': self._dirs.bindir,
-      'pip_prefix': self._dirs.pip_prefix,
-      'pip_bindir': self._dirs.pip_bindir,
-      'reference_dir': six.text_type(self._dirs.base)
-    }
+    self.install_location = install_location
+    self.dirs = get_directories(install_location)
+    self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
 
   def find_package(self, package):
     """
@@ -137,8 +169,15 @@ class Installer:
     if not os.path.isdir(dirname):
       raise PackageNotFound(package)
 
-    # TODO: Follow package links
-    return parse_manifest(os.path.join(dirname, 'package.json'))
+    lnk = nodepy.get_package_link(dirname)
+    if lnk:
+      rel = os.path.relpath(dirname, lnk.src)
+      assert rel == os.curdir, rel
+      manifest_fn = os.path.join(lnk.dst, 'package.json')
+    else:
+      manifest_fn = os.path.join(dirname, 'package.json')
+
+    return parse_manifest(manifest_fn, directory=dirname)
 
   def uninstall(self, package_name):
     """
@@ -266,15 +305,24 @@ class Installer:
     for name, version in deps.items():
       install_modules.append(name + version)
 
+    if not install_modules:
+      return True
+
     # TODO: Upgrade strategy?
 
-    if install_modules:
-      print('  Installing Python dependencies via Pip:', ' '.join(install_modules))
-      cmd = ['--prefix', self.dirs['pip_prefix']] + install_modules
-      res = pip.commands.install.InstallCommand().main(cmd)
-      if res != 0:
-        print('Error: `pip install` failed with exit-code', res)
-        return False
+    if self.install_location in ('local', 'global'):
+      cmd = ['--prefix', self.dirs['pip_prefix']]
+    elif self.install_location == 'root':
+      cmd = []
+    else:
+      raise RuntimeError('unexpected install location: {!r}'.format(self.install_location))
+    cmd.extend(install_modules)
+
+    print('  Installing Python dependencies via Pip:', ' '.join(install_modules))
+    res = pip.commands.install.InstallCommand().main(cmd)
+    if res != 0:
+      print('Error: `pip install` failed with exit-code', res)
+      return False
 
     return True
 
@@ -285,9 +333,12 @@ class Installer:
     sure that the respective modules can be found.
     """
 
-    if os.path.isdir(self._dirs.pip_bindir):
+    if self.install_location != 'local':
+      return
+
+    if os.path.isdir(self.dirs['pip_bin']):
       print('Relinking Pip-installed proxy scripts ...')
-      for fn in os.listdir(self._dirs.pip_bindir):
+      for fn in os.listdir(self.dirs['pip_bin']):
         if os.name == 'nt':
           script_name, ext = os.path.splitext(fn)
           if not ext: continue  # Bash script for Git-Bash..?
@@ -295,9 +346,9 @@ class Installer:
           script_name = fn
 
         print('  Creating', script_name, '...')
-        fn = os.path.abspath(os.path.join(self._dirs.pip_bindir, fn))
+        fn = os.path.abspath(os.path.join(self.dirs['pip_bin'], fn))
         _script.make_environment_wrapped_script(script_name, self.dirs['bin'],
-            fn, path=self._dirs.binpath, pythonpath=self._dirs.libpath)
+            fn, path=[self.dirs.pip_bin], pythonpath=self.dirs['pip_lib'])
 
   def install_from_directory(self, directory, develop=False, dev=False, expect=None):
     """
