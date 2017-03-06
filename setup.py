@@ -69,7 +69,7 @@ def install_ppym(develop=False):
 
   # TODO: Determine if Node.py is installed into the User or global
   #       directory and pass --global for the user directory instead.
-  cmd = ['ppym/bootstrap', '--no-bootstrap', '--root', '--upgrade']
+  cmd = ['ppym/bootstrap', '--root', '--upgrade']
   if develop:
     cmd.append('--develop')
 
