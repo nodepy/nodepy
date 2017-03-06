@@ -24,107 +24,109 @@ shell commands. Uses the Python #distlib package.
 
 import os
 import six
-from distlib.scripts import ScriptMaker
+from distlib.scripts import ScriptMaker as _ScriptMaker
 
 argschema = require('../argschema')
 
 
-def make_python_script(script_name, directory, code):
+class ScriptMaker:
   """
-  Uses #distlib.scripts.ScriptMaker to create a Python script that is invoked
-  with this current interpreter. The script runs *code* and will be created
-  in the specified *directory*.
-
-  # Parameters
-  script_name (str): The name of the script to create.
-  directory (str): The directory to create the script in.
-  code (str): The python code to run.
-
-  # Returns
-  A list of filenames created. Depending on the platform, more than one file
-  might be created to support multiple use cases (eg. and `.exe` but also a
-  bash-script on Windows).
+  Our own script maker class. It is unlike #distutils.script.ScriptMaker.
   """
 
-  if os.name == 'nt' and (not script_name.endswith('.py') \
-      or not script_name.endswith('.pyw')):
-    # ScriptMaker._write_script() will split the extension from the script
-    # name, thus if there is an extension, we should add another suffix so
-    # the extension doesn't get lost.
-    script_name += '.py'
+  def __init__(self, directory):
+    self.directory = directory
+    self.path = []
+    self.pythonpath = []
 
-  maker = ScriptMaker(None, directory)
-  maker.clobber = True
-  maker.variants = set(('',))
-  maker.set_mode = True
-  maker.script_template = code
-  return maker.make(script_name + '=isthisreallynecessary')
+  def _init_code(self):
+    if not self.path and not self.pythonpath:
+      return ''
+    code = '# Initialize environment variables (from ScriptMaker).\nimport os,sys\n'
+    if self.path:
+      path = [os.path.abspath(x) for x in self.path]
+      code += 'os.environ["PATH"] = os.pathsep.join({path!r}) + '\
+              'os.pathsep + os.environ.get("PATH", "")\n'.format(path=path)
+    if self.pythonpath:
+      path = [os.path.abspath(x) for x in self.pythonpath]
+      code += '_add_pythonpath = {pythonpath!r}\n'\
+              'os.environ["PYTHONPATH"] = os.pathsep.join(_add_pythonpath) + '\
+              'os.pathsep + os.environ.get("PYTHONPATH", "")\n'\
+              'sys.path.extend(_add_pythonpath); del _add_pythonpath\n'.format(pythonpath=path)
+    return code + '\n'
 
+  def make_python(self, script_name, code):
+    """
+    Uses #distlib.scripts.ScriptMaker to create a Python script that is invoked
+    with this current interpreter. The script runs *code* and will be created
+    in the *directory* specified in the constructor of this #ScriptMaker.
 
-def make_command_script(script_name, directory, args):
-  """
-  Uses #make_python_script() to create a Python script that uses the
-  #subprocess module to run the command specified with *args*.
-  """
+    # Parameters
+    script_name (str): The name of the script to create.
+    code (str): The python code to run.
 
-  argschema.validate('args', args, {'type': [list, tuple],
-      'items': {'type': six.text_type}})
-  code = 'import subprocess\n'\
-         'import sys\n'\
-         'sys.exit(subprocess.call({!r}))\n'.format(args)
-  return make_python_script(script_name, directory, code)
+    # Returns
+    A list of filenames created. Depending on the platform, more than one file
+    might be created to support multiple use cases (eg. and `.exe` but also a
+    bash-script on Windows).
+    """
 
+    if os.name == 'nt' and (not script_name.endswith('.py') \
+        or not script_name.endswith('.pyw')):
+      # ScriptMaker._write_script() will split the extension from the script
+      # name, thus if there is an extension, we should add another suffix so
+      # the extension doesn't get lost.
+      script_name += '.py'
 
-def make_nodepy_script(script_name, directory, filename, reference_dir=None):
-  """
-  Uses #make_python_script() to create a script that invokes the current
-  python and ppy runtime to run the ppy module specified by *filename*.
-  If a *reference_dir* is specified, that directory will be used as a
-  the base directory to start searching for `ppy_modules/` directories
-  instead of the current working directory.
-  """
+    maker = _ScriptMaker(None, self.directory)
+    maker.clobber = True
+    maker.variants = set(('',))
+    maker.set_mode = True
+    maker.script_template = self._init_code() + code
+    return maker.make(script_name + '=isthisreallynecessary')
 
-  if isinstance(reference_dir, six.binary_type):
-    reference_dir = reference_dir.decode()
+  def make_command(self, script_name, args):
+    """
+    Uses #make_python() to create a Python script that uses the #subprocess
+    module to run the command specified with *args*.
+    """
 
-  argschema.validate('filename', filename, {'type': six.text_type})
-  argschema.validate('reference_dir', reference_dir, {'type': [six.text_type, None]})
+    code = 'import sys, subprocess\n'\
+           'sys.exit(subprocess.call({!r}))\n'.format(args)
+    return self.make_python(script_name, code)
 
-  args = []
-  if reference_dir:
-    # Find modules in the reference directory.
-    args.append('--current-dir')
-    args.append(reference_dir)
-  args.append(filename)
+  def make_nodepy(self, script_name, filename, reference_dir=None):
+    """
+    Uses #make_pyton() to create a script that invokes the current Python and
+    Node.py runtime to run the Node.py module specified by *filename*. If a
+    *reference_dir* is specified, that directory will be used as a the base
+    directory to start searching for `nodepy_modules/` directories instead of
+    the current working directory.
+    """
 
-  code = 'import sys\n'\
-         'import nodepy\n'\
-         'sys.argv = [sys.argv[0]] + {args!r} + sys.argv[1:]\n'\
-         'sys.exit(nodepy.main())\n'.format(args=args)
+    args = []
+    if reference_dir:
+      # Find modules in the reference directory.
+      args.append('--current-dir')
+      args.append(reference_dir)
+    args.append(filename)
 
-  return make_python_script(script_name, directory, code)
+    code = 'import sys, nodepy;\n'\
+           'sys.argv = [sys.argv[0]] + {args!r} + sys.argv[1:]\n'\
+           'sys.exit(nodepy.main())\n'.format(args=args)
+    return self.make_python(script_name, code)
 
+  def make_wrapper(self, script_name, target_program):
+    """
+    Creates a Python wrapper script that will invoke *target_program*. Before
+    the program is invoked, the environment variables PATH and PYTHONPATH will
+    be prefixed with the paths from *path* and *pythonpath*.
+    """
 
-def make_environment_wrapped_script(script_name, directory, target_program,
-    path=(), pythonpath=()):
-  """
-  Creates a Python wrapper script that will invoke *target_program*. Before
-  the program is invoked, the environment variables PATH and PYTHONPATH will
-  be prefixed with the paths from *path* and *pythonpath*.
-  """
+    if not os.path.isabs(target_program):
+      raise ValueError('target_program must be an absolute path')
 
-  argschema.validate('target_program', target_program, {'type': six.text_type})
-  argschema.validate('path', path, {'type': [tuple, list], 'items': {'type': six.text_type}})
-  argschema.validate('pythonpath', pythonpath, {'type': [tuple, list], 'items': {'type': six.text_type}})
-  if not os.path.isabs(target_program):
-    raise ValueError('target_program must be an absolute path')
-
-  path = [os.path.abspath(x) for x in path]
-  pythonpath = [os.path.abspath(x) for x in pythonpath]
-
-  code = 'import os, subprocess, sys\n'\
-         'os.environ["PATH"] = os.pathsep.join({path!r}) + os.pathsep + os.environ.get("PATH", "")\n'\
-         'os.environ["PYTHONPATH"] = os.pathsep.join({pythonpath!r}) + os.pathsep + os.environ.get("PYTHONPATH", "")\n'\
-         'sys.exit(subprocess.call([{program!r}] + sys.argv[1:]))\n'.format(path=path, pythonpath=pythonpath, program=target_program)
-
-  return make_python_script(script_name, directory, code)
+    code = 'import subprocess, sys\n'\
+           'sys.exit(subprocess.call([{program!r}] + sys.argv[1:]))\n'\
+             .format(program=target_program)
+    return self.make_python(script_name, directory, code)

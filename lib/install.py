@@ -154,6 +154,10 @@ class Installer:
     self.install_location = install_location
     self.dirs = get_directories(install_location)
     self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
+    self.script = _script.ScriptMaker(self.dirs['bin'])
+    if install_location in ('local', 'global'):
+      self.script.path.append(self.dirs['pip_bin'])
+      self.script.pythonpath.extend(self.dirs['pip_lib'])
 
   def find_package(self, package):
     """
@@ -334,7 +338,7 @@ class Installer:
     sure that the respective modules can be found.
     """
 
-    if self.install_location != 'local':
+    if self.install_location not in ('local', 'global'):
       return
 
     if os.path.isdir(self.dirs['pip_bin']):
@@ -347,9 +351,8 @@ class Installer:
           script_name = fn
 
         print('  Creating', script_name, '...')
-        fn = os.path.abspath(os.path.join(self.dirs['pip_bin'], fn))
-        _script.make_environment_wrapped_script(script_name, self.dirs['bin'],
-            fn, path=[self.dirs.pip_bin], pythonpath=self.dirs['pip_lib'])
+        target_prog = os.path.abspath(os.path.join(self.dirs['pip_bin'], fn))
+        self.script.make_wrapper(script_name, target_prog)
 
   def install_from_directory(self, directory, develop=False, dev=False, expect=None):
     """
@@ -435,8 +438,8 @@ class Installer:
     for script_name, filename in manifest.bin.items():
       print('  Installing script "{}"...'.format(script_name))
       filename = os.path.abspath(os.path.join(target_dir, filename))
-      installed_files += _script.make_nodepy_script(
-          script_name, self.dirs['bin'], filename, self.dirs['reference_dir'])
+      installed_files += self.script.make_nodepy(
+          script_name, filename, self.dirs['reference_dir'])
 
     # Write down the names of the installed files.
     with open(os.path.join(target_dir, PPYM_INSTALLED_FILES), 'w') as fp:
