@@ -70,7 +70,7 @@ def get_directories(location, config=_config):
   """
 
   pip_bin_base = 'Scripts' if os.name == 'nt' else 'bin'
-  pip_lib_base = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version)
+  pip_lib_base = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version_info)
   if location == 'local':
     pip_lib_dir = 'nodepy_modules/.pip/' + pip_lib_base
     return {
