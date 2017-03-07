@@ -120,7 +120,7 @@ def _check_include_file(filename, include_patterns, exclude_patterns):
 
 
 def is_virtualenv():
-  return hasattr(sys, 'real_prefix') or (sys.prefix == sys.base_prefix)
+  return hasattr(sys, 'real_prefix') or (sys.prefix != sys.base_prefix)
 
 
 class PackageNotFound(Exception):

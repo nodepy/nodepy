@@ -17,6 +17,10 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
+### v0.0.11
+
+- fix `is_virtualenv()` which returned True outside a virtual environment
+
 ### v0.0.10
 
 - fix `ppym run` for actual Node.py scripts, using `nodepy.main()` over
