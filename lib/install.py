@@ -20,6 +20,7 @@
 
 __all__ = ['InstallError', 'Installer', 'walk_package_files']
 
+import errno
 import nodepy
 import os
 import pip.commands
@@ -149,12 +150,13 @@ class Installer:
   """
 
   def __init__(self, registry=None, upgrade=False, install_location='local',
-      pip_separate_process=False):
+      pip_separate_process=False, recursive=False):
     assert install_location in ('local', 'global', 'root')
     self.reg = registry or _registry.RegistryClient(_config['registry'])
     self.upgrade = upgrade
     self.install_location = install_location
     self.pip_separate_process = pip_separate_process
+    self.recursive = recursive
     self.dirs = get_directories(install_location)
     self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
     self.script = _script.ScriptMaker(self.dirs['bin'])
@@ -185,7 +187,17 @@ class Installer:
     else:
       manifest_fn = os.path.join(dirname, 'package.json')
 
-    return parse_manifest(manifest_fn, directory=dirname)
+    if not os.path.isfile(manifest_fn):
+      print('Warning: found package directory without package.json')
+      print("  at '{}'".format(dirname))
+      raise PackageNotFound(package)
+    else:
+      try:
+        return parse_manifest(manifest_fn, directory=dirname)
+      except InvalidPackageManifest as exc:
+        print('Warning: invalid package manifest')
+        print("  at '{}'".format(manifest_fn))
+        return None
 
   def uninstall(self, package_name):
     """
@@ -215,8 +227,13 @@ class Installer:
 
     try:
       manifest = parse_manifest(manifest_fn)
+    except (OSError, IOError) as exc:
+      if exc.errno != errno.ENOENT:
+        raise
+      print('Can not uninstall: directory "{}": No package manifest, please remove the directory manually'.format(directory))
+      return False
     except InvalidPackageManifest as exc:
-      print('Can not uninstall: directory "{}": Invalid manifest": {}'.format(directory, ext))
+      print('Can not uninstall: directory "{}": Invalid manifest": {}'.format(directory, exc))
       return False
 
     print('Uninstalling "{}" from "{}"{}...'.format(manifest.identifier,
@@ -289,8 +306,10 @@ class Installer:
           print('  Warning: Dependency "{}@{}" unsatisfied, have "{}" installed'
               .format(name, version, dep.identifier))
         else:
-          print('  Skipping satisfied dependency "{}@{}", have "{} installed'.
-              format(name, version, dep.identifier))
+          print('  Skipping satisfied dependency "{}@{}", have "{}" installed'
+              .format(name, version, dep.identifier))
+          if self.recursive:
+            self.install_dependencies_for(dep)
 
     if not install_deps:
       return True
@@ -298,7 +317,7 @@ class Installer:
     depfmt = ', '.join(refstring.join(n, version=v) for (n, v) in install_deps)
     print('  Installing dependencies:', depfmt)
     for name, version in install_deps:
-      if not self.install_from_registry(name, version):
+      if not self.install_from_registry(name, version)[0]:
         return False
 
     return True
@@ -494,10 +513,14 @@ class Installer:
       if not self.upgrade:
         print('package "{}@{}" already installed, specify --upgrade'.format(
             package.name, package.version))
-        return True
+        return True, (package.name, package.version)
 
     print('Finding package matching "{}@{}"...'.format(package_name, selector))
-    info = self.reg.find_package(package_name, selector)
+    try:
+      info = self.reg.find_package(package_name, selector)
+    except _registry.PackageNotFound as exc:
+      print('Error: package "{}" could not be located'.format(exc))
+      return False, None
     assert info.name == package_name, info
 
     print('Downloading "{}@{}"...'.format(info.name, info.version))
@@ -509,10 +532,12 @@ class Installer:
       with tempfile.NamedTemporaryFile(suffix='_' + filename, delete=False) as tmp:
         progress = _download.DownloadProgress(30, prefix='  ')
         _download.download_to_fileobj(response, tmp, progress=progress)
-      return self.install_from_archive(tmp.name, dev=dev, expect=(package_name, info.version))
+      sucess = self.install_from_archive(tmp.name, dev=dev, expect=(package_name, info.version))
     finally:
       if tmp and os.path.isfile(tmp.name):
         os.remove(tmp.name)
+
+    return sucess, (package_name, info.version)
 
 
 class InstallError(Exception):

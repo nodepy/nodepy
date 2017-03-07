@@ -24,6 +24,8 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   manifest in `walk_package_files()`
 - fix `ppym dist` which would not close the archive before returning, which
   caused `ppym publish` to upload an empty package archive
+- add `ppym install --save/--save-dev` options
+- add `ppym install --recursive` option
 
 ### v0.0.10
 
