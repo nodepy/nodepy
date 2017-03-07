@@ -20,6 +20,8 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 ### v0.0.11
 
 - fix `is_virtualenv()` which returned True outside a virtual environment
+- use `.git*` default exclude pattern, fix exclude patterns read from package
+  manifest in `walk_package_files()`
 
 ### v0.0.10
 

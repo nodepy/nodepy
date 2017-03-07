@@ -50,7 +50,7 @@ PPYM_INSTALLED_FILES = '.ppym-installed-files'
 
 
 default_exclude_patterns = [
-    '.DS_Store', '.svn/*', '.git', '.git/*', 'nodepy_modules/*',
+    '.DS_Store', '.svn/*', '.git*', 'nodepy_modules/*',
     '*.pyc', '*.pyo', 'dist/*']
 
 
@@ -133,7 +133,7 @@ def walk_package_files(manifest):
   """
 
   inpat = manifest.dist.get('include_files', [])
-  expat = manifest.dist.get('include_files', []) + default_exclude_patterns
+  expat = manifest.dist.get('exclude_files', []) + default_exclude_patterns
 
   for root, __, files in os.walk(manifest.directory):
     for filename in files:
