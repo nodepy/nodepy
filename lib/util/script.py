@@ -104,7 +104,7 @@ class ScriptMaker:
     the current working directory.
     """
 
-    args = []
+    args = ['--keep-arg0']
     if reference_dir:
       # Find modules in the reference directory.
       args.append('--current-dir')
