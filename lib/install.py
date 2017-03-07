@@ -84,7 +84,7 @@ def get_directories(location, config=_config):
   elif location == 'global':
     prefix = os.path.expanduser(config['prefix'])
     return {
-      'packages': os.path.join(prefix, 'nodepy_modules'),
+      'packages': os.path.join(prefix, 'share', 'nodepy_modules'),
       'bin': os.path.join(prefix, pip_bin_base),
       'pip_prefix': prefix,
       'pip_bin': os.path.join(prefix, pip_bin_base),

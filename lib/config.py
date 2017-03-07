@@ -146,8 +146,7 @@ config = Config()
 # scripts to. Note that global installs inside a virtual environment will
 # ignore this option and instead place the packages under the virtualenv's
 # prefix.
-config.defaults['prefix'] = os.path.join(
-    appdirs.user_data_dir('Node.py', False), sys.version[:3])
+config.defaults['prefix'] = '~/.local'
 
 # The URL of the PPYM registry from which packages should be downloaded
 # from and uploaded to.
