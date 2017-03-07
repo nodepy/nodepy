@@ -80,14 +80,12 @@ def install_deps():
     sys.exit(res)
 
 
-def install_ppym(develop=False):
+def install_ppym(user, develop=False):
   """
   Executes the PPYM `bootstrap` module to install PPYM globally.
   """
 
-  # TODO: Determine if Node.py is installed into the User or global
-  #       directory and pass --global for the user directory instead.
-  cmd = ['ppym/bootstrap', '--root', '--upgrade']
+  cmd = ['ppym/bootstrap', '--upgrade', '--global' if user else '--root']
   if develop:
     cmd.append('--develop')
 
@@ -136,7 +134,7 @@ class develop(_develop):
     install_deps()
     with hook_distlib_scriptmaker():
       _develop.run(self)
-    install_ppym(develop=True)
+    install_ppym(develop=True, user=self.user)
 
 
 class install(_install):
@@ -144,7 +142,7 @@ class install(_install):
     install_deps()
     with hook_distlib_scriptmaker():
       _install.run(self)
-    install_ppym()
+    install_ppym(user=self.user)
 
 
 setuptools.setup(

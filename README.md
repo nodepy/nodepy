@@ -39,6 +39,11 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.13
+
+- `setup.py` installs PPYM into user directory if Node.py is installed
+  into user directory
+
 ### v0.0.12
 
 - remove `nodepy.Directories` class again, we only need to compute the
