@@ -45,6 +45,12 @@ dependencies and then running the `build` script.
   into user directory
 - add `--keep-arg0` argument to `node.py`, which is used when PPYM installs
   a command-line script
+- `Context.load_module()` now accepts an explicit `loader` argument
+- add `Context.get_extension()`
+- add `Context.current_modules`
+- always add local `nodepy_modules/` directory to `Context.path`
+- add `Require.hide_main()`
+- `exports` argument to `Require.__call__()`
 
 ### v0.0.12
 

@@ -91,6 +91,7 @@ def new_module(name):
 
 
 class ResolveError(Exception):
+
   def __init__(self, request, current_dir, is_main, path):
     self.request = request
     self.current_dir = current_dir
@@ -186,7 +187,6 @@ def _py_loader(context, filename):
   and loads that file instead.
   """
 
-  assert filename.endswith('.py')
   bytecache_file = os.path.splitext(filename)[0] + NodepyByteModule.pyc_suffix
   if os.path.isfile(bytecache_file) and os.path.isfile(filename) \
       and os.path.getmtime(bytecache_file) >= os.path.getmtime(filename):
@@ -198,6 +198,8 @@ class Require(object):
   """
   The `require()` function for #NodepyModule#s.
   """
+
+  ResolveError = ResolveError
 
   def __init__(self, module):
     self.module = module
@@ -220,20 +222,38 @@ class Require(object):
   def current(self):
     return self.context.current_module
 
-  def __call__(self, request, current_dir=None, is_main=False, cache=True):
+  def __call__(self, request, current_dir=None, is_main=False, cache=True, exports=True):
     current_dir = current_dir or self.module.directory
     filename = self.context.resolve(request, current_dir, is_main=is_main)
     module = self.context.load_module(filename, is_main=is_main, cache=cache)
-    return get_exports(module)
+    if exports:
+      return get_exports(module)
+    return module
 
-  def exec_main(self, request, current_dir=None, argv=None, cache=True):
+  @contextlib.contextmanager
+  def hide_main(self, argv=None):
+    """
+    Context manager to temporarily swap out the current main module, allowing
+    you to execute another main module. Optionally, `sys.argv` can be
+    temporarily overwritten, too.
+    """
+
     main, self.main = self.main, None
     argv, sys.argv = sys.argv, sys.argv if argv is None else argv
     try:
-      self(request, current_dir, is_main=True, cache=cache)
+      yield
     finally:
       sys.argv = argv
       self.main = main
+
+  def exec_main(self, request, current_dir=None, argv=None, cache=True):
+    """
+    Uses #hide_main() to temporarily swap out the current main module and
+    loading another module as main. Returns the loaded module.
+    """
+
+    with self.hide_main(argv=argv):
+      return self(request, current_dir, is_main=True, cache=cache)
 
 
 def get_exports(module):
@@ -332,6 +352,7 @@ class Context(object):
     # A list of additional search directories. Defaults to the paths specified
     # in the `NODEPY_PATH` environment variable.
     self.path = list(filter(bool, os.getenv('NODEPY_PATH', '').split(os.pathsep)))
+    self.path.insert(0, 'nodepy_modules')
     # The main module. Will be set by #load_module().
     self.main_module = None
 
@@ -358,6 +379,10 @@ class Context(object):
   @property
   def current_module(self):
     return self._module_stack[-1] if self._module_stack else None
+
+  @property
+  def current_modules(self):
+    return self._module_stack
 
   @contextlib.contextmanager
   def enter_module(self, module):
@@ -414,6 +439,13 @@ class Context(object):
       raise TypeError('loader must be a callable')
     self._extensions[ext] = loader
     self._extensions_order.append(ext)
+
+  def get_extension(self, ext):
+    """
+    Returns the loader that was registered for the extension *ext*.
+    """
+
+    return self._extensions[ext]
 
   def resolve(self, request, current_dir=None, is_main=False, path=None):
     """
@@ -478,7 +510,7 @@ class Context(object):
 
     raise ResolveError(request, current_dir, is_main, path)
 
-  def load_module(self, filename, is_main=False, exec_=True, cache=True):
+  def load_module(self, filename, is_main=False, exec_=True, cache=True, loader=None):
     """
     Loads a module by *filename*. The filename will be converted to an
     absolute path and normalized. If the module is already loaded, the
@@ -494,11 +526,14 @@ class Context(object):
     filename = os.path.normpath(os.path.abspath(filename))
     if cache and filename in self._module_cache:
       return self._module_cache[filename]
-    for ext, loader in six.iteritems(self._extensions):
-      if filename.endswith(ext):
-        break
-    else:
-      raise UnknownModuleTypeError(filename)
+
+    if loader is None:
+      for ext, loader in six.iteritems(self._extensions):
+        if filename.endswith(ext):
+          break
+      else:
+        raise UnknownModuleTypeError(filename)
+
     module = loader(self, filename)
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
