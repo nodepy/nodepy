@@ -22,6 +22,8 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - fix `is_virtualenv()` which returned True outside a virtual environment
 - use `.git*` default exclude pattern, fix exclude patterns read from package
   manifest in `walk_package_files()`
+- fix `ppym dist` which would not close the archive before returning, which
+  caused `ppym publish` to upload an empty package archive
 
 ### v0.0.10
 

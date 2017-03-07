@@ -78,6 +78,7 @@ class PackageLifecycle(object):
     for name, rel in _install.walk_package_files(self.manifest):
       print('  Adding "{}"...'.format(rel))
       archive.add(name, rel)
+    archive.close()
     self.run('post-dist', [])
     print('Done!')
     return filename
