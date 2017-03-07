@@ -526,6 +526,8 @@ def main(argv=None):
       help='Change where the initial request will be resolved in.')
   parser.add_argument('--version', action='store_true',
       help='Print the Node.py version and exit.')
+  parser.add_argument('--keep-arg0', action='store_true',
+      help='Do not overwrite sys.argv[0] when executing a file.')
   args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
   if args.version:
@@ -545,7 +547,7 @@ def main(argv=None):
     else:
       request = arguments.pop(0)
       filename = context.resolve(request, args.current_dir, is_main=True)
-      sys.argv = [filename] + arguments
+      sys.argv = [sys.argv[0] if args.keep_arg0 else filename] + arguments
       module = context.load_module(filename, is_main=True)
 
   sys.exit(0)

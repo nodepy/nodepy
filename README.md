@@ -43,6 +43,8 @@ dependencies and then running the `build` script.
 
 - `setup.py` installs PPYM into user directory if Node.py is installed
   into user directory
+- add `--keep-arg0` argument to `node.py`, which is used when PPYM installs
+  a command-line script
 
 ### v0.0.12
 
