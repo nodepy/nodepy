@@ -2,7 +2,8 @@
 
 ```
 ppym install [-g,--global] [--root] [-e,--develop] [--pip-separate-process]
-             [--dev/--production] [PACKAGES]
+             [--dev/--production] [--save] [--save-dev] [--recursive]
+             [PACKAGES]
 ```
 
 Installs one or more Node.py packages from the PPYM registry, package
@@ -33,3 +34,13 @@ means that a `.nodepy-link` file will be created instead of the package
 contents being copied. Node.py will read this link and continue resolving
 `require()`s in the target directory (which is your package that you installed
 with `--develop`).
+
+Using the `--save` or `--save-dev` options requires a `package.json` in the
+current working directory to which the new dependencies can be added. Note
+also that the package manifest will be re-written with a strict 2-space
+indentation.
+
+The `--recursive` option can be used to make sure dependencies of already
+satisfied dependencies are satisfied as well. This can be useful if you
+uninstall a dependencies of another package and want to re-install them
+without remembering them all.
