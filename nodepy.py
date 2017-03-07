@@ -336,6 +336,9 @@ class Context(object):
     # Container for internal modules that can be bound to the context
     # explicitly with the #register_binding() method.
     self._bindings = {}
+    # A list of filenames that are looked into when resolving a request to
+    # a directory.
+    self._index_files = ['index']
     # Loaders for file extensions. The default loader for `.py` files is
     # automatically registered.
     self._extensions = {}
@@ -412,6 +415,13 @@ class Context(object):
 
     return self._bindings[binding_name]
 
+  def register_index_file(self, filename):
+    """
+    Register a filename to be checked when resolving a request to a directory.
+    """
+
+    self._index_files.append(filename)
+
   def register_binding(self, binding_name, obj):
     """
     Registers a binding to the Context under the specified *binding_name*. The
@@ -487,8 +497,12 @@ class Context(object):
         if filename:
           return filename
       if os.path.isdir(request):
-        request = os.path.join(request, 'index')
-        return self.resolve(request, current_dir, is_main, path)
+        for choice in self._index_files:
+          new_request = os.path.join(request, choice)
+          try:
+            return self.resolve(new_request, current_dir, is_main, path)
+          except ResolveError:
+            continue
       raise ResolveError(request, current_dir, is_main, path)
 
     if current_dir is None and is_main:

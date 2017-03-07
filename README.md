@@ -51,6 +51,7 @@ dependencies and then running the `build` script.
 - always add local `nodepy_modules/` directory to `Context.path`
 - add `Require.hide_main()`
 - `exports` argument to `Require.__call__()`
+- add `Context.register_index_file()`
 
 ### v0.0.12
 
