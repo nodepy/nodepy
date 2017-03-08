@@ -1,4 +1,4 @@
-# PPYM v0.0.11 Documentation
+# PPYM v0.0.12 Documentation
 
 PPYM is the [Node.py] package manager.
 
