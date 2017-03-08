@@ -17,6 +17,10 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
+### v0.0.12
+
+- add support for install dependencies via Git URLs (like `git+https://gith...`)
+
 ### v0.0.11
 
 - fix `is_virtualenv()` which returned True outside a virtual environment

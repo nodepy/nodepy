@@ -125,7 +125,11 @@ def install(packages, develop, strict, upgrade, global_, root, recursive,
 
   save_deps = []
   for package in packages:
-    if os.path.isdir(package):
+    if package.startswith('git+'):
+      success, package_info = installer.install_from_git(package[4:])
+      if success:
+        save_deps.append((package_info[0], package))
+    elif os.path.isdir(package):
       success = installer.install_from_directory(package, develop, dev=dev)
     elif os.path.isfile(package):
       success = installer.install_from_archive(package, dev=dev)
@@ -134,7 +138,7 @@ def install(packages, develop, strict, upgrade, global_, root, recursive,
       selector = ref.version or semver.Selector('*')
       success, package_info = installer.install_from_registry(six.text_type(ref.package), selector, dev=dev)
       if success:
-        save_deps.append(package_info)
+        save_deps.append((package_info[0], '^' + str(package_info[1])))
     if not success:
       print('Installation failed')
       return 1
@@ -142,7 +146,6 @@ def install(packages, develop, strict, upgrade, global_, root, recursive,
   installer.relink_pip_scripts()
 
   if save or save_dev:
-    save_deps = [(k, '^' + str(v)) for k, v in save_deps]
     save_deps.sort(key=lambda x: x[0])
 
     field = 'dependencies' if save else 'dev-dependencies'

@@ -40,6 +40,7 @@ _config = require('./config')
 _download = require('./util/download')
 _script = require('./util/script')
 refstring = require('./refstring')
+pathutils = require('./util/pathutils')
 
 parse_manifest = require('./manifest').parse
 PackageManifest = require('./manifest').PackageManifest
@@ -398,7 +399,7 @@ class Installer:
       directory.
 
     # Returns
-    False if the installation failed.
+    (success, manifest)
     """
 
     filename = os.path.normpath(os.path.abspath(os.path.join(directory, 'package.json')))
@@ -407,15 +408,15 @@ class Installer:
       manifest = parse_manifest(filename)
     except FileNotFoundError:
       print('Error: directory "{}" contains no package manifest'.format(directory))
-      return False
+      return False, None
     except InvalidPackageManifest as exc:
       print('Error: directory "{}":'.format(directory), exc)
-      return False
+      return False, None
 
     if expect is not None and (manifest.name, manifest.version) != expect:
       print('Error: Expected to install "{}@{}" but got "{}" in "{}"'
           .format(expect[0], expect[1], manifest.identifier, directory))
-      return False
+      return False, manifest
 
     print('Installing "{}"...'.format(manifest.identifier))
     target_dir = os.path.join(self.dirs['packages'], manifest.name)
@@ -425,9 +426,9 @@ class Installer:
     if os.path.exists(target_dir):
       if not self.upgrade:
         print('  Note: install directory "{}" already exists, specify --upgrade'.format(target_dir))
-        return True
+        return True, manifest
       if not self.uninstall_directory(target_dir):
-        return False
+        return False, manifest
 
     plc = PackageLifecycle(manifest=manifest)
     try:
@@ -435,11 +436,11 @@ class Installer:
     except:
       traceback.print_exc()
       print('Error: pre-install script failed.')
-      return False
+      return False, manifest
 
     # Install dependencies.
     if not self.install_dependencies_for(manifest, dev=dev):
-      return False
+      return False, manifest
 
     installed_files = []
 
@@ -478,9 +479,9 @@ class Installer:
     except:
       traceback.print_exc()
       print('Error: post-install script failed.')
-      return False
+      return False, manifest
 
-    return True
+    return True, manifest
 
   def install_from_archive(self, archive, dev=False, expect=None):
     """
@@ -499,6 +500,9 @@ class Installer:
   def install_from_registry(self, package_name, selector, dev=False):
     """
     Install a package from a registry.
+
+    # Returns
+    (success, (package_name, package_version))
     """
 
     # Check if the package already exists.
@@ -532,12 +536,37 @@ class Installer:
       with tempfile.NamedTemporaryFile(suffix='_' + filename, delete=False) as tmp:
         progress = _download.DownloadProgress(30, prefix='  ')
         _download.download_to_fileobj(response, tmp, progress=progress)
-      sucess = self.install_from_archive(tmp.name, dev=dev, expect=(package_name, info.version))
+      success = self.install_from_archive(tmp.name, dev=dev, expect=(package_name, info.version))
     finally:
       if tmp and os.path.isfile(tmp.name):
         os.remove(tmp.name)
 
-    return sucess, (package_name, info.version)
+    return success, (package_name, info.version)
+
+  def install_from_git(self, url):
+    """
+    Install a package from a Git repository. The package will first be cloned
+    into the package directorie's `.tmp/` directory, then it will be installed
+    from that directory.
+
+    # Returns
+    (success, (package_name, package_version))
+    """
+
+    dest = os.path.join(self.dirs['packages'], '.tmp')
+    res = subprocess.call(['git', 'clone', url, dest])
+    if res != 0:
+      print('Error: Git clone failed')
+      return False, None
+
+    try:
+      success, manifest = self.install_from_directory(dest)
+    finally:
+      shutil.rmtree(dest, onerror=pathutils.onerror)
+
+    if manifest:
+      return success, (manifest.name, manifest.version)
+    return success, None
 
 
 class InstallError(Exception):
