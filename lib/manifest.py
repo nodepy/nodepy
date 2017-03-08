@@ -193,7 +193,6 @@ class InvalidPackageManifest(Exception):
     return str(self.cause)
 
 
-
 def parse(filename, directory=None):
   """
   Parses a manifest file and returns it. If *directory* is #None, it will
@@ -242,12 +241,16 @@ def parse_dict(data, filename=None, directory=None, copy=True):
 
   dependencies = {}
   for dep, sel in data.get('dependencies', {}).items():
-    dependencies[dep] = semver.Selector(sel)
+    if not sel.startswith('git+'):
+      sel = semver.Selector(sel)
+    dependencies[dep] = sel
   data['dependencies'] = dependencies
 
   dev_dependencies = {}
   for dep, sel in data.get('dev-dependencies', {}).items():
-    dev_dependencies[dep] = semver.Selector(sel)
+    if not sel.startswith('git+'):
+      sel = semver.Selector(sel)
+    dev_dependencies[dep] = sel
   data['dev-dependencies'] = dev_dependencies
 
   engines = {}

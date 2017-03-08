@@ -303,12 +303,17 @@ class Installer:
       except PackageNotFound as exc:
         install_deps.append((name, version))
       else:
-        if not version(dep.version):
-          print('  Warning: Dependency "{}@{}" unsatisfied, have "{}" installed'
-              .format(name, version, dep.identifier))
+        if isinstance(version, str):
+          # Must be some URL format or so.
+          print('  Skipping satisfied dependency "{}" from URL "{}", have "{}" '
+              'installed'.format(name, version, dep.identifier))
         else:
-          print('  Skipping satisfied dependency "{}@{}", have "{}" installed'
-              .format(name, version, dep.identifier))
+          if not version(dep.version):
+            print('  Warning: Dependency "{}@{}" unsatisfied, have "{}" installed'
+                .format(name, version, dep.identifier))
+          else:
+            print('  Skipping satisfied dependency "{}@{}", have "{}" installed'
+                .format(name, version, dep.identifier))
           if self.recursive:
             self.install_dependencies_for(dep)
 
@@ -318,8 +323,16 @@ class Installer:
     depfmt = ', '.join(refstring.join(n, version=v) for (n, v) in install_deps)
     print('  Installing dependencies:', depfmt)
     for name, version in install_deps:
-      if not self.install_from_registry(name, version)[0]:
-        return False
+      if isinstance(version, str):
+        if version.startswith('git+'):
+          if not self.install_from_git(version[4:])[0]:
+            return False
+        else:
+          print('Error: Unsupported URL dependency format: {!r}'.format(version))
+          return False
+      else:
+        if not self.install_from_registry(name, version)[0]:
+          return False
 
     return True
 
