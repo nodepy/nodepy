@@ -12,6 +12,14 @@ are specified, the dependencies of the current package are installed. In that
 case, the `--dev` switch is enabled by default, otherwise `--production` is
 the default.
 
+The *PACKAGES* argument, if specified, can be of the following type:
+
+- A package name and version selector of the format `<package>[@<version>]`,
+  in which case the package will be looked up and installed from the PPYM
+  registry.
+- An existing directory that contains a `package.json` to install from.
+- A Git URL in the format `git+<url>[@<ref>]` to install the package from.
+
 With `--dev` enabled, the development dependencies of the packages are
 installed additionally to their normal runtime dependencies. Note that
 development dependencies are never installed transitively.
