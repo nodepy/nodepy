@@ -152,12 +152,13 @@ class Installer:
   """
 
   def __init__(self, registry=None, upgrade=False, install_location='local',
-      pip_separate_process=False, recursive=False):
+      pip_separate_process=False, pip_use_target_option=False, recursive=False):
     assert install_location in ('local', 'global', 'root')
     self.reg = registry or _registry.RegistryClient(_config['registry'])
     self.upgrade = upgrade
     self.install_location = install_location
     self.pip_separate_process = pip_separate_process
+    self.pip_use_target_option = pip_use_target_option
     self.recursive = recursive
     self.dirs = get_directories(install_location)
     self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
@@ -353,9 +354,15 @@ class Installer:
     # TODO: Upgrade strategy?
 
     if self.install_location in ('local', 'global'):
-      cmd = ['--prefix', self.dirs['pip_prefix']]
+      if self.pip_use_target_option:
+        # TODO: Ths assumes that the pip_lib argument is always the
+        #       site-packages directory. While this may be true now,
+        #       if we change it later, we surely forget this line here.
+        cmd = ['--target', self.dirs['pip_lib'][-1]]
+      else:
+        cmd = ['--prefix', self.dirs['pip_prefix']]
     elif self.install_location == 'root':
-      cmd = ['--prefix', sys.prefix]
+      cmd = []
     else:
       raise RuntimeError('unexpected install location: {!r}'.format(self.install_location))
     cmd.extend(install_modules)

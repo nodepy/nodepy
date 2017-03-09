@@ -82,6 +82,10 @@ def main():
 @click.option('--recursive', is_flag=True,
     help='Satisfy dependencies of already satisfied dependencies.')
 @click.option('--pip-separate-process', is_flag=True)
+@click.option('--pip-use-target-option', is_flag=True,
+    help='Use --target instead of --prefix when installing dependencies '
+      'via Pip. This is to circumvent a Bug in Pip where installing with '
+      '--prefix fails. See nodepy/ppym#9.')
 @click.option('--info', is_flag=True)
 @click.option('--dev/--production', 'dev', default=None,
     help='Specify whether to install development dependencies or not. The '
@@ -90,7 +94,8 @@ def main():
 @click.option('--save', is_flag=True)
 @click.option('--save-dev', is_flag=True)
 def install(packages, develop, strict, upgrade, global_, root, recursive,
-            info, dev, pip_separate_process, save, save_dev):
+            info, dev, pip_separate_process, pip_use_target_option, save,
+            save_dev):
   """
   Installs one or more packages.
   """
@@ -110,7 +115,8 @@ def install(packages, develop, strict, upgrade, global_, root, recursive,
 
   location = get_install_location(global_, root)
   installer = _install.Installer(upgrade=upgrade, install_location=location,
-      pip_separate_process=pip_separate_process, recursive=recursive)
+      pip_separate_process=pip_separate_process,
+      pip_use_target_option=pip_use_target_option, recursive=recursive)
   if info:
     for key in sorted(installer.dirs):
       print('{}: {}'.format(key, installer.dirs[key]))
