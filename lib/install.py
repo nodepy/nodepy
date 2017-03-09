@@ -24,6 +24,7 @@ import errno
 import nodepy
 import os
 import pip.commands
+import pip.locations
 import shlex
 import shutil
 import six
@@ -72,7 +73,7 @@ def get_directories(location, config=_config):
   - pip_lib
   """
 
-  pip_bin_base = 'Scripts' if os.name == 'nt' else 'bin'
+  pip_bin_base = os.path.basename(pip.locations.bin_py)
   pip_lib_base = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version_info)
   if location == 'local':
     pip_lib_dir = 'nodepy_modules/.pip/' + pip_lib_base
@@ -80,8 +81,8 @@ def get_directories(location, config=_config):
       'packages': 'nodepy_modules',
       'bin': 'nodepy_modules/.bin',
       'pip_prefix': 'nodepy_modules/.pip',
-      'pip_bin': 'nodepy_modules/.pip/' + pip_bin_base,
-      'pip_lib': [pip_lib_dir, pip_lib_dir + '/site-packages']
+      'pip_bin': os.path.join('nodepy_modules/.pip/', pip_bin_base),
+      'pip_lib': [pip_lib_dir, os.path.join(pip_lib_dir, '/site-packages')]
     }
   elif location == 'global':
     prefix = os.path.expanduser(config['prefix'])
@@ -97,7 +98,7 @@ def get_directories(location, config=_config):
     prefix = os.path.join(os.path.normpath(sys.prefix))
     return {
       'packages': os.path.join(prefix, 'share', 'nodepy_modules'),
-      'bin': os.path.join(prefix, pip_bin_base),
+      'bin': pip.locations.bin_py,
       'pip_bin': os.path.join(prefix, pip_bin_base),
     }
   else:

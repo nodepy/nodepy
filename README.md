@@ -21,6 +21,7 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 - fix `ppym run` for Node.py scripts, `--current-dir` was placed after the
   actual script that was to be executed
+- deduct pip install locations from pip module
 
 ### v0.0.12
 
