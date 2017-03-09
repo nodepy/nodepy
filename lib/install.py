@@ -49,7 +49,7 @@ InvalidPackageManifest = require('./manifest').InvalidPackageManifest
 PackageLifecycle = require('./package-lifecycle')
 
 PACKAGE_LINK = '.nodepy-link'
-PPYM_INSTALLED_FILES = '.ppym-installed-files'
+PPYM_INSTALLED_FILES = 'installed-files.txt'
 
 
 default_exclude_patterns = [
