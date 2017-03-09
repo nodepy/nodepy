@@ -39,6 +39,10 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.14
+
+- add nice string representation of `ResolveError`
+
 ### v0.0.13
 
 - `setup.py` installs PPYM into user directory if Node.py is installed

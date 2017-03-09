@@ -98,6 +98,14 @@ class ResolveError(Exception):
     self.is_main = is_main
     self.path = path
 
+  def __str__(self):
+    msg = "'{request}'{main} in '{current_dir}'".format(
+        request=self.request, main=' [main]' if self.is_main else '',
+        current_dir=self.current_dir)
+    if self.path:
+      msg += ' in path:\n  -' + '\n  -'.join(self.path)
+    return msg
+
 
 class UnknownModuleTypeError(Exception):
   def __filename__(self, filename):
