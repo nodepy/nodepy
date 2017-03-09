@@ -17,6 +17,11 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
+### v0.0.13
+
+- fix `ppym run` for Node.py scripts, `--current-dir` was placed after the
+  actual script that was to be executed
+
 ### v0.0.12
 
 - add support for install dependencies via Git URLs (like `git+https://gith...`)
