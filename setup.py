@@ -157,11 +157,12 @@ setuptools.setup(
   py_modules = ['nodepy'],
   install_requires = install_requires,
   entry_points = {
+    # Note: We hook ScriptMaker._write_script to prevent it from
+    # stripping the .py suffix.\
     'console_scripts': [
-      # Note: We hook ScriptMaker._write_script to prevent it from
-      # stripping the .py suffix.
-      'node.py = nodepy:main'
-    ]
+      'node.py{} = nodepy:main'.format(v)
+      for v in ('', sys.version[0], sys.version[:3])
+    ],
   },
   cmdclass = {
     'develop': develop,

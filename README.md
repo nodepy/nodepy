@@ -39,6 +39,12 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.15
+
+- fix interactive Node.py session (NameError variable `code`)
+- now install multiple versions of the `node.py` command for the Python
+  version, eg. `node.py3` and `node.py3.5` for Python 3.5
+
 ### v0.0.14
 
 - add nice string representation of `ResolveError`
