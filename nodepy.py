@@ -168,7 +168,7 @@ class NodepyModule(BaseModule):
 
   def _load_code(self):
     with open(self.filename, 'r') as fp:
-      return compile(fp.read(), self.filename, 'exec')
+      return compile(fp.read(), self.filename, 'exec', dont_inherit=True)
 
 
 class NodepyByteModule(NodepyModule):
@@ -598,7 +598,8 @@ def main(argv=None):
       sys.argv = [sys.argv[0]] + arguments
       module = InteractiveSessionModule(context)
       if args.exec_:
-        exec(args.exec_, vars(module.namespace))
+        code = compile(args.exec_, dont_inherit=True)
+        exec(code, vars(module.namespace))
       else:
         code.interact(VERSION, local=vars(module.namespace))
     else:

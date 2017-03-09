@@ -42,6 +42,7 @@ dependencies and then running the `build` script.
 ### v0.0.14
 
 - add nice string representation of `ResolveError`
+- Python modules loaded with `require()` no longer inherit Node.py's future flags
 
 ### v0.0.13
 
