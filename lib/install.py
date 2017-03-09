@@ -476,10 +476,18 @@ class Installer:
 
     # Create scripts for the 'bin' field in the package manifest.
     for script_name, filename in manifest.bin.items():
-      print('  Installing script "{}"...'.format(script_name))
-      filename = os.path.abspath(os.path.join(target_dir, filename))
-      installed_files += self.script.make_nodepy(
-          script_name, filename, self.dirs['reference_dir'])
+      if script_name.endswith('${py}'):
+        script_name = script_name[:-5]
+        script_names = [script_name, script_name + sys.version[0],
+            script_name + sys.version[:3]]
+      else:
+        script_names = [script_name]
+
+      for script_name in script_names:
+        print('  Installing script "{}"...'.format(script_name))
+        filename = os.path.abspath(os.path.join(target_dir, filename))
+        installed_files += self.script.make_nodepy(
+            script_name, filename, self.dirs['reference_dir'])
 
     # Write down the names of the installed files.
     with open(os.path.join(target_dir, PPYM_INSTALLED_FILES), 'w') as fp:
