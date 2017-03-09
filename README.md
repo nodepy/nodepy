@@ -43,6 +43,7 @@ dependencies and then running the `build` script.
 
 - add nice string representation of `ResolveError`
 - Python modules loaded with `require()` no longer inherit Node.py's future flags
+- upgrade PPYM to v0.0.13
 
 ### v0.0.13
 
