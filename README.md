@@ -44,6 +44,13 @@ dependencies and then running the `build` script.
 - fix interactive Node.py session (NameError variable `code`)
 - now install multiple versions of the `node.py` command for the Python
   version, eg. `node.py3` and `node.py3.5` for Python 3.5
+- fix #17: Requiring another package from a develop install does not resolve
+  in the original installation directory
+- add `Context.resolve(followed_from)` and `Context.load_module(followed_from)`
+- add `Context.resolve_and_load()` which automatically adds an element to
+  `Require.path` for package links
+- add `Require.path`
+- add `BaseModule.require`
 
 ### v0.0.14
 

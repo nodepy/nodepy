@@ -124,13 +124,14 @@ class BaseModule(object):
     self.directory = directory
     self.name = name
     self.namespace = new_module(name)
+    self.require = Require(self)
     self.executed = False
     self.init_namespace()
 
   def init_namespace(self):
     self.namespace.__file__ = self.filename
     self.namespace.__name__ = self.name
-    self.namespace.require = Require(self)
+    self.namespace.require = self.require
     self.namespace.module = self
     if self.directory:
       self.namespace.__directory__ = self.directory
@@ -211,6 +212,7 @@ class Require(object):
 
   def __init__(self, module):
     self.module = module
+    self.path = []
 
   @property
   def context(self):
@@ -232,8 +234,8 @@ class Require(object):
 
   def __call__(self, request, current_dir=None, is_main=False, cache=True, exports=True):
     current_dir = current_dir or self.module.directory
-    filename = self.context.resolve(request, current_dir, is_main=is_main)
-    module = self.context.load_module(filename, is_main=is_main, cache=cache)
+    module = self.context.resolve_and_load(request, current_dir,
+        is_main=is_main, additional_path=self.path, cache=cache)
     if exports:
       return get_exports(module)
     return module
@@ -341,6 +343,7 @@ class Context(object):
   """
 
   def __init__(self, current_dir='.', verbose=False):
+    self.current_dir = current_dir
     # Container for internal modules that can be bound to the context
     # explicitly with the #register_binding() method.
     self._bindings = {}
@@ -465,7 +468,8 @@ class Context(object):
 
     return self._extensions[ext]
 
-  def resolve(self, request, current_dir=None, is_main=False, path=None):
+  def resolve(self, request, current_dir=None, is_main=False, path=None,
+              followed_from=None):
     """
     Resolves the *request* to a filename of a module that can be loaded by one
     of the extension loaders. For relative requests (ones starting with `./` or
@@ -497,6 +501,8 @@ class Context(object):
         self.debug('follow .nodepy-link \'{}\''.format(link.src))
         self.debug('  maps to \'{}\''.format(link.dst))
         request = os.path.join(link.dst, os.path.relpath(request, link.src))
+        if followed_from is not None:
+          followed_from.append(link)
       filename = try_file(request)
       if filename:
         return filename
@@ -532,7 +538,8 @@ class Context(object):
 
     raise ResolveError(request, current_dir, is_main, path)
 
-  def load_module(self, filename, is_main=False, exec_=True, cache=True, loader=None):
+  def load_module(self, filename, is_main=False, exec_=True, cache=True,
+                  loader=None, followed_from=None):
     """
     Loads a module by *filename*. The filename will be converted to an
     absolute path and normalized. If the module is already loaded, the
@@ -540,6 +547,12 @@ class Context(object):
 
     Note that the returned #BaseModule will be ensured to be executed
     unless *exec_* is set to False.
+
+    In order to keep the correct reference directory when loading files via
+    package links (directories that contain a `.nodepy-link` file), the
+    *follow_from* argument should be specified which must be a list which
+    was obtained via #resolve()'s same parameter. It must be a list of
+    #PackageLink objects.
     """
 
     if is_main and self.main_module:
@@ -560,6 +573,11 @@ class Context(object):
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
           'but instead a {!r} object'.format(_get_name(loader), _get_name(module)))
+
+    if followed_from:
+      nodepy_modules = find_nearest_modules_directory(followed_from[0].src)
+      if nodepy_modules:
+        module.require.path.append(nodepy_modules)
     if cache:
       self._module_cache[filename] = module
     if is_main:
@@ -567,6 +585,25 @@ class Context(object):
     if exec_ and not module.executed:
       module.exec_()
     return module
+
+  def resolve_and_load(self, request, current_dir=None, is_main=False,
+                       path=None, additional_path=None, frollowed_from=None,
+                       exec_=True, cache=True, loader=None):
+    """
+    A combination of #resolve() and #load_module() that should be used when
+    actually wanting to require another module instead of just resolving a
+    request or loading from a filename.
+    """
+
+    path = list(self.path if path is None else path)
+    if additional_path is not None:
+      path = list(additional_path) + path
+    followed_from = []
+    filename = self.resolve(request, current_dir, is_main=is_main,
+        path=path, followed_from=followed_from)
+    print(followed_from)
+    return self.load_module(filename, is_main=is_main, cache=cache,
+        exec_=exec_, loader=loader, followed_from=followed_from)
 
 
 def main(argv=None):
@@ -603,9 +640,10 @@ def main(argv=None):
         code.interact(VERSION, local=vars(module.namespace))
     else:
       request = arguments.pop(0)
-      filename = context.resolve(request, args.current_dir, is_main=True)
-      sys.argv = [sys.argv[0] if args.keep_arg0 else filename] + arguments
-      module = context.load_module(filename, is_main=True)
+      module = context.resolve_and_load(request, args.current_dir,
+          is_main=True, exec_=False)
+      sys.argv = [sys.argv[0] if args.keep_arg0 else module.filename] + arguments
+      module.exec_()
 
   sys.exit(0)
 
