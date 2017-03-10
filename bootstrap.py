@@ -51,7 +51,13 @@ def main(args=None):
   with open(os.path.join(__directory__, 'package.json')) as fp:
     package = json.load(fp)
 
-  cmd = ['--prefix', 'nodepy_modules/.pip']
+  # We would like to use Pip --prefix, but there seems to be a Bug on Windows
+  # that lets installations fail (see nodepym/ppym#9).
+  if os.name == 'nt':
+    site_packages = 'Lib/site-packages'
+  else:
+    site_packages = 'lib/python{}.{}/site-packages'.format(*sys.version_info)
+  cmd = ['--target', 'nodepy_modules/.pip/' + site_packages]
   for key, value in package['python-dependencies'].items():
     cmd.append(key + value)
 
