@@ -601,7 +601,6 @@ class Context(object):
     followed_from = []
     filename = self.resolve(request, current_dir, is_main=is_main,
         path=path, followed_from=followed_from)
-    print(followed_from)
     return self.load_module(filename, is_main=is_main, cache=cache,
         exec_=exec_, loader=loader, followed_from=followed_from)
 
