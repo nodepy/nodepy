@@ -17,14 +17,18 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
-### v0.0.13
+### v0.0.14
 
-- fix `ppym run` for Node.py scripts, `--current-dir` was placed after the
-  actual script that was to be executed
 - deduct pip install locations from pip module
 - follow pip convention in writing the installed files to `installed-files.txt`
   rather than `.ppym-installed-files`. Note that PPYM will assume that such a
   file would not be part of a package.
+- enhance Python 2 compatibility
+
+### v0.0.13
+
+- fix `ppym run` for Node.py scripts, `--current-dir` was placed after the
+  actual script that was to be executed
 
 ### v0.0.12
 

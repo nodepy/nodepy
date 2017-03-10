@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-__all__ = ['InstallError', 'Installer', 'walk_package_files']
+from __future__ import print_function
 
 import errno
 import nodepy
@@ -123,7 +123,11 @@ def _check_include_file(filename, include_patterns, exclude_patterns):
 
 
 def is_virtualenv():
-  return hasattr(sys, 'real_prefix') or (sys.prefix != sys.base_prefix)
+  if hasattr(sys, 'real_prefix'):
+    return True
+  if hasattr(sys, 'base_prefix'): # Python 3+ only
+    return sys.prefix != sys.base_prefix
+  return False
 
 
 class PackageNotFound(Exception):
