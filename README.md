@@ -24,6 +24,10 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   rather than `.ppym-installed-files`. Note that PPYM will assume that such a
   file would not be part of a package.
 - enhance Python 2 compatibility
+- manifest `"bin"` fields may now end with `${py}` in which case the script
+  is installed in three versions: plain, with the major Python version appended
+  and with the major.minor Python version appended
+- install PPYM as plain command, with major and major.minor version
 
 ### v0.0.13
 
