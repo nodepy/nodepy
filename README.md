@@ -51,6 +51,8 @@ dependencies and then running the `build` script.
   `Require.path` for package links
 - add `Require.path`
 - add `BaseModule.require`
+- remove `UnknownModuleTypeError` for now, `Context.load_module()` now raises
+  a `ValueError` if no loader could be determined
 
 ### v0.0.14
 

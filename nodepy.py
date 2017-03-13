@@ -109,11 +109,6 @@ class ResolveError(Exception):
     return msg
 
 
-class UnknownModuleTypeError(Exception):
-  def __filename__(self, filename):
-    self.filename = filename
-
-
 class BaseModule(object):
   """
   Represents a Python module that exposes members like data, functions and
@@ -569,7 +564,7 @@ class Context(object):
         if filename.endswith(ext):
           break
       else:
-        raise UnknownModuleTypeError(filename)
+        raise ValueError('no loader for {!r}'.format(filename))
 
     module = loader(self, filename)
     if not isinstance(module, BaseModule):
