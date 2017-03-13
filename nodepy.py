@@ -101,7 +101,7 @@ class BaseModule(object):
     self.filename = filename
     self.directory = directory
     self.name = name
-    self.namespace = types.ModuleType(name)
+    self.namespace = types.ModuleType(str(name))  # in Python 2, does not accept Unicode
     self.require = Require(self)
     self.executed = False
     self.init_namespace()
