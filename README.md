@@ -58,6 +58,9 @@ dependencies and then running the `build` script.
 - remove `NodepyByteModule`
 - add `PythonModule(code)` parameter
 - add `get_python_library_base()`
+- replace `_py_loader()` function with `PythonLoader` class
+- the `PythonLoader` class now writes a bytecache from the source file if
+  `PYTHONDONTWRITEBYTECODE` is not set
 
 ### v0.0.14
 

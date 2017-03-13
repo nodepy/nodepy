@@ -38,6 +38,7 @@ import itertools
 import marshal
 import os
 import pdb
+import py_compile
 import sys
 import traceback
 import types
@@ -181,10 +182,10 @@ class PythonLoader(object):
       with open(filename, 'r') as fp:
         return compile(fp.read(), filename, 'exec', dont_inherit=True)
 
-  def __init__(self, write_bytecode=None):
-    if write_bytecode is None:
-      write_bytecode = bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
-    self._write_bytecode = write_bytecode
+  def __init__(self, write_bytecache=None):
+    if write_bytecache is None:
+      write_bytecache = not bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
+    self._write_bytecache = write_bytecache
 
   def __call__(self, context, filename):
     """
@@ -194,14 +195,28 @@ class PythonLoader(object):
     since it was created.
     """
 
-    name = os.path.splitext(os.path.basename(filename))[0]
-    bytecache_file = os.path.splitext(filename)[0] + self.pyc_suffix
-    if os.path.isfile(bytecache_file) and os.path.isfile(filename) \
-        and os.path.getmtime(bytecache_file) >= os.path.getmtime(filename):
+    filename_noext = os.path.splitext(filename)[0]
+    name = os.path.basename(filename_noext)
+    bytecache_file = filename_noext + self.pyc_suffix
+
+    if os.path.isfile(bytecache_file) and os.path.isfile(filename) and \
+        os.path.getmtime(bytecache_file) >= os.path.getmtime(filename):
+      can_load_bytecache = True
+    else:
+      can_load_bytecache = False
+
+    if not can_load_bytecache and self._write_bytecache:
+      # TODO: It would be much better if we could just pass to it the code
+      #       object that we read in anyway.
+      py_compile.compile(filename, bytecache_file)
+      can_load_bytecache = True
+
+    if can_load_bytecache:
       code = self.load_code(bytecache_file, is_compiled=True)
       filename = bytecache_file
     else:
       code = self.load_code(filename, is_compiled=None)
+
     return PythonModule(context, filename, name, code)
 
 
