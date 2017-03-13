@@ -53,6 +53,11 @@ dependencies and then running the `build` script.
 - add `BaseModule.require`
 - remove `UnknownModuleTypeError` for now, `Context.load_module()` now raises
   a `ValueError` if no loader could be determined
+- add `Context(bare=False)` parameter
+- rename `NodepyModule` to `PythonModule`
+- remove `NodepyByteModule`
+- add `PythonModule(code)` parameter
+- add `get_python_library_base()`
 
 ### v0.0.14
 

@@ -50,9 +50,7 @@ try:
 except ImportError:
   importlib = None
 
-
 VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_info)
-
 PackageLink = collections.namedtuple('PackageLink', 'src dst')
 
 
@@ -70,24 +68,6 @@ def jit_debug(debug=True):
     if debug:
       pdb.post_mortem(sys.exc_info()[2])
     raise
-
-
-def _get_name(x):
-  if hasattr(x, '__name__'):
-    return x.__name__
-  return type(x).__name__
-
-
-def new_module(name):
-  """
-  Creates a new #types.ModuleType object from the specified *name*. In Python
-  2, the constructor accepts only normal strings and not unicode (which is what
-  we get from #click though).
-  """
-
-  if six.PY2 and isinstance(name, unicode):
-    name = name.encode()
-  return types.ModuleType(name)
 
 
 class ResolveError(Exception):
@@ -120,7 +100,7 @@ class BaseModule(object):
     self.filename = filename
     self.directory = directory
     self.name = name
-    self.namespace = new_module(name)
+    self.namespace = types.ModuleType(name)
     self.require = Require(self)
     self.executed = False
     self.init_namespace()
@@ -143,66 +123,91 @@ class InteractiveSessionModule(BaseModule):
   """
 
   def __init__(self, context):
-    super(InteractiveSessionModule, self).__init__(context, '__interactive__',
-        os.getcwd(), 'interactive')
+    super(InteractiveSessionModule, self).__init__(
+        context, '__interactive__', os.getcwd(), 'interactive')
 
 
-class NodepyModule(BaseModule):
+class PythonModule(BaseModule):
   """
-  Represents an actual `.py` file.
+  Represents a Node.py Python module object that is executed from a code
+  object. The #PythonLoader is responsible for loading the code from files
+  respectively.
   """
 
-  def __init__(self, context, filename):
-    dirname, base = os.path.split(filename)
-    super(NodepyModule, self).__init__(context, filename,
-        dirname, os.path.splitext(base)[0])
+  def __init__(self, context, filename, name, code):
+    super(PythonModule, self).__init__(
+        context, filename, os.path.dirname(filename), name)
+    self.code = code
 
   def exec_(self):
     if self.executed:
       raise RuntimeError('already executed')
     self.executed = True
     with self.context.enter_module(self):
-      exec(self._load_code(), vars(self.namespace))
-
-  def _load_code(self):
-    with open(self.filename, 'r') as fp:
-      return compile(fp.read(), self.filename, 'exec', dont_inherit=True)
+      exec(self.code, vars(self.namespace))
 
 
-class NodepyByteModule(NodepyModule):
+class PythonLoader(object):
   """
-  Represents a `.cpython-XY.pyc` file where X and Y stand for the major and
-  minor versio of the Python version that the bytecode was compiled with.
+  Loader for Node.py Python modules.
   """
 
-  pyc_suffix = '.cpython-{}{}.pyc'.format(*sys.version_info)
+  if hasattr(sys, 'implementation'):
+    _impl_name = sys.implementation.name.lower()
+  else:
+    _impl_name = sys.subversion[0].lower()
 
-  def _load_code(self):
-    with open(self.filename, 'rb') as fp:
-      if six.PY3:
-        importlib._bootstrap_external._validate_bytecode_header(fp.read(12))
-      else:
-        fp.read(8)
-      return marshal.load(fp)
+  pyc_suffix = '.{}-{}{}.pyc'.format(_impl_name, *sys.version_info)
 
+  @staticmethod
+  def load_code(filename, is_compiled=None):
+    """
+    Loads a Python code object from a file. If *is_compiled*, it will be
+    treated as a bytecompiled file if it ends with `.pyc`, otherwise it will
+    be loaded as Python source. Note that any syntactical errors might be
+    raised when the file is loaded as source.
+    """
 
-def _py_loader(context, filename):
-  """
-  Loader for `.py` files. Before the file is loaded, it checks if there is
-  bytecache file with the same name and a timestamp that is at least as new
-  and loads that file instead.
-  """
+    if is_compiled is None:
+      is_compiled = filename.endswith('.pyc')
+    if is_compiled:
+      with open(filename, 'rb') as fp:
+        if six.PY3:
+          importlib._bootstrap_external._validate_bytecode_header(fp.read(12))
+        else:
+          fp.read(8)  # Skip the magic bytes
+        return marshal.load(fp)
+    else:
+      with open(filename, 'r') as fp:
+        return compile(fp.read(), filename, 'exec', dont_inherit=True)
 
-  bytecache_file = os.path.splitext(filename)[0] + NodepyByteModule.pyc_suffix
-  if os.path.isfile(bytecache_file) and os.path.isfile(filename) \
-      and os.path.getmtime(bytecache_file) >= os.path.getmtime(filename):
-    return NodepyByteModule(context, bytecache_file)
-  return NodepyModule(context, filename)
+  def __init__(self, write_bytecode=None):
+    if write_bytecode is None:
+      write_bytecode = bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
+    self._write_bytecode = write_bytecode
+
+  def __call__(self, context, filename):
+    """
+    Called when a #Context requires to load a module for a filename. The
+    #PythonLoader will always check if a byte-compiled version of the source
+    file already exists and if the respective source file has not been modified
+    since it was created.
+    """
+
+    name = os.path.splitext(os.path.basename(filename))[0]
+    bytecache_file = os.path.splitext(filename)[0] + self.pyc_suffix
+    if os.path.isfile(bytecache_file) and os.path.isfile(filename) \
+        and os.path.getmtime(bytecache_file) >= os.path.getmtime(filename):
+      code = self.load_code(bytecache_file, is_compiled=True)
+      filename = bytecache_file
+    else:
+      code = self.load_code(filename, is_compiled=None)
+    return PythonModule(context, filename, name, code)
 
 
 class Require(object):
   """
-  The `require()` function for #NodepyModule#s.
+  The `require()` function for #PythonModule#s.
   """
 
   ResolveError = ResolveError
@@ -292,6 +297,7 @@ def upiter_directory(current_dir):
     current_dir = dirname
   return
 
+
 def find_nearest_modules_directory(current_dir):
   """
   Finds the nearest `nodepy_modules/` directory to *current_dir* and returns
@@ -333,14 +339,28 @@ def try_file(filename, preserve_symlinks=True):
   return None
 
 
+def get_python_library_base():
+  """
+  Returns the path relative to the root of a Python prefix of where the
+  standard library would be placed (i.e. `Lib/` on Windows and `lib/pythonX.Y`
+  on other systems).
+  """
+
+  if os.name == 'nt':
+    return 'Lib'
+  else:
+    return 'lib/python{}.{}'.format(*sys.version_info)
+
+
 class Context(object):
   """
   The context encapsulates the execution of Python modules. It serves as the
   central unit to control the finding, caching and loading of Python modules.
   """
 
-  def __init__(self, current_dir='.', verbose=False):
+  def __init__(self, current_dir='.', verbose=False, bare=False):
     self.current_dir = current_dir
+    self.verbose = verbose
     # Container for internal modules that can be bound to the context
     # explicitly with the #register_binding() method.
     self._bindings = {}
@@ -351,8 +371,6 @@ class Context(object):
     # automatically registered.
     self._extensions = {}
     self._extensions_order = []
-    self.register_extension('.py', _py_loader)
-    self.register_extension(NodepyByteModule.pyc_suffix, NodepyByteModule)
     # Container for cached modules. The keys are the absolute and normalized
     # filenames of the module so that the same file will not be loaded multiple
     # times.
@@ -368,14 +386,20 @@ class Context(object):
     self.main_module = None
 
     # Localimport context for Python modules installed via Pip through PPYM.
+    # Find the location of where Pip modules would be installed into the Node.py
+    # modules directory and add it to the importer.
     nearest_modules = find_nearest_modules_directory(current_dir)
     if not nearest_modules:
       nearest_modules = os.path.join(current_dir, 'nodepy_modules')
-    pip_bin_base = 'Scripts' if os.name == 'nt' else 'bin'
-    pip_lib_base = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version_info)
-    self.importer = localimport.localimport(parent_dir=nearest_modules,
-        path=['.pip/' + pip_lib_base, '.pip/' + pip_lib_base + '/site-packages'])
-    self.verbose = verbose
+    pip_dir = os.path.join(nearest_modules, '.pip')
+    pip_lib = get_python_library_base()
+    self.importer = localimport.localimport(parent_dir=pip_dir,
+        path=[pip_lib, os.path.join(pip_lib, 'site-packages')])
+
+    if not bare:
+      loader = PythonLoader()
+      self.register_extension('.py', loader)
+      self.register_extension(loader.pyc_suffix, loader)
 
   def __enter__(self):
     self.importer.__enter__()
@@ -569,7 +593,8 @@ class Context(object):
     module = loader(self, filename)
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
-          'but instead a {!r} object'.format(_get_name(loader), _get_name(module)))
+          'but instead a {!r} object'.format(
+            type(loader).__name__, type(module).__name__))
 
     if followed_from:
       nodepy_modules = find_nearest_modules_directory(followed_from[0].src)
