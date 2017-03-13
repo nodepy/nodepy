@@ -99,11 +99,13 @@ class ResolveError(Exception):
     self.path = path
 
   def __str__(self):
-    msg = "'{request}'{main} in '{current_dir}'".format(
-        request=self.request, main=' [main]' if self.is_main else '',
-        current_dir=self.current_dir)
+    msg = "'{0}'".format(self.request)
+    if self.is_main:
+      msg += ' [main]'
+    if self.current_dir:
+      msg += " (from directory '{0}')".format(self.current_dir)
     if self.path:
-      msg += ' in path:\n  -' + '\n  -'.join(self.path)
+      msg += ' searched in:\n  - ' + '\n  - '.join(map(repr, self.path))
     return msg
 
 
