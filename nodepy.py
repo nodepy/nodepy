@@ -46,10 +46,8 @@ import types
 import localimport
 import six
 
-try:
+if sys.version >= '3.5':
   import importlib._bootstrap_external
-except ImportError:
-  importlib = None
 
 VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_info)
 PackageLink = collections.namedtuple('PackageLink', 'src dst')
@@ -173,10 +171,11 @@ class PythonLoader(object):
       is_compiled = filename.endswith('.pyc')
     if is_compiled:
       with open(filename, 'rb') as fp:
-        if six.PY3:
+        if sys.version >= '3.5':
           importlib._bootstrap_external._validate_bytecode_header(fp.read(12))
         else:
-          fp.read(8)  # Skip the magic bytes
+          header_size = 12 if sys.version >= '3.3' else 8
+          fp.read(header_size)
         return marshal.load(fp)
     else:
       with open(filename, 'r') as fp:
