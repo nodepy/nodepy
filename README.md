@@ -39,6 +39,11 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.17
+
+- rename `InteractiveSessionModule` to `InitModule`
+- add `-P,--preload` option
+
 ### v0.0.16
 
 - fix `require('.')` and `require('..')` being resolved in the PATH rather

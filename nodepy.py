@@ -118,14 +118,15 @@ class BaseModule(object):
     raise NotImplementedError
 
 
-class InteractiveSessionModule(BaseModule):
+class InitModule(BaseModule):
   """
-  A proxy module used for interactive sessions.
+  A proxy module that is used as the entry point into Node.py modules or as
+  the container for the interactive session.
   """
 
   def __init__(self, context):
-    super(InteractiveSessionModule, self).__init__(
-        context, '__interactive__', os.getcwd(), 'interactive')
+    super(InitModule, self).__init__(
+        context, '__init__', os.getcwd(), '__init__')
 
 
 class PythonModule(BaseModule):
@@ -253,7 +254,8 @@ class Require(object):
   def current(self):
     return self.context.current_module
 
-  def __call__(self, request, current_dir=None, is_main=False, cache=True, exports=True):
+  def __call__(self, request, current_dir=None, is_main=False, cache=True,
+               exports=True, exec_=True):
     if cache and request in self.cache:
       module = self.cache[request]
     else:
@@ -264,7 +266,7 @@ class Require(object):
       )
       module = self.context.resolve_and_load(request, current_dir,
           is_main=is_main, additional_path=self.path, cache=cache,
-          parent=self.module)
+          parent=self.module, exec_=exec_)
       if cache:
         self.cache[request] = module
     if exports:
@@ -287,14 +289,16 @@ class Require(object):
       sys.argv = argv
       self.main = main
 
-  def exec_main(self, request, current_dir=None, argv=None, cache=True):
+  def exec_main(self, request, current_dir=None, argv=None, cache=True,
+                exec_=True, exports=True):
     """
     Uses #hide_main() to temporarily swap out the current main module and
     loading another module as main. Returns the loaded module.
     """
 
     with self.hide_main(argv=argv):
-      return self(request, current_dir, is_main=True, cache=cache)
+      return self(request, current_dir, is_main=True, cache=cache,
+                  exec_=exec_, exports=exports)
 
 
 def get_exports(module):
@@ -686,6 +690,7 @@ def main(argv=None):
       help='Print the Node.py version and exit.')
   parser.add_argument('--keep-arg0', action='store_true',
       help='Do not overwrite sys.argv[0] when executing a file.')
+  parser.add_argument('-P', '--preload', action='append', default=[])
   args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
   if args.version:
@@ -695,17 +700,19 @@ def main(argv=None):
   arguments = args.arguments[:]
   context = Context(args.current_dir, args.verbose)
   with context, jit_debug(args.debug):
+    init = InitModule(context)
     if args.exec_ or not arguments:
       sys.argv = [sys.argv[0]] + arguments
-      module = InteractiveSessionModule(context)
       if args.exec_:
-        exec(compile(args.exec_, dont_inherit=True), vars(module.namespace))
+        exec(compile(args.exec_, dont_inherit=True), vars(init.namespace))
       else:
-        code.interact(VERSION, local=vars(module.namespace))
+        code.interact(VERSION, local=vars(init.namespace))
     else:
+      require = init.require
+      for request in args.preload:
+        require(request)
       request = arguments.pop(0)
-      module = context.resolve_and_load(request, args.current_dir,
-          is_main=True, exec_=False)
+      module = require(request, args.current_dir, is_main=True, exec_=False, exports=False)
       sys.argv = [sys.argv[0] if args.keep_arg0 else module.filename] + arguments
       module.exec_()
 
