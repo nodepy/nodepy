@@ -47,6 +47,8 @@ dependencies and then running the `build` script.
 - add `Context.event_handlers` and `Context.send_event()`
 - events `load`, `require` and `enter` are now sent via `Context.event_handlers`
 - add `Require.cache`
+- add `'__init__'` to `Context.index_files`, `'index'` might get deprecated
+  in the future
 
 ### v0.0.15
 

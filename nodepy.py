@@ -395,7 +395,7 @@ class Context(object):
     self._bindings = {}
     # A list of filenames that are looked into when resolving a request to
     # a directory.
-    self._index_files = ['index']
+    self._index_files = ['index', '__init__']
     # Loaders for file extensions. The default loader for `.py` files is
     # automatically registered.
     self._extensions = {}
