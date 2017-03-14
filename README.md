@@ -43,6 +43,9 @@ dependencies and then running the `build` script.
 
 - fix `require('.')` and `require('..')` being resolved in the PATH rather
   then relative to the current directory
+- add `BaseModule.parent` and `BaseModule.request`
+- add `Context.event_handlers` and `Context.send_event()`
+- events `load`, `require` and `enter` are now sent via `Context.event_handlers`
 
 ### v0.0.15
 

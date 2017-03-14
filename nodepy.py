@@ -94,7 +94,7 @@ class BaseModule(object):
   classes in its #namespace.
   """
 
-  def __init__(self, context, filename, directory, name):
+  def __init__(self, context, filename, directory, name, parent=None, request=None):
     self.context = context
     self.filename = filename
     self.directory = directory
@@ -102,6 +102,8 @@ class BaseModule(object):
     self.namespace = types.ModuleType(str(name))  # in Python 2, does not accept Unicode
     self.require = Require(self)
     self.executed = False
+    self.parent = parent
+    self.request = request
     self.init_namespace()
 
   def init_namespace(self):
@@ -133,9 +135,10 @@ class PythonModule(BaseModule):
   respectively.
   """
 
-  def __init__(self, context, filename, name, code):
+  def __init__(self, context, filename, name, code, parent, request):
     super(PythonModule, self).__init__(
-        context, filename, os.path.dirname(filename), name)
+        context, filename, os.path.dirname(filename), name, parent=parent,
+        request=request)
     self.code = code
 
   def exec_(self):
@@ -186,7 +189,7 @@ class PythonLoader(object):
       write_bytecache = not bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
     self._write_bytecache = write_bytecache
 
-  def __call__(self, context, filename):
+  def __call__(self, context, filename, load_data):
     """
     Called when a #Context requires to load a module for a filename. The
     #PythonLoader will always check if a byte-compiled version of the source
@@ -216,7 +219,8 @@ class PythonLoader(object):
     else:
       code = self.load_code(filename, is_compiled=None)
 
-    return PythonModule(context, filename, name, code)
+    return PythonModule(context, filename, name, code,
+        parent=load_data['parent'], request=load_data['request'])
 
 
 class Require(object):
@@ -250,8 +254,13 @@ class Require(object):
 
   def __call__(self, request, current_dir=None, is_main=False, cache=True, exports=True):
     current_dir = current_dir or self.module.directory
+    self.context.send_event('require', {
+        'request': request, 'current_dir': current_dir,
+        'is_main': is_main, 'cache': cache}
+    )
     module = self.context.resolve_and_load(request, current_dir,
-        is_main=is_main, additional_path=self.path, cache=cache)
+        is_main=is_main, additional_path=self.path, cache=cache,
+        parent=self.module)
     if exports:
       return get_exports(module)
     return module
@@ -392,6 +401,9 @@ class Context(object):
     # A stack of modules that are currently being executed. Every module
     # should add itself on the stack when it is executed with #enter_module().
     self._module_stack = []
+    # A list of functions that are called for various events. The first
+    # arugment is always the event type, followed by the event data.
+    self.event_handlers = []
     # A list of additional search directories. Defaults to the paths specified
     # in the `NODEPY_PATH` environment variable.
     self.path = list(filter(bool, os.getenv('NODEPY_PATH', '').split(os.pathsep)))
@@ -448,10 +460,15 @@ class Context(object):
     self._module_stack.append(module)
     self.debug('loading module:', module.filename)
     try:
+      self.send_event('enter', module)
       yield
     finally:
       if self._module_stack.pop() is not module:
         raise RuntimeError('module stack corrupted')
+
+  def send_event(self, event_type, event_data):
+    for callback in self.event_handlers:
+      callback(event_type, event_data)
 
   def binding(self, binding_name):
     """
@@ -574,7 +591,7 @@ class Context(object):
     raise ResolveError(request, current_dir, is_main, path)
 
   def load_module(self, filename, is_main=False, exec_=True, cache=True,
-                  loader=None, followed_from=None):
+                  loader=None, followed_from=None, request=None, parent=None):
     """
     Loads a module by *filename*. The filename will be converted to an
     absolute path and normalized. If the module is already loaded, the
@@ -604,7 +621,7 @@ class Context(object):
       else:
         raise ValueError('no loader for {!r}'.format(filename))
 
-    module = loader(self, filename)
+    module = loader(self, filename, {'request': request, 'parent': parent})
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
           'but instead a {!r} object'.format(
@@ -618,18 +635,23 @@ class Context(object):
       self._module_cache[filename] = module
     if is_main:
       self.main_module = module
+
+    self.send_event('load', module)
     if exec_ and not module.executed:
       module.exec_()
     return module
 
   def resolve_and_load(self, request, current_dir=None, is_main=False,
                        path=None, additional_path=None, frollowed_from=None,
-                       exec_=True, cache=True, loader=None):
+                       exec_=True, cache=True, loader=None, parent=NotImplemented):
     """
     A combination of #resolve() and #load_module() that should be used when
     actually wanting to require another module instead of just resolving a
     request or loading from a filename.
     """
+
+    if parent is NotImplemented:
+      parent = self._module_stack[-1] if self._module_stack else None
 
     path = list(self.path if path is None else path)
     if additional_path is not None:
@@ -638,7 +660,8 @@ class Context(object):
     filename = self.resolve(request, current_dir, is_main=is_main,
         path=path, followed_from=followed_from)
     return self.load_module(filename, is_main=is_main, cache=cache,
-        exec_=exec_, loader=loader, followed_from=followed_from)
+        exec_=exec_, loader=loader, followed_from=followed_from,
+        request=request, parent=parent)
 
 
 def main(argv=None):
