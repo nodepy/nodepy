@@ -525,7 +525,7 @@ class Context(object):
     filename.
     """
 
-    if request.startswith('./') or request.startswith('../'):
+    if request in '..' or request.startswith('./') or request.startswith('../'):
       try:
         return self.resolve(os.path.abspath(os.path.join(current_dir, request)))
       except ResolveError as exc:

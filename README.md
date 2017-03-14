@@ -39,6 +39,11 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.16
+
+- fix `require('.')` and `require('..')` being resolved in the PATH rather
+  then relative to the current directory
+
 ### v0.0.15
 
 - fix interactive Node.py session (NameError variable `code`)
