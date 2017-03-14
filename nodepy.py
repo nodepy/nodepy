@@ -233,6 +233,7 @@ class Require(object):
   def __init__(self, module):
     self.module = module
     self.path = []
+    self.cache = {}
 
   @property
   def context(self):
@@ -253,14 +254,19 @@ class Require(object):
     return self.context.current_module
 
   def __call__(self, request, current_dir=None, is_main=False, cache=True, exports=True):
-    current_dir = current_dir or self.module.directory
-    self.context.send_event('require', {
-        'request': request, 'current_dir': current_dir,
-        'is_main': is_main, 'cache': cache}
-    )
-    module = self.context.resolve_and_load(request, current_dir,
-        is_main=is_main, additional_path=self.path, cache=cache,
-        parent=self.module)
+    if cache and request in self.cache:
+      module = self.cache[request]
+    else:
+      current_dir = current_dir or self.module.directory
+      self.context.send_event('require', {
+          'request': request, 'current_dir': current_dir,
+          'is_main': is_main, 'cache': cache, 'parent': self.module}
+      )
+      module = self.context.resolve_and_load(request, current_dir,
+          is_main=is_main, additional_path=self.path, cache=cache,
+          parent=self.module)
+      if cache:
+        self.cache[request] = module
     if exports:
       return get_exports(module)
     return module
