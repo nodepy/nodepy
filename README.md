@@ -17,6 +17,11 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
+### v0.0.15
+
+- remove caret (`^`) version selector from semver for now, it is not
+  implemented the same as the Node.js NPM semver criteria semantics anyway
+
 ### v0.0.14
 
 - deduct pip install locations from pip module

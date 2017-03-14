@@ -69,19 +69,30 @@ def test_critera():
   with assert_raises(ValueError) as exc:
     Selector('')
 
-  assert Selector('~ 1.0')(Version('1.0.1'))
-  assert Selector('~ 1.0')(Version('1.0.6'))
-  assert Selector('~ 1.0')(Version('1.0.19-alpha'))
-  assert Selector('~ 1.0')(Version('1.0.1-rc1+build112'))
-  assert Selector('1.0 - 1.9.2')(Version('1.0'))
-  assert Selector('1.0 - 1.9.2')(Version('1.9.2'))
-  assert Selector('1.0 - 1.9.2')(Version('1.8-alpha'))
-  assert not Selector('1.0 - 1.9.2')(Version('1.32'))
-  assert not Selector('>2.5')(Version('1.2.3'))
+  assert_true(Selector('~1.0')(Version('1.0.1')))
+  assert_true(Selector('~1.0')(Version('1.0.6')))
+  assert_true(Selector('~1.0')(Version('1.0.19-alpha')))
+  assert_true(Selector('~1.0')(Version('1.0.1-rc1+build112')))
+  assert_true(Selector('1.0 - 1.9.2')(Version('1.0')))
+  assert_true(Selector('1.0 - 1.9.2')(Version('1.9.2')))
+  assert_true(Selector('1.0 - 1.9.2')(Version('1.8-alpha')))
+  assert_false(Selector('1.0 - 1.9.2')(Version('1.32')))
+  assert_false(Selector('>2.5')(Version('1.2.3')))
+  assert_true(Selector('~0.0.1')(Version('0.0.3')))
+  assert_false(Selector('~0.0.3')(Version('0.0.1')))
 
-  versions = [Version('1.9.3'), Version('1.2.3'), Version('1.2.6'), Version('1.2.7')]
-  assert Selector('~1.2.5').best_of(versions, is_sorted=True) == Version('1.2.6')
-  assert Selector('~1.2.5').best_of(versions) == Version('1.2.7')
+  versions = [
+      Version('0.0.3'),
+      Version('1.2.3'),
+      Version('1.2.6'),
+      Version('1.2.7'),
+      Version('1.9.3')
+  ]
+  assert_equals(Selector('~0.0.1').best_of(versions), Version('0.0.3'))
+  assert_equals(Selector('~0.0.2').best_of(versions), Version('0.0.3'))
+  assert_equals(Selector('~0.0.3').best_of(versions), Version('0.0.3'))
+  assert_equals(Selector('~0.0.4').best_of(versions), None)
+  assert_equals(Selector('~1.2.5').best_of(versions), Version('1.2.7'))
 
   assert_equals(str(Selector("1.x.9-alpha")), "1.x.9-alpha")
   assert_equals(str(Selector("1.x.9-x")), "1.x.9-x")

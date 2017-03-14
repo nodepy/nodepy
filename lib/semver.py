@@ -115,7 +115,7 @@ class Version(object):
     return (self.major, self.minor, self.patch, self.extension, self.build)
 
   def satisfies(self, selector):
-    if isinstance(selector, six.text_type):
+    if isinstance(selector, six.string_types):
       selector = Selector(selector)
     elif not callable(selector):
       raise TypeError("selector: expected unicode or callable")
@@ -133,8 +133,8 @@ class SingleSelector(object):
     '<=': lambda a, b: a <= b,
     '>':  lambda a, b: a >  b,
     '>=': lambda a, b: a >= b,
-    '~':  lambda a, b: a.major == b.major and a.minor == b.minor and a >= b,
-    '^':  lambda a, b: a.major == b.major and a >= b,
+    '~':  lambda a, b: a.major == b.major and a.minor == b.minor and a >= b
+    #'^':  lambda a, b: a.mmp == b.mmp and a >= b,
   }
 
   def __init__(self, value, version=None):
@@ -198,7 +198,7 @@ class SingleSelector(object):
         self.version_min = None
       else:
         # Match unary operators.
-        match = re.match(r'^(=|<=?|>=?|\^|~)(.*)$', value)
+        match = re.match(r'^(=|<=?|>=?|~)(.*)$', value)
         if not match:
           raise ValueError("invalid version selector: {0!r}".format(value))
         if match.group(2):
