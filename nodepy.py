@@ -700,6 +700,7 @@ def main(argv=None):
   parser.add_argument('--keep-arg0', action='store_true',
       help='Do not overwrite sys.argv[0] when executing a file.')
   parser.add_argument('-P', '--preload', action='append', default=[])
+  parser.add_argument('--pymain', action='store_true')
   args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
   if args.version:
@@ -722,6 +723,8 @@ def main(argv=None):
         require(request)
       request = arguments.pop(0)
       module = require(request, args.current_dir, is_main=True, exec_=False, exports=False)
+      if args.pymain:
+        module.namespace.__name__ = '__main__'
       sys.argv = [sys.argv[0] if args.keep_arg0 else module.filename] + arguments
       module.exec_()
 

@@ -45,6 +45,7 @@ dependencies and then running the `build` script.
 - add `-P,--preload` option
 - add `nodepy.get_python_library_path()`
 - add `doraise=True` to `py_compile.compile()` call
+- add `--pymain` option
 
 ### v0.0.16
 
