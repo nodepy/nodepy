@@ -43,6 +43,8 @@ dependencies and then running the `build` script.
 
 - rename `InteractiveSessionModule` to `InitModule`
 - add `-P,--preload` option
+- add `nodepy.get_python_library_path()`
+- add `doraise=True` to `py_compile.compile()` call
 
 ### v0.0.16
 

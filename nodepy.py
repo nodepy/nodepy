@@ -211,7 +211,7 @@ class PythonLoader(object):
     if not can_load_bytecache and self._write_bytecache:
       # TODO: It would be much better if we could just pass to it the code
       #       object that we read in anyway.
-      py_compile.compile(filename, bytecache_file)
+      py_compile.compile(filename, bytecache_file, doraise=True)
       can_load_bytecache = True
 
     if can_load_bytecache:
@@ -385,6 +385,16 @@ def get_python_library_base():
     return 'lib/python{}.{}'.format(*sys.version_info)
 
 
+def get_python_library_path(prefix):
+  """
+  Returns a list of two paths to the Python library inside the specified
+  *prefix* directory.
+  """
+
+  lib = os.path.join(prefix, get_python_library_base())
+  return [lib, os.path.join(lib, 'site-packages')]
+
+
 class Context(object):
   """
   The context encapsulates the execution of Python modules. It serves as the
@@ -427,10 +437,9 @@ class Context(object):
     nearest_modules = find_nearest_modules_directory(current_dir)
     if not nearest_modules:
       nearest_modules = os.path.join(current_dir, 'nodepy_modules')
-    pip_dir = os.path.join(nearest_modules, '.pip')
-    pip_lib = get_python_library_base()
-    self.importer = localimport.localimport(parent_dir=pip_dir,
-        path=[pip_lib, os.path.join(pip_lib, 'site-packages')])
+
+    pip_lib = get_python_library_path(os.path.join(nearest_modules, '.pip'))
+    self.importer = localimport.localimport(parent_dir=current_dir, path=pip_lib)
 
     if not bare:
       loader = PythonLoader()
