@@ -20,6 +20,7 @@
 
 from __future__ import print_function
 
+import contextlib
 import errno
 import nodepy
 import os
@@ -170,6 +171,23 @@ class Installer:
     if install_location in ('local', 'global'):
       self.script.path.append(self.dirs['pip_bin'])
       self.script.pythonpath.extend(self.dirs['pip_lib'])
+
+  @contextlib.contextmanager
+  def pythonpath_update_context(self):
+    self._old_sys_path = sys.path[:]
+    self._old_pythonpath = os.getenv('PYTHONPATH', '')
+    # Add the path to the local Pip library path to sys.path and the PYTHONPATH
+    # environment variable to ensure that the current installation process can
+    # also find the already installed packages (some setup scripts might import
+    # third party modules). Fix for nodepy/ppym#10.
+    sys.path[:] = self.dirs['pip_lib'] + sys.path
+    abspath = map(os.path.abspath, self.dirs['pip_lib'])
+    os.environ['PYTHONPATH'] = os.pathsep.join(abspath) + os.pathsep + self._old_pythonpath
+    try:
+      yield
+    finally:
+      sys.path[:] = self._old_sys_path
+      os.environ['PYTHONPATH'] = self._old_pythonpath
 
   def find_package(self, package):
     """
@@ -373,10 +391,11 @@ class Installer:
 
     print('  Installing Python dependencies via Pip:', ' '.join(cmd),
         '(as a separate process)' if self.pip_separate_process else '')
-    if self.pip_separate_process:
-      res = subprocess.call([sys.executable, '-m', 'pip', 'install'] + cmd)
-    else:
-      res = pip.commands.install.InstallCommand().main(cmd)
+    with self.pythonpath_update_context():
+      if self.pip_separate_process:
+        res = subprocess.call([sys.executable, '-m', 'pip', 'install'] + cmd)
+      else:
+        res = pip.commands.install.InstallCommand().main(cmd)
     if res != 0:
       print('Error: `pip install` failed with exit-code', res)
       return False
