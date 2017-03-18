@@ -67,6 +67,14 @@ def get_install_location(global_, root):
     return 'local'
 
 
+def get_installer(global_, root, upgrade, pip_separate_process,
+                  pip_use_target_option, recursive):
+  location = get_install_location(global_, root)
+  return _install.Installer(upgrade=upgrade, install_location=location,
+      pip_separate_process=pip_separate_process,
+      pip_use_target_option=pip_use_target_option, recursive=recursive)
+
+
 @click.group()
 def main():
   if not config['registry'].startswith('https://'):
@@ -74,10 +82,22 @@ def main():
         .format(config['registry']))
 
 
+@main.command('pip-install', context_settings={'ignore_unknown_options': True})
+@click.argument('args', nargs=-1)  # Todo: Consume all arguments followed by the first positional argument
+@click.option('-g', '--global/--local', 'global_', is_flag=True)
+@click.option('--root', is_flag=True)
+def pip_install(args, global_, root):
+  """
+  Access to Pip, pre-configured for the local Node.py environment.
+  """
+
+  installer = get_installer(global_, root, False, False, False, False)
+  return installer.install_python_dependencies({}, args)
+
+
 @main.command()
 @click.argument('packages', nargs=-1)
 @click.option('-e', '--develop', is_flag=True)
-@click.option('-S', '--strict', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
 @click.option('--root', is_flag=True)
@@ -95,7 +115,7 @@ def main():
       'are specified, --production otherwise).')
 @click.option('--save', is_flag=True)
 @click.option('--save-dev', is_flag=True)
-def install(packages, develop, strict, upgrade, global_, root, recursive,
+def install(packages, develop, upgrade, global_, root, recursive,
             info, dev, pip_separate_process, pip_use_target_option, save,
             save_dev):
   """
@@ -115,10 +135,8 @@ def install(packages, develop, strict, upgrade, global_, root, recursive,
   if dev is None:
     dev = not packages
 
-  location = get_install_location(global_, root)
-  installer = _install.Installer(upgrade=upgrade, install_location=location,
-      pip_separate_process=pip_separate_process,
-      pip_use_target_option=pip_use_target_option, recursive=recursive)
+  installer = get_installer(global_, root, upgrade, pip_separate_process,
+      pip_use_target_option, recursive)
   if info:
     for key in sorted(installer.dirs):
       print('{}: {}'.format(key, installer.dirs[key]))

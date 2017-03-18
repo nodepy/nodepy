@@ -22,6 +22,7 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - remove caret (`^`) version selector from semver for now, it is not
   implemented the same as the Node.js NPM semver criteria semantics anyway
 - Fix #10: Pip install can not access already installed local packages
+- Add `pip-install` command
 
 ### v0.0.14
 

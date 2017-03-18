@@ -360,7 +360,7 @@ class Installer:
 
     return True
 
-  def install_python_dependencies(self, deps):
+  def install_python_dependencies(self, deps, args=()):
     """
     Install all Python dependencies specified in *deps* using Pip. Make sure
     to call #relink_pip_scripts().
@@ -370,7 +370,7 @@ class Installer:
     for name, version in deps.items():
       install_modules.append(name + version)
 
-    if not install_modules:
+    if not install_modules and not args:
       return True
 
     # TODO: Upgrade strategy?
@@ -387,6 +387,7 @@ class Installer:
       cmd = []
     else:
       raise RuntimeError('unexpected install location: {!r}'.format(self.install_location))
+    cmd.extend(args)
     cmd.extend(install_modules)
 
     print('  Installing Python dependencies via Pip:', ' '.join(cmd),
