@@ -181,8 +181,8 @@ class Installer:
     # also find the already installed packages (some setup scripts might import
     # third party modules). Fix for nodepy/ppym#10.
     sys.path[:] = self.dirs['pip_lib'] + sys.path
-    abspath = map(os.path.abspath, self.dirs['pip_lib'])
-    os.environ['PYTHONPATH'] = os.pathsep.join(abspath) + os.pathsep + self._old_pythonpath
+    pypath = list(map(os.path.abspath, self.dirs['pip_lib'])) + self.dirs['pip_lib']
+    os.environ['PYTHONPATH'] = os.pathsep.join(pypath) + os.pathsep + self._old_pythonpath
     try:
       yield
     finally:
