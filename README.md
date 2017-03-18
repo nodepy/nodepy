@@ -46,6 +46,8 @@ dependencies and then running the `build` script.
 - add `nodepy.get_python_library_path()`
 - add `doraise=True` to `py_compile.compile()` call
 - add `--pymain` option
+- Fix #21: Bug with Click and Py2: invalid arguments used for argument parsing
+  &ndash; by importing `click` before altering `sys.argv` if possible
 
 ### v0.0.16
 

@@ -718,6 +718,17 @@ def main(argv=None):
       else:
         code.interact(VERSION, local=vars(init.namespace))
     else:
+      # A special fix for when Click is used in Python 2. A hash is generated
+      # for sys.argv when Click is imported, and it gives invalid results if
+      # click is imported after we modify sys.argv. Since it would be
+      # inconsistent to import Click only on Windows and Python 2, we do it
+      # always when possible.See https://github.com/nodepy/nodepy/issues/21 and
+      # https://github.com/pallets/click/issues/751
+      try:
+        import click
+      except ImportError:
+        pass
+
       require = init.require
       for request in args.preload:
         require(request)
