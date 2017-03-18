@@ -255,7 +255,33 @@ class Require(object):
     return self.context.current_module
 
   def __call__(self, request, current_dir=None, is_main=False, cache=True,
-               exports=True, exec_=True):
+               exports=True, exec_=True, into=None):
+    """
+    Resolve *request* into a module filename and load that module. For relative
+    paths, the *current_dir* will be used to resolve the request (defaults to
+    the parent directory of the module that owns the #Require instance).
+
+    If *is_main* is True, non-relative requests will also be resolved in the
+    *current_dir* first. Note that the #Context will raise a #RuntimeError when
+    there is already a #Context.main_module, thus it is recommended to use
+    #exec_main().
+
+    If *cache* is False, the request will not be cached and also not be looked
+    up into the cache.
+
+    If *exports* is False, the actual #BaseModule object is returned, otherwise
+    the #BaseModule.namespace or even #BaseModule.namespace.exports member if
+    exists.
+
+    If *exec_* is False, the module will only be loaded and not be executed.
+    Note that the module may have already been loaded on another occassion!
+
+    If *into* is specified, this function behaves like a Python star-import and
+    will import all members of the module that would normally be returned into
+    the specified dictionary. Usually, you'll want to pass `globals()` to this
+    parameter.
+    """
+
     if cache and request in self.cache:
       module = self.cache[request]
     else:
@@ -270,7 +296,17 @@ class Require(object):
       if cache:
         self.cache[request] = module
     if exports:
-      return get_exports(module)
+      module = get_exports(module)
+    if into is not None:
+      __all__ = getattr(module, '__all__', None)
+      if __all__ is not None:
+        for key in __all__:
+          into[key] = getattr(module, key)
+      else:
+        for key in dir(module):
+          if not key.startswith('_') and key not in ('module', 'require'):
+            print(key)
+            into[key] = getattr(module, key)
     return module
 
   @contextlib.contextmanager
