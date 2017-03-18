@@ -23,6 +23,7 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   implemented the same as the Node.js NPM semver criteria semantics anyway
 - Fix #10: Pip install can not access already installed local packages
 - Add `pip-install` command
+- Uppercase characters are now valid characters in a package name
 
 ### v0.0.14
 

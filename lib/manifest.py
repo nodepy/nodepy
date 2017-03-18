@@ -125,7 +125,8 @@ class PackageManifest:
     "additionalProperties": {"type": "object"}
   }
 
-  valid_characters = frozenset(string.ascii_lowercase + string.digits + '-._@/')
+  valid_characters = frozenset(string.ascii_lowercase + string.ascii_uppercase
+                               + string.digits + '-._@/')
 
   def __init__(self, filename, directory, name, version, description=None,
       author=None, license=None, dependencies=None, dev_dependencies=None,
