@@ -39,6 +39,11 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.18
+
+- Hotfix for bundled PPYM (now in version v0.0.16) &ndash; fixes installation
+  into Python root directory
+
 ### v0.0.17
 
 - rename `InteractiveSessionModule` to `InitModule`
