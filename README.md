@@ -49,6 +49,7 @@ dependencies and then running the `build` script.
 - Fix #21: Bug with Click and Py2: invalid arguments used for argument parsing
   &ndash; by importing `click` before altering `sys.argv` if possible
 - add `require(into)` parameter
+- upgrade to PPYM v0.0.15
 
 ### v0.0.16
 
