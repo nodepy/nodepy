@@ -17,6 +17,10 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
+### v0.0.16
+
+- Hotfix for PPYM installation to the root directory
+
 ### v0.0.15
 
 - remove caret (`^`) version selector from semver for now, it is not
