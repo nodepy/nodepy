@@ -180,9 +180,10 @@ class Installer:
     # environment variable to ensure that the current installation process can
     # also find the already installed packages (some setup scripts might import
     # third party modules). Fix for nodepy/ppym#10.
-    sys.path[:] = self.dirs['pip_lib'] + sys.path
-    pypath = list(map(os.path.abspath, self.dirs['pip_lib'])) + self.dirs['pip_lib']
-    os.environ['PYTHONPATH'] = os.pathsep.join(pypath) + os.pathsep + self._old_pythonpath
+    if self.install_location != 'root':
+      sys.path[:] = self.dirs['pip_lib'] + sys.path
+      pypath = list(map(os.path.abspath, self.dirs['pip_lib'])) + self.dirs['pip_lib']
+      os.environ['PYTHONPATH'] = os.pathsep.join(pypath) + os.pathsep + self._old_pythonpath
     try:
       yield
     finally:
