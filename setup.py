@@ -158,10 +158,12 @@ setuptools.setup(
   install_requires = install_requires,
   entry_points = {
     # Note: We hook ScriptMaker._write_script to prevent it from
-    # stripping the .py suffix.\
+    # stripping the .py suffix.
+    # Note: 'node.py' is deprecated for 'nodepy'.
     'console_scripts': [
-      'node.py{} = nodepy:main'.format(v)
+      'node{}py{} = nodepy:main'.format(d, v)
       for v in ('', sys.version[0], sys.version[:3])
+      for d in ('', '.')
     ],
   },
   cmdclass = {

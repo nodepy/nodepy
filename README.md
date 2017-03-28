@@ -39,6 +39,10 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.19
+
+- deprecate `node.py` program name for `nodepy`
+
 ### v0.0.18
 
 - Hotfix for bundled PPYM (now in version v0.0.16) &ndash; fixes installation
