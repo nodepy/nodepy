@@ -46,6 +46,8 @@ dependencies and then running the `build` script.
   Python major and minor version number, to avoid conflicts when installing to
   multiple installations
 - add `Require.PY2` and `Require.PY3`
+- add `require.symbols(request, symbols=None)` to selectively import symbols
+  from another module
 
 ### v0.0.18
 

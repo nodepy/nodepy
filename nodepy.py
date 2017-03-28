@@ -258,7 +258,7 @@ class Require(object):
     return self.context.current_module
 
   def __call__(self, request, current_dir=None, is_main=False, cache=True,
-               exports=True, exec_=True, into=None):
+               exports=True, exec_=True, into=None, symbols=None):
     """
     Resolve *request* into a module filename and load that module. For relative
     paths, the *current_dir* will be used to resolve the request (defaults to
@@ -301,9 +301,10 @@ class Require(object):
     if exports:
       module = get_exports(module)
     if into is not None:
-      __all__ = getattr(module, '__all__', None)
-      if __all__ is not None:
-        for key in __all__:
+      if symbols is None:
+        symbols = getattr(module, '__all__', None)
+      if symbols is not None:
+        for key in symbols:
           into[key] = getattr(module, key)
       else:
         for key in dir(module):
@@ -311,6 +312,15 @@ class Require(object):
             print(key)
             into[key] = getattr(module, key)
     return module
+
+  def symbols(self, request, symbols=None):
+    if isinstance(symbols, str):
+      if ',' in symbols:
+        symbols = [x.strip() for x in symbols.split(',')]
+      else:
+        symbols = symbols.split()
+    into = sys._getframe(1).f_locals
+    return self(request, into=into, symbols=symbols)
 
   @contextlib.contextmanager
   def hide_main(self, argv=None):
