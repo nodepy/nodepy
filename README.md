@@ -42,6 +42,9 @@ dependencies and then running the `build` script.
 ### v0.0.19
 
 - deprecate `node.py` program name for `nodepy`
+- on develop installs, use `node.py-X.Y` name for `setup()` where `X.Y` is the
+  Python major and minor version number, to avoid conflicts when installing to
+  multiple installations
 
 ### v0.0.18
 

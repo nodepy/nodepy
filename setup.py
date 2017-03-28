@@ -36,6 +36,11 @@ from setuptools.command.install import install as _install
 
 install_requires = ['localimport>=1.5.1', 'six>=1.10.0']
 
+if 'develop' in sys.argv:
+  name = 'node.py-' + sys.version[:3]
+else:
+  name = 'node.py'
+
 
 def readme():
   """
@@ -146,7 +151,7 @@ class install(_install):
 
 
 setuptools.setup(
-  name = 'node.py',
+  name = name,
   version = '0.0.18',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
