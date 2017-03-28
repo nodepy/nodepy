@@ -763,7 +763,7 @@ def main(argv=None):
     if args.exec_ or not arguments:
       sys.argv = [sys.argv[0]] + arguments
       if args.exec_:
-        exec(compile(args.exec_, dont_inherit=True), vars(init.namespace))
+        exec(compile(args.exec_, '<commandline>', 'exec', dont_inherit=True), vars(init.namespace))
       else:
         code.interact(VERSION, local=vars(init.namespace))
     else:

@@ -48,6 +48,7 @@ dependencies and then running the `build` script.
 - add `Require.PY2` and `Require.PY3`
 - add `require.symbols(request, symbols=None)` to selectively import symbols
   from another module
+- fix `-c` argument
 
 ### v0.0.18
 
