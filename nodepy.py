@@ -231,6 +231,9 @@ class Require(object):
 
   ResolveError = ResolveError
 
+  PY2 = six.PY2
+  PY3 = six.PY3
+
   def __init__(self, module):
     self.module = module
     self.path = []

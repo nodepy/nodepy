@@ -45,6 +45,7 @@ dependencies and then running the `build` script.
 - on develop installs, use `node.py-X.Y` name for `setup()` where `X.Y` is the
   Python major and minor version number, to avoid conflicts when installing to
   multiple installations
+- add `Require.PY2` and `Require.PY3`
 
 ### v0.0.18
 
