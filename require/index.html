@@ -195,6 +195,55 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#requiresymbols" title="require.symbols()" class="md-nav__link">
+    require.symbols()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requiremodule" title="require.module" class="md-nav__link">
+    require.module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requiremain" title="require.main" class="md-nav__link">
+    require.main
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirecurrent" title="require.current" class="md-nav__link">
+    require.current
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirecontext" title="require.context" class="md-nav__link">
+    require.context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirepath" title="require.path" class="md-nav__link">
+    require.path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirecache" title="require.cache" class="md-nav__link">
+    require.cache
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -436,6 +485,55 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#requiresymbols" title="require.symbols()" class="md-nav__link">
+    require.symbols()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requiremodule" title="require.module" class="md-nav__link">
+    require.module
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requiremain" title="require.main" class="md-nav__link">
+    require.main
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirecurrent" title="require.current" class="md-nav__link">
+    require.current
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirecontext" title="require.context" class="md-nav__link">
+    require.context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirepath" title="require.path" class="md-nav__link">
+    require.path
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requirecache" title="require.cache" class="md-nav__link">
+    require.cache
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -470,8 +568,7 @@ paths, the <em>current_dir</em> will be used to resolve the request (defaults to
 the parent directory of the module that owns the #Require instance).</p>
 <p>If <em>is_main</em> is True, non-relative requests will also be resolved in the
 <em>current_dir</em> first. Note that the #Context will raise a #RuntimeError when
-there is already a #Context.main_module, thus it is recommended to use</p>
-<h1 id="exec_main">exec_main().</h1>
+there is already a #Context.main_module, thus it is recommended to use #exec_main().</p>
 <p>If <em>cache</em> is False, the request will not be cached and also not be looked
 up into the cache.</p>
 <p>If <em>exports</em> is False, the actual #BaseModule object is returned, otherwise
