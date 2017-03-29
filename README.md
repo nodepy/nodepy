@@ -6,17 +6,16 @@
 [![GitHub version](https://badge.fury.io/gh/nodepy%2Fnodepy.svg)](https://badge.fury.io/gh/nodepy%2Fnodepy)
 [![PyPI version](https://badge.fury.io/py/node.py.svg)](https://badge.fury.io/py/node.py)
 
-Node.py is a loader for Python modules that offers a `require()` function.
-Unlike standard Python modules, Node.py modules are cached by their filename,
-thus multiple modules with the same name but from different locations can be
-loaded without collisions.
+Node.py is a layer on top of the Python runtime which allows to load other
+modules the Node.js way, using a [require()][require] function. It has it's own
+[package ecosystem][ppym.org] and [package manager][PPYM]. Of course, standard
+Python modules can still be used and are explicitly supported by [PPYM][] and
+the [package manifest][].
 
-Node.py has its own package ecosystem managed by [PPYM] and the
-[PPYM package registry]. Check out the [Documentation].
-
+  [require]: https://ppym.org/docs/latest/require/
   [ppym]: https://github.com/nodepy/ppym
-  [PPYM package registry]: https://github.com/nodepy/ppym-registry
-  [Documentation]: https://nodepy.github.io/nodepy/
+  [ppym.org]: https://ppym.org
+  [package manifest]: https://ppym.org/docs/latest/ppym/package-manifest/
 
 __Requirements__
 

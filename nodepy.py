@@ -18,10 +18,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """
-Node.py is a loader for Python modules in the Node.js-style. Unlike standard
-Python modules, the Node.py `require()` caches modules by their filename and
-thus allows modules with the same name be loaded from multiple locations at
-the same time.
+Node.py is a layer on top of the Python runtime which allows to load other
+modules the Node.js way, using a require() function.
+
+synopsis:
+  nodepy                (interactive console)
+  nodepy -c EXPR [...]  (evaluate EXPR)
+  nodepy REQUEST [...]  (resolve REQUEST and execute it)
 """
 
 from __future__ import absolute_import, division, print_function
@@ -733,7 +736,8 @@ class Context(object):
 
 
 def main(argv=None):
-  parser = argparse.ArgumentParser(description=__doc__)
+  parser = argparse.ArgumentParser(description=__doc__,
+      formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('arguments', nargs='...')
   parser.add_argument('-d', '--debug', action='store_true',
       help='Enter the interactive debugger when an exception would cause '
