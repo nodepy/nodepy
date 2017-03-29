@@ -11,7 +11,7 @@
       
         <link rel="shortcut icon" href="../assets/images/favicon.png">
       
-      <meta name="generator" content="mkdocs-0.16.1, mkdocs-material-1.2.0">
+      <meta name="generator" content="mkdocs-0.16.2, mkdocs-material-1.5.0">
     
     
       
@@ -22,9 +22,9 @@
       <script src="../assets/javascripts/modernizr-56ade86843.js"></script>
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/application-e17eeafcbc.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application-d848f886dc.css">
       
-        <link rel="stylesheet" href="../assets/stylesheets/application-892b79c5c5.palette.css">
+        <link rel="stylesheet" href="../assets/stylesheets/application-66fa0d9bba.palette.css">
       
     
     
@@ -56,7 +56,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="search">
     <label class="md-overlay" data-md-component="overlay" for="drawer"></label>
     
-      <header class="md-header">
+      <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
     <div class="md-flex">
       <div class="md-flex__cell md-flex__cell--shrink">
@@ -87,12 +87,18 @@
   <div class="md-search__overlay"></div>
   <div class="md-search__inner">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" placeholder="Search" accesskey="s" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query">
+      <input type="text" class="md-search__input" name="query" required placeholder="Search" accesskey="s" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query">
       <label class="md-icon md-search__icon" for="search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset">close</button>
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="result"></div>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta" data-md-lang-result-none="No matching documents" data-md-lang-result-one="1 matching document" data-md-lang-result-other="# matching documents">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
       </div>
     </div>
   </div>
@@ -156,9 +162,49 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="toc">
+        Require
+      </label>
+    
     <a href="./" title="Require" class="md-nav__link md-nav__link--active">
       Require
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#api" title="API" class="md-nav__link">
+    API
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#require_1" title="require()" class="md-nav__link">
+    require()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -218,7 +264,7 @@
     <label class="md-nav__link" for="nav-3-3">
       Commands
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="2">
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="4">
       <label class="md-nav__title" for="nav-3-3">
         Commands
       </label>
@@ -269,6 +315,18 @@
   <li class="md-nav__item">
     <a href="../ppym/commands/install/" title="Install" class="md-nav__link">
       Install
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../ppym/commands/pip-install/" title="Pip install" class="md-nav__link">
+      Pip install
     </a>
   </li>
 
@@ -360,6 +418,33 @@
     
   
   
+    <label class="md-nav__title" for="toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#api" title="API" class="md-nav__link">
+    API
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#require_1" title="require()" class="md-nav__link">
+    require()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -368,12 +453,50 @@
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
-               
               
                 
+                
                 <h1 id="require">require()</h1>
-<p>TODO</p>
+<p>The <code>require()</code> function in Node.py is available for every module that is
+executed through the Node.py command-line or again loaded with the <code>require()</code>
+function. It is an instance of the <code>nodepy.Require</code> class and the instance is
+unique in every module.</p>
+<h2 id="api">API</h2>
+<h3 id="require_1"><code>require()</code></h3>
+<p><code>require(request, current_dir=None, is_main=False, cache=True,
+         exports=True, exec_=True, into=None, symbols=None)</code></p>
+<p>Resolve <em>request</em> into a module filename and load that module. For relative
+paths, the <em>current_dir</em> will be used to resolve the request (defaults to
+the parent directory of the module that owns the #Require instance).</p>
+<p>If <em>is_main</em> is True, non-relative requests will also be resolved in the
+<em>current_dir</em> first. Note that the #Context will raise a #RuntimeError when
+there is already a #Context.main_module, thus it is recommended to use</p>
+<h1 id="exec_main">exec_main().</h1>
+<p>If <em>cache</em> is False, the request will not be cached and also not be looked
+up into the cache.</p>
+<p>If <em>exports</em> is False, the actual #BaseModule object is returned, otherwise
+the #BaseModule.namespace or even #BaseModule.namespace.exports member if
+exists.</p>
+<p>If <em>exec_</em> is False, the module will only be loaded and not be executed.
+Note that the module may have already been loaded on another occassion!</p>
+<p>If <em>into</em> is specified, this function behaves like a Python star-import and
+will import all members of the module that would normally be returned into
+the specified dictionary. Usually, you'll want to pass <code>globals()</code> to this
+parameter.</p>
+<h3 id="requiresymbols"><code>require.symbols()</code></h3>
+<p><code>require.symbols(request, symbols=None)</code></p>
+<h3 id="requiremodule"><code>require.module</code></h3>
+<h3 id="requiremain"><code>require.main</code></h3>
+<h3 id="requirecurrent"><code>require.current</code></h3>
+<h3 id="requirecontext"><code>require.context</code></h3>
+<h3 id="requirepath"><code>require.path</code></h3>
+<h3 id="requirecache"><code>require.cache</code></h3>
+                
+                  
+                
               
+              
+                
               
             </article>
           </div>
@@ -445,7 +568,7 @@
       
     </div>
     
-      <script src="../assets/javascripts/application-30ac6a1727.js"></script>
+      <script src="../assets/javascripts/application-c6f9af8d0c.js"></script>
       <script>app.initialize({url:{base:".."}})</script>
       
     

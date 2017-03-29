@@ -15,7 +15,7 @@
     
     
       
-        <title>Register - Node.py Documentation</title>
+        <title>Pip install - Node.py Documentation</title>
       
     
     
@@ -83,7 +83,7 @@
                 </span>
               
             
-            Register
+            Pip install
           
         </span>
       </div>
@@ -286,11 +286,18 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="../pip-install/" title="Pip install" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="toc">
+    
+    
+    <a href="./" title="Pip install" class="md-nav__link md-nav__link--active">
       Pip install
     </a>
+    
   </li>
 
         
@@ -310,20 +317,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="toc">
-    
-      
-    
-    
-    <a href="./" title="Register" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../register/" title="Register" class="md-nav__link">
       Register
     </a>
-    
   </li>
 
         
@@ -387,8 +385,6 @@
 <nav class="md-nav md-nav--secondary">
   
   
-    
-  
   
 </nav>
                   </div>
@@ -401,17 +397,15 @@
               
                 
                 
-                <h1 id="register">register</h1>
-<div class="codehilite"><pre><span></span>ppym register [--agree-tos] [--save]
+                  <h1>Pip install</h1>
+                
+                <div class="codehilite"><pre><span></span>pip-install [-g,--global] [--root] ARGS
 </pre></div>
 
 
-<p>Register a new account on the PPYM registry. Note that you can change the
-URL to the registry being used in the <code>~/.ppymrc</code> file. By default, it will
-point to https://ppym.org.</p>
-<div class="codehilite"><pre><span></span>$ craftr ~/.ppymrc
-<span class="nv">registry</span><span class="o">=</span>http://localhost:8000
-</pre></div>
+<p>Runs Pip's <code>install</code> sub-command with the specified ARGS. The <code>--prefix</code> option
+will be passed automatically and correctly depending on whether -g,--global or
+--root is specified or not specified.</p>
                 
                   
                 
@@ -430,7 +424,7 @@ point to https://ppym.org.</p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../publish/" title="Publish" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../install/" title="Install" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -439,19 +433,19 @@ point to https://ppym.org.</p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Publish
+                Install
               </span>
             </div>
           </a>
         
         
-          <a href="../run/" title="Run" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../publish/" title="Publish" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Run
+                Publish
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">
