@@ -398,7 +398,10 @@
 
 
 <p>Node.py is a layer on top of the Python runtime which allows to load other
-modules the Node.js way, using a [require()][require] function.</p>
+modules the Node.js way, using a <a href="./require">require()</a> function. It has it's own
+<a href="https://ppym.org">package ecosystem</a> and <a href="https://github.com/nodepy/ppym">package manager</a>. Of course, standard
+Python modules can still be used and are explicitly supported by <a href="https://github.com/nodepy/ppym">PPYM</a> and
+the <a href="./ppym/package-manifest">package manifest</a>.</p>
 <p><strong>Synopsis</strong></p>
 <div class="codehilite"><pre><span></span>nodepy                (interactive console)
 nodepy -c EXPR [...]  (evaluate EXPR)
