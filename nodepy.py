@@ -489,7 +489,6 @@ class Context(object):
     nearest_modules = find_nearest_modules_directory(current_dir)
     if not nearest_modules:
       nearest_modules = os.path.join(current_dir, 'nodepy_modules')
-
     pip_lib = get_python_library_path(os.path.join(nearest_modules, '.pip'))
     self.importer = localimport.localimport(parent_dir=current_dir, path=pip_lib)
 
@@ -528,14 +527,44 @@ class Context(object):
       raise TypeError('module must be a BaseModule instance')
     if module in self._module_stack:
       raise RuntimeError('a module can only appear once in the module stack')
+
+    # If the module is near a `nodepy_modules/` directory, we want to be able
+    # to import from that directory as well.
+    library_path = None
+    nearest_modules = None
+    if module.filename:
+      nearest_modules = find_nearest_modules_directory(module.filename)
+      if nearest_modules:
+        # TODO: Is it only the site-packages path we have to add?
+        # TODO: If we ever change the return value of get_python_library_path(),
+        #       make sure to adjust this call or refactor it before changing the
+        #       function.
+        library_path = get_python_library_path(os.path.join(nearest_modules, '.pip'))[-1]
+        if os.path.isdir(library_path):
+          library_path = os.path.normpath(library_path)
+        else:
+          library_path = None
+
+    if library_path and library_path not in sys.path:
+      # We can append to sys.path directly since we must be inside a
+      # localimport context anyway. The localimport will also remove
+      # modules imported from this path once it is exited.
+      sys.path.append(library_path)
+    else:
+      library_path = None
+
     self._module_stack.append(module)
     self.debug('loading module:', module.filename)
     try:
       self.send_event('enter', module)
       yield
     finally:
-      if self._module_stack.pop() is not module:
-        raise RuntimeError('module stack corrupted')
+      try:
+        if self._module_stack.pop() is not module:
+          raise RuntimeError('module stack corrupted')
+      finally:
+        if library_path:
+          sys.path.remove(library_path)
 
   def send_event(self, event_type, event_data):
     for callback in self.event_handlers:

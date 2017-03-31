@@ -48,6 +48,13 @@ dependencies and then running the `build` script.
 - add `require.symbols(request, symbols=None)` to selectively import symbols
   from another module
 - fix `-c` argument
+- when a `nodepy_modules/` directory is close to a Node.py module, not only
+  Node.py dependencies will be searched in this directory also Python modules
+  can be found in it as well (from the `.pip` directory). Note that unlike for
+  Node.py modules, the farthest `nodepy_modules/.pip` directory takes precedence
+  when importing a Python module and that they are not unique for the scope
+  of that module's nearest `nodepy_modules/` directory, and instead will be
+  available globally even after the Node.py modules was loaded.
 
 ### v0.0.18
 
