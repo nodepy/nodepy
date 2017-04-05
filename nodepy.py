@@ -42,6 +42,7 @@ import marshal
 import os
 import pdb
 import py_compile
+import subprocess
 import sys
 import traceback
 import types
@@ -359,6 +360,16 @@ class Require(object):
     with self.hide_main(argv=argv):
       return self(request, current_dir, is_main=True, cache=cache,
                   exec_=exec_, exports=exports)
+
+  def subprocess(self, request, args=(), nodepy_args=(), **kwargs):
+    """
+    Resolves *request* and executes it as a subprocess. Returns the created
+    subprocess.
+    """
+
+    filename = self.context.resolve(request, self.module.directory)
+    cmd = proc_args + list(nodepy_args) + [filename] + list(args)
+    return subprocess.Popen(cmd)
 
 
 def get_exports(module):
