@@ -55,6 +55,9 @@ if sys.version >= '3.5':
 VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_info)
 PackageLink = collections.namedtuple('PackageLink', 'src dst')
 
+proc_args = [sys.executable, __file__]
+executable = None
+
 
 @contextlib.contextmanager
 def jit_debug(debug=True):
@@ -241,6 +244,11 @@ class Require(object):
     self.module = module
     self.path = []
     self.cache = {}
+
+    # Find the nearest modules directory for this module.
+    self.nearest_modules = None
+    if self.module.filename:
+      self.nearest_modules = find_nearest_modules_directory(self.module.filename)
 
   @property
   def context(self):
@@ -788,6 +796,10 @@ def main(argv=None):
   if args.version:
     print(VERSION)
     sys.exit(0)
+
+  global proc_args, executable
+  executable = sys.argv[0]
+  proc_args = [executable]
 
   arguments = args.arguments[:]
   context = Context(args.current_dir, args.verbose)

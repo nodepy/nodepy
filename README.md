@@ -55,6 +55,7 @@ dependencies and then running the `build` script.
   when importing a Python module and that they are not unique for the scope
   of that module's nearest `nodepy_modules/` directory, and instead will be
   available globally even after the Node.py modules was loaded.
+- add `nodepy.proc_args` and `nodepy.executable` data members
 
 ### v0.0.18
 
