@@ -216,10 +216,15 @@ class PythonLoader(object):
       can_load_bytecache = False
 
     if not can_load_bytecache and self._write_bytecache:
-      # TODO: It would be much better if we could just pass to it the code
-      #       object that we read in anyway.
-      py_compile.compile(filename, bytecache_file, doraise=True)
-      can_load_bytecache = True
+      if os.access(bytecache_file, os.W_OK):
+        # TODO: It would be much better if we could just pass to it the code
+        #       object that we read in anyway.
+        try:
+          py_compile.compile(filename, bytecache_file, doraise=True)
+        except Exception as exc:
+          traceback.print_exc()
+        else:
+          can_load_bytecache = True
 
     if can_load_bytecache:
       code = self.load_code(bytecache_file, is_compiled=True)
