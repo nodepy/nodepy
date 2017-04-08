@@ -326,7 +326,6 @@ class Require(object):
       else:
         for key in dir(module):
           if not key.startswith('_') and key not in ('module', 'require'):
-            print(key)
             into[key] = getattr(module, key)
     return module
 
