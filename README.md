@@ -62,6 +62,7 @@ dependencies and then running the `build` script.
   unwritable location
 - add `-L,--loader` argument to `nodepy` command-line
 - add `require(loader=None)` argument
+- `nodepy` interactive banner now shows the Python maxsize (usually 32 or 64)
 
 ### v0.0.18
 

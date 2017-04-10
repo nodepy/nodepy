@@ -39,6 +39,7 @@ import collections
 import contextlib
 import itertools
 import marshal
+import math
 import os
 import pdb
 import py_compile
@@ -53,7 +54,8 @@ import six
 if sys.version >= '3.5':
   import importlib._bootstrap_external
 
-VERSION = 'Node.py-{0} [Python {1}.{2}.{3}]'.format(__version__, *sys.version_info)
+VERSION = 'Node.py-{0} [Python {1[0]}.{1[1]}.{1[2]} {2}-bit]'.format(
+    __version__, sys.version_info, int(round(math.log(sys.maxsize, 2))) + 1)
 PackageLink = collections.namedtuple('PackageLink', 'src dst')
 
 proc_args = [sys.executable, __file__]
