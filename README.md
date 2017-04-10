@@ -57,6 +57,7 @@ dependencies and then running the `build` script.
   available globally even after the Node.py modules was loaded.
 - add `nodepy.proc_args` and `nodepy.executable` data members
 - add `require.subprocess()` function
+- add `require.subprocess_args()` function
 - Fix #20: py_compile causes PermissionError when file is read from an
   unwritable location
 

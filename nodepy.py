@@ -372,9 +372,17 @@ class Require(object):
     subprocess.
     """
 
+    cmd = self.subprocess_args(request, args, nodepy_args)
+    return subprocess.Popen(cmd, **kwargs)
+
+  def subprocess_args(self, request, args=(), nodepy_args=()):
+    """
+    Resolves *request* and returns the argument list that would be used to
+    execute it as a subprocess.
+    """
+
     filename = self.context.resolve(request, self.module.directory)
-    cmd = proc_args + list(nodepy_args) + [filename] + list(args)
-    return subprocess.Popen(cmd)
+    return proc_args + list(nodepy_args) + [filename] + list(args)
 
 
 def get_exports(module):
