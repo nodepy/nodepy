@@ -275,7 +275,7 @@ class Require(object):
     return self.context.current_module
 
   def __call__(self, request, current_dir=None, is_main=False, cache=True,
-               exports=True, exec_=True, into=None, symbols=None):
+               exports=True, exec_=True, into=None, symbols=None, loader=None):
     """
     Resolve *request* into a module filename and load that module. For relative
     paths, the *current_dir* will be used to resolve the request (defaults to
@@ -312,7 +312,7 @@ class Require(object):
       )
       module = self.context.resolve_and_load(request, current_dir,
           is_main=is_main, additional_path=self.path, cache=cache,
-          parent=self.module, exec_=exec_)
+          parent=self.module, exec_=exec_, loader=loader)
       if cache:
         self.cache[request] = module
     if exports:
@@ -813,6 +813,8 @@ def main(argv=None):
   parser.add_argument('--keep-arg0', action='store_true',
       help='Do not overwrite sys.argv[0] when executing a file.')
   parser.add_argument('-P', '--preload', action='append', default=[])
+  parser.add_argument('-L', '--loader', default=None,
+      help='The loader to use to load and execute the module.')
   parser.add_argument('--pymain', action='store_true')
   args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
@@ -850,7 +852,9 @@ def main(argv=None):
       for request in args.preload:
         require(request)
       request = arguments.pop(0)
-      module = require(request, args.current_dir, is_main=True, exec_=False, exports=False)
+      loader = context.get_extension(args.loader) if args.loader else None
+      module = require(request, args.current_dir, is_main=True, exec_=False,
+          exports=False, loader=loader)
       if args.pymain:
         module.namespace.__name__ = '__main__'
       sys.argv = [sys.argv[0] if args.keep_arg0 else module.filename] + arguments

@@ -60,6 +60,8 @@ dependencies and then running the `build` script.
 - add `require.subprocess_args()` function
 - Fix #20: py_compile causes PermissionError when file is read from an
   unwritable location
+- add `-L,--loader` argument to `nodepy` command-line
+- add `require(loader=None)` argument
 
 ### v0.0.18
 
