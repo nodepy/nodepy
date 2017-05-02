@@ -23,6 +23,7 @@ import re
 
 argschema = require('./argschema')
 semver = require('./semver')
+manifest = require('./manifest')
 
 spec = '[[@<scope>/]<name>[@<version>]][/<module>][:<member>]'
 
@@ -47,7 +48,7 @@ class Ref(object):
 
   def __init__(self, package, version, module, member):
     argschema.validate('package', package, {'type': [None, Package]})
-    argschema.validate('version', version, {'type': [None, str, semver.Selector]})
+    argschema.validate('version', version, {'type': [None, str, semver.Selector, manifest.PackageVersion]})
     argschema.validate('module', module, {'type': [None, str]})
     argschema.validate('member', member, {'type': [None, str]})
 

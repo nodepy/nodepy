@@ -38,6 +38,36 @@ url_regex = re.compile(
   r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 
+class PackageVersion:
+  """
+  This class represents a package version, which can be either a
+  #semver.Version(), a Git URL or a relative path. For relative paths,
+  editable installations are possible.
+  """
+
+  def __init__(self, name, selector):
+    selector = selector.strip()
+    self.name = name
+    self._selrepr = selector
+    self.develop = selector.startswith('-e')
+    if self.develop or selector.startswith('.'):
+      if self.develop:
+        selector = selector[2:].lstrip()
+      self.path = selector
+      self.type = 'path'
+    elif selector.startswith('git+'):
+      self.url = selector[4:]
+      self.type = 'git'
+    else:
+      self.sel = semver.Selector(selector)
+      self.type = 'version'
+
+  def __repr__(self):
+    return '<PackageVersion {}="{}">'.format(self.name, self._selrepr)
+
+  def __str__(self):
+    return self._selrepr
+
 class PackageManifest:
   """
   This class describes a `package.json` package manifest in memory. The
@@ -242,16 +272,12 @@ def parse_dict(data, filename=None, directory=None, copy=True):
 
   dependencies = {}
   for dep, sel in data.get('dependencies', {}).items():
-    if not sel.startswith('git+'):
-      sel = semver.Selector(sel)
-    dependencies[dep] = sel
+    dependencies[dep] = PackageVersion(dep, sel)
   data['dependencies'] = dependencies
 
   dev_dependencies = {}
   for dep, sel in data.get('dev-dependencies', {}).items():
-    if not sel.startswith('git+'):
-      sel = semver.Selector(sel)
-    dev_dependencies[dep] = sel
+    dev_dependencies[dep] = PackageVersion(dep, sel)
   data['dev-dependencies'] = dev_dependencies
 
   engines = {}

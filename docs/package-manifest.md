@@ -127,8 +127,9 @@ of this would be a package that generates the documentation of another project.
 ### `dependencies`
 
 *Optional.*: An object that specifies the dependencies of the package.
-All values must be valid `ppym/lib/semver:Selector` syntax or Git URL syntax
-of the format `git+<url>[@<ref>]`. Dependencies declared here will be installed
+All values must be valid `ppym/lib/semver:Selector` syntax, Git URL syntax
+of the format `git+<url>[@<ref>]` or relative paths of the format
+`[-e] [./|../]<path>`. Dependencies declared here will be installed
 transitively.
 
 ```json
@@ -136,7 +137,8 @@ transitively.
   "dependencies": {
     "ppym": "~0.0.8",
     "ppym-registry": "~0.0.3",
-    "some-module": "git+https://github.com/someuser/some-module.git@development"
+    "some-module": "git+https://github.com/someuser/some-module.git@development",
+    "local-module": "-e ../local-module"
   }
 }
 ```

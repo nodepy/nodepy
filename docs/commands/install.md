@@ -1,9 +1,9 @@
 # install
 
 ```
-ppym install [-g,--global] [--root] [-e,--develop] [--pip-separate-process]
-             [--dev/--production] [--save] [--save-dev] [--recursive]
-             [PACKAGES]
+ppym install [-g,--global] [--root] [-e,--develop] [-P,--packagedir]
+             [--pip-separate-process] [--dev/--production] [--save]
+             [--save-dev] [--recursive] [PACKAGES]
 ```
 
 Installs one or more Node.py packages from the PPYM registry, package
@@ -42,6 +42,11 @@ means that a `.nodepy-link` file will be created instead of the package
 contents being copied. Node.py will read this link and continue resolving
 `require()`s in the target directory (which is your package that you installed
 with `--develop`).
+
+The `-P,--packagedir` option can be used to change the directory from which
+the `package.json` will be read (in case of an installation without packages
+specified on the command-line) or written to (in case of `--save` and
+`--save-dev`).
 
 Using the `--save` or `--save-dev` options requires a `package.json` in the
 current working directory to which the new dependencies can be added. Note
