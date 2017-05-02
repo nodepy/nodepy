@@ -17,6 +17,12 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
+### v0.0.17
+
+- Add `-P,--packagedir` option to `ppym install`
+- Allow listing dependencies to local folders in `package.json` using
+  `[-e] [./|../]<path>` syntax
+
 ### v0.0.16
 
 - Hotfix for PPYM installation to the root directory
