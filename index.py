@@ -100,6 +100,8 @@ def pip_install(args, global_, root):
 @click.option('-e', '--develop', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
+@click.option('-P', '--packagedir', default='.',
+    help='The directory to read/write the package.json to/from.')
 @click.option('--root', is_flag=True)
 @click.option('--recursive', is_flag=True,
     help='Satisfy dependencies of already satisfied dependencies.')
@@ -115,21 +117,23 @@ def pip_install(args, global_, root):
       'are specified, --production otherwise).')
 @click.option('--save', is_flag=True)
 @click.option('--save-dev', is_flag=True)
-def install(packages, develop, upgrade, global_, root, recursive,
+def install(packages, develop, upgrade, global_, packagedir, root, recursive,
             info, dev, pip_separate_process, pip_use_target_option, save,
             save_dev):
   """
   Installs one or more packages.
   """
 
+  packagefile = os.path.join(packagedir, 'package.json')
+
   if save and save_dev:
     print('Error: decide for either --save or --save-dev')
     return 1
   if save or save_dev:
-    if not os.path.isfile('package.json'):
+    if not os.path.isfile(packagefile):
       print('Error: can not --save or --save-dev without a package.json')
       return 1
-    with open('package.json') as fp:
+    with open(packagefile) as fp:
       package_json = json.load(fp, object_pairs_hook=collections.OrderedDict)
 
   if dev is None:
@@ -143,7 +147,7 @@ def install(packages, develop, upgrade, global_, root, recursive,
     return 0
 
   if not packages:
-    success = installer.install_dependencies_for(manifest.parse('package.json'), dev=dev)
+    success = installer.install_dependencies_for(manifest.parse(packagefile), dev=dev)
     if not success:
       return 1
     installer.relink_pip_scripts()
@@ -184,7 +188,7 @@ def install(packages, develop, upgrade, global_, root, recursive,
     have_deps = sorted(have_deps.items(), key=lambda x: x[0])
 
     package_json[field] = collections.OrderedDict(have_deps)
-    with open('package.json', 'w') as fp:
+    with open(packagefile, 'w') as fp:
       json.dump(package_json, fp, indent=2)
 
   print()
