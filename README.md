@@ -20,6 +20,7 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 ### v0.0.17
 
 - Add `-P,--packagedir` option to `ppym install`
+- Add `-I,--ignore-installed` option to `ppym install`
 - Allow listing dependencies to local folders in `package.json` using
   `[-e] [./|../]<path>` syntax
 

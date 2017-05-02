@@ -2,6 +2,7 @@
 
 ```
 ppym install [-g,--global] [--root] [-e,--develop] [-P,--packagedir]
+             [-I,--ignore-installed]
              [--pip-separate-process] [--dev/--production] [--save]
              [--save-dev] [--recursive] [PACKAGES]
 ```
@@ -42,6 +43,8 @@ means that a `.nodepy-link` file will be created instead of the package
 contents being copied. Node.py will read this link and continue resolving
 `require()`s in the target directory (which is your package that you installed
 with `--develop`).
+
+The `-I,--ignore-installed` option will be passed to `pip install`.
 
 The `-P,--packagedir` option can be used to change the directory from which
 the `package.json` will be read (in case of an installation without packages

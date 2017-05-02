@@ -86,12 +86,14 @@ def main():
 @click.argument('args', nargs=-1)  # Todo: Consume all arguments followed by the first positional argument
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
 @click.option('--root', is_flag=True)
-def pip_install(args, global_, root):
+@click.option('-I', '--ignore-installed', is_flag=True)
+def pip_install(args, global_, root, ignore_installed):
   """
   Access to Pip, pre-configured for the local Node.py environment.
   """
 
   installer = get_installer(global_, root, False, False, False, False)
+  installer.ignore_installed = ignore_installed
   return installer.install_python_dependencies({}, args)
 
 
@@ -100,6 +102,8 @@ def pip_install(args, global_, root):
 @click.option('-e', '--develop', is_flag=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
+@click.option('-I', '--ignore-installed', is_flag=True,
+    help='Passes the same option to Pip.')
 @click.option('-P', '--packagedir', default='.',
     help='The directory to read/write the package.json to/from.')
 @click.option('--root', is_flag=True)
@@ -117,9 +121,9 @@ def pip_install(args, global_, root):
       'are specified, --production otherwise).')
 @click.option('--save', is_flag=True)
 @click.option('--save-dev', is_flag=True)
-def install(packages, develop, upgrade, global_, packagedir, root, recursive,
-            info, dev, pip_separate_process, pip_use_target_option, save,
-            save_dev):
+def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
+            root, recursive, info, dev, pip_separate_process,
+            pip_use_target_option, save, save_dev):
   """
   Installs one or more packages.
   """
@@ -141,6 +145,7 @@ def install(packages, develop, upgrade, global_, packagedir, root, recursive,
 
   installer = get_installer(global_, root, upgrade, pip_separate_process,
       pip_use_target_option, recursive)
+  installer.ignore_installed = ignore_installed
   if info:
     for key in sorted(installer.dirs):
       print('{}: {}'.format(key, installer.dirs[key]))

@@ -168,6 +168,7 @@ class Installer:
     self.dirs = get_directories(install_location)
     self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
     self.script = _script.ScriptMaker(self.dirs['bin'])
+    self.ignore_installed = False
     if install_location in ('local', 'global'):
       self.script.path.append(self.dirs['pip_bin'])
       self.script.pythonpath.extend(self.dirs['pip_lib'])
@@ -394,6 +395,8 @@ class Installer:
       raise RuntimeError('unexpected install location: {!r}'.format(self.install_location))
     cmd.extend(args)
     cmd.extend(install_modules)
+    if self.ignore_installed:
+      cmd += ['--ignore-installed']
 
     print('  Installing Python dependencies via Pip:', ' '.join(cmd),
         '(as a separate process)' if self.pip_separate_process else '')
