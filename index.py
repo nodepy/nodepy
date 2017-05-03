@@ -22,6 +22,7 @@ from __future__ import print_function
 
 import click
 import collections
+import functools
 import getpass
 import json
 import os
@@ -75,6 +76,13 @@ def get_installer(global_, root, upgrade, pip_separate_process,
       pip_use_target_option=pip_use_target_option, recursive=recursive)
 
 
+def exit_with_return(func):
+  @functools.wraps(func)
+  def wrapper(*args, **kwargs):
+    res = func(*args, **kwargs)
+    exit(res)
+  return wrapper
+
 @click.group()
 def main():
   if not config['registry'].startswith('https://'):
@@ -87,6 +95,7 @@ def main():
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
 @click.option('--root', is_flag=True)
 @click.option('-I', '--ignore-installed', is_flag=True)
+@exit_with_return
 def pip_install(args, global_, root, ignore_installed):
   """
   Access to Pip, pre-configured for the local Node.py environment.
@@ -121,6 +130,7 @@ def pip_install(args, global_, root, ignore_installed):
       'are specified, --production otherwise).')
 @click.option('--save', is_flag=True)
 @click.option('--save-dev', is_flag=True)
+@exit_with_return
 def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
             root, recursive, info, dev, pip_separate_process,
             pip_use_target_option, save, save_dev):
@@ -165,9 +175,9 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
       if success:
         save_deps.append((package_info[0], package))
     elif os.path.isdir(package):
-      success = installer.install_from_directory(package, develop, dev=dev)
+      success = installer.install_from_directory(package, develop, dev=dev)[0]
     elif os.path.isfile(package):
-      success = installer.install_from_archive(package, dev=dev)
+      success = installer.install_from_archive(package, dev=dev)[0]
     else:
       ref = refstring.parse(package)
       selector = ref.version or semver.Selector('*')
@@ -204,6 +214,7 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
 @click.argument('package')
 @click.option('-g', '--global', 'global_', is_flag=True)
 @click.option('--root', is_flag=True)
+@exit_with_return
 def uninstall(package, global_, root):
   """
   Uninstall a module with the specified name from the local package directory.
@@ -217,6 +228,7 @@ def uninstall(package, global_, root):
 
 
 @main.command()
+@exit_with_return
 def dist():
   """
   Create a .tar.gz distribution from the package.
@@ -231,6 +243,7 @@ def dist():
 @click.option('-u', '--user')
 @click.option('-p', '--password')
 @click.option('--dry', is_flag=True)
+@exit_with_return
 def upload(filename, force, user, password, dry):
   """
   Upload a file to the current version to the registry. If the package does
@@ -247,6 +260,7 @@ def upload(filename, force, user, password, dry):
 @click.option('-u', '--user')
 @click.option('-p', '--password')
 @click.option('--dry', is_flag=True)
+@exit_with_return
 def publish(force, user, password, dry):
   """
   Combination of `ppym dist` and `ppym upload`. Also invokes the `pre-publish`
@@ -259,6 +273,7 @@ def publish(force, user, password, dry):
 @main.command()
 @click.option('--agree-tos', is_flag=True)
 @click.option('--save', is_flag=True, help='Save username in configuration.')
+@exit_with_return
 def register(agree_tos, save):
   """
   Register a new user on the package registry.
@@ -307,6 +322,7 @@ def register(agree_tos, save):
 
 @main.command()
 @click.argument('directory', default='.')
+@exit_with_return
 def init(directory):
   """
   Initialize a new package.json.
@@ -345,6 +361,7 @@ def init(directory):
 @click.option('-g', '--global', 'global_', is_flag=True)
 @click.option('--root', is_flag=True)
 @click.option('--pip', is_flag=True)
+@exit_with_return
 def bin(global_, root, pip):
   """
   Print the path to the bin directory.
@@ -361,6 +378,7 @@ def bin(global_, root, pip):
 @main.command(context_settings={'ignore_unknown_options': True})
 @click.argument('script')
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
+@exit_with_return
 def run(script, args):
   """
   Run a script that is specified in the package.json.
