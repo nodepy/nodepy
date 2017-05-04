@@ -359,7 +359,7 @@ class Installer:
         if not self.install_from_directory(path, version.develop)[0]:
           return False
       elif version.type == 'version':
-        if not self.install_from_registry(name, version)[0]:
+        if not self.install_from_registry(name, version.sel)[0]:
           return False
       else:
         raise RuntimeError('unsupported PackageVersion: {!r}'.format(version))
