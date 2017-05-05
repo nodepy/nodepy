@@ -123,7 +123,20 @@ class BaseModule(object):
     if self.directory:
       self.namespace.__directory__ = self.directory
 
+  def remove(self):
+    """
+    Removes the module from the #Context._module_cache.
+    """
+
+    del self.context._module_cache[self.filename]
+
   def exec_(self):
+    """
+    Execute the module. If #BaseModule.executed is #True, a #RuntimeError
+    should be raised. If an error occurs during the module's execution,
+    #BaseModule.remove() must be called!
+    """
+
     raise NotImplementedError
 
 
@@ -154,9 +167,13 @@ class PythonModule(BaseModule):
   def exec_(self):
     if self.executed:
       raise RuntimeError('already executed')
-    self.executed = True
-    with self.context.enter_module(self):
-      exec(self.code, vars(self.namespace))
+    try:
+      self.executed = True
+      with self.context.enter_module(self):
+        exec(self.code, vars(self.namespace))
+    except:
+      self.remove()
+      raise
 
 
 class PythonLoader(object):

@@ -63,6 +63,9 @@ dependencies and then running the `build` script.
 - add `-L,--loader` argument to `nodepy` command-line
 - add `require(loader=None)` argument
 - `nodepy` interactive banner now shows the Python maxsize (usually 32 or 64)
+- add `BaseModule.remove()` method
+- fix #19: A module that fails to execute must be automatically cleared from
+  the module cache again
 
 ### v0.0.18
 
