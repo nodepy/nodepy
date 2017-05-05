@@ -18,6 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import distutils.sysconfig
+import json
 import os
 import sys
 
@@ -54,3 +56,36 @@ def get_python_install_type():
     if not rel.startswith(os.curdir) and not rel.startswith(os.pardir):
       return 'user'
   return 'root'
+
+
+def get_module_dist_info(module, pythonpath=None):
+  """
+  Finds a Python module in the *pythonpath* and returns the distribution
+  information stored by Pip in the respective `.dist-info` directory. If
+  the module can not be found, #None will be returned.
+
+  Note that the *module* name does not necessarily reflect the name of the
+  Python module name that is used on `import`s, but instead the name of the
+  module on PyPI and as defined in the `setup.py` script.
+  """
+
+  if not pythonpath:
+    pythonpath = sys.path
+  sosuffix = distutils.sysconfig.get_config_var('SO')
+  for dirname in sys.path:
+    if not os.path.isdir(dirname): continue
+    for fn in os.listdir(dirname):
+      if fn.startswith(module + '-') and fn.endswith('.dist-info'):
+        break
+    else:
+      continue
+    version = fn[len(module) + 1:-len('.dist-info')]
+    fn = os.path.join(dirname, fn, 'metadata.json')
+    if not os.path.isfile(fn):
+      # TODO: Don't show if no verbose output is desired.
+      print('warning: file \'{}\' does not exist'.format(fn))
+      continue
+    with open(fn) as fp:
+      return json.load(fp)
+
+  return None

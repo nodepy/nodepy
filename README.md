@@ -27,6 +27,11 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   PPYM to `~/.local/Scripts`: For Python installations inside the users home
   directory, `--global` will by default install to `sys.prefix` instead of
   `~/.local` (can still be overwritten with the `prefix` configuration option).
+- Remove `ppym pip-install` command
+- Add `ppym install` support for installing standard Python modules by
+  prepending `py/`, for example `py/request`
+- `--save` and `--save-deps` now also works with Python dependencies when
+  the `py/<req>` format is used
 
 ### v0.0.16
 

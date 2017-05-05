@@ -20,6 +20,7 @@ The *PACKAGES* argument, if specified, can be of the following type:
   registry.
 - An existing directory that contains a `package.json` to install from.
 - A Git URL in the format `git+<url>[@<ref>]` to install the package from.
+- A Python package requirement in the format `py/<req>`
 
 With `--dev` enabled, the development dependencies of the packages are
 installed additionally to their normal runtime dependencies. Note that

@@ -26,8 +26,10 @@ import functools
 import getpass
 import json
 import os
+import pip.req
 import six
 
+from operator import itemgetter
 from six.moves import input
 from sys import exit
 
@@ -39,6 +41,7 @@ logger = require('./lib/logger')
 _install = require('./lib/install')
 registry = require('./lib/registry')
 is_virtualenv = require('./lib/env').is_virtualenv
+get_module_dist_info = require('./lib/env').get_module_dist_info
 
 PackageLifecycle = require('./lib/package-lifecycle')
 
@@ -91,22 +94,6 @@ def main():
         .format(config['registry']))
 
 
-@main.command('pip-install', context_settings={'ignore_unknown_options': True})
-@click.argument('args', nargs=-1)  # Todo: Consume all arguments followed by the first positional argument
-@click.option('-g', '--global/--local', 'global_', is_flag=True)
-@click.option('--root', is_flag=True)
-@click.option('-I', '--ignore-installed', is_flag=True)
-@exit_with_return
-def pip_install(args, global_, root, ignore_installed):
-  """
-  Access to Pip, pre-configured for the local Node.py environment.
-  """
-
-  installer = get_installer(global_, root, False, False, False, False)
-  installer.ignore_installed = ignore_installed
-  return installer.install_python_dependencies({}, args)
-
-
 @main.command()
 @click.argument('packages', nargs=-1)
 @click.option('-e', '--develop', is_flag=True)
@@ -136,7 +123,7 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
             root, recursive, info, dev, pip_separate_process,
             pip_use_target_option, save, save_dev):
   """
-  Installs one or more packages.
+  Installs one or more Node.Py or Pip packages.
   """
 
   packagefile = os.path.join(packagedir, 'package.json')
@@ -170,8 +157,24 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
     return 0
 
   save_deps = []
+  python_deps = {}
+  python_additional_install = []
   for package in packages:
-    if package.startswith('git+'):
+    if package.startswith('py/'):
+      try:
+        spec = pip.req.InstallRequirement.from_line(package[3:])
+      except (pip.exceptions.InstallationError, pip._vendor.packaging.requirements.InvalidRequirement) as exc:
+        print(str(exc))
+        return 1
+      if (save or save_dev) and not spec.req:
+        print("'{}' is not something we can install via PPYM with --save/--save-dev".format(package[3:]))
+        return 1
+      if spec.req:
+        python_deps[spec.req.name] = str(spec.req.specifier)
+      else:
+        python_additional_install.append(str(spec))
+      continue
+    elif package.startswith('git+'):
       success, package_info = installer.install_from_git(package[4:])
       if success:
         save_deps.append((package_info[0], package))
@@ -189,21 +192,46 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
       print('Installation failed')
       return 1
 
+  # We pass as additional arguments since that allows us to avoid parsing
+  # the requirement.
+  if python_deps and not installer.install_python_dependencies(python_deps, args=python_additional_install):
+    print('Installation failed')
+    return 1
+
   installer.relink_pip_scripts()
 
-  if save or save_dev:
-    save_deps.sort(key=lambda x: x[0])
-
+  if (save or save_dev) and save_deps:
+    save_deps.sort(key=itemgetter(0))
     field = 'dependencies' if save else 'dev-dependencies'
-    print('Saving "{}"'.format(field))
+    print('Saving {}...'.format(field))
     for key, value in save_deps:
       print('  "{}": "{}"'.format(key, value))
 
     have_deps = package_json.get(field, {})
     have_deps.update(dict(save_deps))
-    have_deps = sorted(have_deps.items(), key=lambda x: x[0])
-
+    have_deps = sorted(have_deps.items(), key=itemgetter(0))
     package_json[field] = collections.OrderedDict(have_deps)
+
+  if (save or save_dev) and python_deps:
+    python_deps = sorted(python_deps.items(), key=itemgetter(0))
+    field = 'python-dependencies' if save else 'dev-python-dependencies'
+    print('Saving {}...'.format(field))
+    for i, (key, value) in enumerate(python_deps):
+      if not value:
+        dist_info = get_module_dist_info(key)
+        if dist_info is None:
+          print('warning: could not find .dist-info of module "{}"'.format(key))
+        else:
+          value = '>=' + dist_info['version']
+      print('  "{}": "{}"'.format(key, value))
+      python_deps[i] = (key, value)
+
+    have_deps = package_json.get(field, {})
+    have_deps.update(dict(python_deps))
+    have_deps = sorted(have_deps.items(), key=itemgetter(0))
+    package_json[field] = collections.OrderedDict(have_deps)
+
+  if (save or save_dev) and (save_deps or python_deps):
     with open(packagefile, 'w') as fp:
       json.dump(package_json, fp, indent=2)
 
