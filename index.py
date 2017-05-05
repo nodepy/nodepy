@@ -365,6 +365,7 @@ def init(directory):
   questions = [
     ('Package Name', 'name', None),
     ('Package Version', 'version', '1.0.0'),
+    ('?Description', 'description', None),
     ('?Author (Name <Email>)', 'author', config.get('author')),
     ('?License', 'license', config.get('license'))
   ]

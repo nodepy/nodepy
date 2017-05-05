@@ -35,6 +35,7 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - `ppym init`: Author and License fields are now optional and can be omitted
   by entering `-` if a default value is already available, or otherwise simply
   enter nothing
+- add Description field to `ppym init`
 
 ### v0.0.16
 
