@@ -66,6 +66,7 @@ dependencies and then running the `build` script.
 - add `BaseModule.remove()` method
 - fix #19: A module that fails to execute must be automatically cleared from
   the module cache again
+- upgrade to PPYM v0.0.17
 
 ### v0.0.18
 
