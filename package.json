@@ -15,9 +15,9 @@
   "python-dependencies": {
     "appdirs": ">=1.4.2",
     "click": ">=6.7",
-    "jsonschema": ">=2.6.0",
     "distlib": ">=0.2.4",
     "hammock": ">=0.2.4",
+    "jsonschema": ">=2.6.0",
     "requests": ">=2.13.0"
   }
 }
