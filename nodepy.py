@@ -845,6 +845,9 @@ def main(argv=None):
   executable = sys.argv[0]
   proc_args = [executable]
 
+  if os.name == 'nt' and not executable.endswith('.exe'):
+    proc_args.insert(0, sys.executable)
+
   arguments = args.arguments[:]
   context = Context(args.current_dir, args.verbose)
   with context, jit_debug(args.debug):

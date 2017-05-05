@@ -38,6 +38,11 @@ dependencies and then running the `build` script.
 
 ## Changelog
 
+### v0.0.20
+
+- fix `nodepy.proc_args` to contain `sys.executable` if the nodepy executable
+  is not an `.exe` on Windows
+
 ### v0.0.19
 
 - deprecate `node.py` program name for `nodepy`
