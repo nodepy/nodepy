@@ -32,6 +32,9 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   prepending `py/`, for example `py/request`
 - `--save` and `--save-deps` now also works with Python dependencies when
   the `py/<req>` format is used
+- `ppym init`: Author and License fields are now optional and can be omitted
+  by entering `-` if a default value is already available, or otherwise simply
+  enter nothing
 
 ### v0.0.16
 

@@ -365,19 +365,22 @@ def init(directory):
   questions = [
     ('Package Name', 'name', None),
     ('Package Version', 'version', '1.0.0'),
-    ('Author (Name <Email>)', 'author', config.get('author')),
-    ('License', 'license', config.get('license'))
+    ('?Author (Name <Email>)', 'author', config.get('author')),
+    ('?License', 'license', config.get('license'))
   ]
 
   results = collections.OrderedDict()
   for qu in questions:
     msg = qu[0]
+    opt = msg.startswith('?')
+    if opt: msg = msg[1:]
     if qu[2]:
       msg += ' [{}]'.format(qu[2])
     while True:
       reply = input(msg + '? ').strip() or qu[2]
-      if reply: break
-    results[qu[1]] = reply
+      if reply or opt: break
+    if reply and reply != '-':
+      results[qu[1]] = reply
 
   results['dependencies'] = {}
   results['python-dependencies'] = {}
