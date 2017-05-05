@@ -1,6 +1,6 @@
 <img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img>
 
-# Node.py v0.0.18 Documentation
+# Node.py v0.0.19 Documentation
 
 ```
 usage: nodepy [-h] [-d] [-v] [-c EXPR] [--current-dir DIR] [--version]
