@@ -38,6 +38,7 @@ config = require('./lib/config')
 logger = require('./lib/logger')
 _install = require('./lib/install')
 registry = require('./lib/registry')
+is_virtualenv = require('./lib/env').is_virtualenv
 
 PackageLifecycle = require('./lib/package-lifecycle')
 
@@ -58,7 +59,7 @@ def get_install_location(global_, root):
     print('Error: -g,--global and --root can not be used together')
     exit(1)
   elif global_:
-    if _install.is_virtualenv():
+    if is_virtualenv():
       print('Note: detected virtual environment, upgrading -g,--global to --root')
       return 'root'
     return 'global'

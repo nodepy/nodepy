@@ -23,6 +23,10 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - Add `-I,--ignore-installed` option to `ppym install`
 - Allow listing dependencies to local folders in `package.json` using
   `[-e] [./|../]<path>` syntax
+- Fix nodepy/nodepy#23: Windows: Node.Py installed to `AppData\Local\Programs\Python` but
+  PPYM to `~/.local/Scripts`: For Python installations inside the users home
+  directory, `--global` will by default install to `sys.prefix` instead of
+  `~/.local` (can still be overwritten with the `prefix` configuration option).
 
 ### v0.0.16
 

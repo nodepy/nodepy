@@ -23,6 +23,8 @@ import errno
 import os
 import sys
 
+get_python_install_type = require('./env').get_python_install_type
+
 PPYM_CONFIG = '~/.ppymrc'
 
 
@@ -146,7 +148,10 @@ config = Config()
 # scripts to. Note that global installs inside a virtual environment will
 # ignore this option and instead place the packages under the virtualenv's
 # prefix.
-config.defaults['prefix'] = '~/.local'
+if get_python_install_type() == 'user':
+  config.defaults['prefix'] = sys.prefix
+else:
+  config.defaults['prefix'] = os.path.expanduser('~/.local')
 
 # The URL of the PPYM registry from which packages should be downloaded
 # from and uploaded to.

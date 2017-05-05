@@ -123,14 +123,6 @@ def _check_include_file(filename, include_patterns, exclude_patterns):
   return _match_any_pattern(filename, include_patterns)
 
 
-def is_virtualenv():
-  if hasattr(sys, 'real_prefix'):
-    return True
-  if hasattr(sys, 'base_prefix'): # Python 3+ only
-    return sys.prefix != sys.base_prefix
-  return False
-
-
 class PackageNotFound(Exception):
   pass
 
