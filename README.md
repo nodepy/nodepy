@@ -17,6 +17,13 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 
 ## Changelog
 
+### v0.0.18
+
+- Fix #9 (partially): Pip install fails with FileNotFoundError: installed-files.txt
+  -- added `lib/brewfix.py` which temporarily (over)writes `~/.pydistutils.cfg`,
+  only fixes `--user` installs of Node.py (and installs in Virtualenv still
+  work flawlessly, too)
+
 ### v0.0.17
 
 - Add `-P,--packagedir` option to `ppym install`
