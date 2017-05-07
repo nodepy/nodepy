@@ -43,6 +43,7 @@ _download = require('./util/download')
 _script = require('./util/script')
 refstring = require('./refstring')
 pathutils = require('./util/pathutils')
+brewfix = require('./brewfix')
 
 parse_manifest = require('./manifest').parse
 PackageManifest = require('./manifest').PackageManifest
@@ -385,6 +386,7 @@ class Installer:
       cmd = []
     else:
       raise RuntimeError('unexpected install location: {!r}'.format(self.install_location))
+
     cmd.extend(args)
     cmd.extend(install_modules)
     if self.ignore_installed:
@@ -392,7 +394,7 @@ class Installer:
 
     print('  Installing Python dependencies via Pip:', ' '.join(cmd),
         '(as a separate process)' if self.pip_separate_process else '')
-    with self.pythonpath_update_context():
+    with brewfix(), self.pythonpath_update_context():
       if self.pip_separate_process:
         res = subprocess.call([sys.executable, '-m', 'pip', 'install'] + cmd)
       else:

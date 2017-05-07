@@ -32,6 +32,8 @@ import pip.commands
 import shutil
 import sys
 
+brewfix = require('./lib/brewfix')
+
 
 def main(args=None):
   parser = argparse.ArgumentParser(description='Bootstrap the PPYM installation.')
@@ -61,7 +63,8 @@ def main(args=None):
   for key, value in package['python-dependencies'].items():
     cmd.append(key + value)
 
-  res = pip.commands.InstallCommand().main(cmd)
+  with brewfix():
+    res = pip.commands.InstallCommand().main(cmd)
   if res != 0:
     print('error: Pip installation failed')
     sys.exit(res)
