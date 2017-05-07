@@ -31,15 +31,18 @@ import configparser
 import contextlib
 import os
 import sys
+is_virtualenv = require('./env').is_virtualenv()
 
 
 @contextlib.contextmanager
-def brewfix(force=False):
-  if not force and not sys.platform.startswith('darwin'):
-    yield
-    return
+def brewfix(prefix_dir='', force=False):
+  if not force:
+    if not sys.platform.startswith('darwin') or is_virtualenv:
+      yield
+      return
 
   print("Note: macOS detected, applying homebrew fix (see nodepy/ppym#9)")
+  print("      [install] prefix={}".format(prefix_dir))
   filename = os.path.expanduser('~/.pydistutils.cfg')
   backupfile = filename + '.ppym-backup'
   parser = configparser.SafeConfigParser()
@@ -50,7 +53,7 @@ def brewfix(force=False):
 
   if not parser.has_section('install'):
     parser.add_section('install')
-  parser.set('install', 'prefix', '')
+  parser.set('install', 'prefix', prefix_dir)
   with open(filename, 'w') as fp:
     parser.write(fp)
   try:
