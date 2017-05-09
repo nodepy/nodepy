@@ -28,6 +28,8 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - Fix `env:get_module_dist_info()` replacing hyphens by underscores, as Pip
   does it
 - Better detection of module `.dist-info`
+- Scripts installed by `ppym install` (from the package manifest's `"bin"` key)
+  no longer export a `PYTHONPATH` environment variable
 
 ### v0.0.17
 
