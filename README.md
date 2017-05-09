@@ -23,6 +23,8 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   -- added `lib/brewfix.py` which temporarily (over)writes `~/.pydistutils.cfg`,
   only fixes `--user` installs of Node.py (and installs in Virtualenv still
   work flawlessly, too)
+- Fix `ppym install --save` saving version as `^VERSION` which is wrong,
+  now uses `~VERSION`
 
 ### v0.0.17
 

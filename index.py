@@ -187,7 +187,7 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
       selector = ref.version or semver.Selector('*')
       success, package_info = installer.install_from_registry(six.text_type(ref.package), selector, dev=dev)
       if success:
-        save_deps.append((package_info[0], '^' + str(package_info[1])))
+        save_deps.append((package_info[0], '~' + str(package_info[1])))
     if not success:
       print('Installation failed')
       return 1
