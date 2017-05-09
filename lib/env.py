@@ -69,7 +69,7 @@ def get_module_dist_info(module, pythonpath=None):
   module on PyPI and as defined in the `setup.py` script.
   """
 
-  module = module.replace('-', '_')
+  module = module.replace('-', '_').lower()
 
   if not pythonpath:
     pythonpath = sys.path
@@ -77,8 +77,9 @@ def get_module_dist_info(module, pythonpath=None):
   for dirname in sys.path:
     if not os.path.isdir(dirname): continue
     for fn in os.listdir(dirname):
-      if fn.startswith(module + '-') and fn.endswith('.dist-info'):
-        break
+      if not fn.endswith('.dist-info'): continue
+      if not fn.lower().startswith(module + '-'): continue
+      break
     else:
       continue
     version = fn[len(module) + 1:-len('.dist-info')]

@@ -201,35 +201,32 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
   installer.relink_pip_scripts()
 
   if (save or save_dev) and save_deps:
-    save_deps.sort(key=itemgetter(0))
     field = 'dependencies' if save else 'dev-dependencies'
+    data = package_json.get(field, {})
     print('Saving {}...'.format(field))
     for key, value in save_deps:
       print('  "{}": "{}"'.format(key, value))
+      data[key] = value
 
-    have_deps = package_json.get(field, {})
-    have_deps.update(dict(save_deps))
-    have_deps = sorted(have_deps.items(), key=itemgetter(0))
-    package_json[field] = collections.OrderedDict(have_deps)
+    data = sorted(data.items(), key=itemgetter(0))
+    package_json[field] = collections.OrderedDict(data)
 
   if (save or save_dev) and python_deps:
-    python_deps = sorted(python_deps.items(), key=itemgetter(0))
     field = 'python-dependencies' if save else 'dev-python-dependencies'
-    print('Saving {}...'.format(field))
-    for i, (key, value) in enumerate(python_deps):
-      if not value:
-        dist_info = get_module_dist_info(key)
-        if dist_info is None:
-          print('warning: could not find .dist-info of module "{}"'.format(key))
-        else:
-          value = '>=' + dist_info['version']
-      print('  "{}": "{}"'.format(key, value))
-      python_deps[i] = (key, value)
+    print("Saving {}...".format(field))
+    data = package_json.get(field, {})
+    for pkg_name, dist_info in installer.installed_python_libs.items():
+      if not dist_info:
+        print('warning: could not find .dist-info of module "{}"'.format(key))
+        data[pkg_name] = ''
+        print('  "{}": ""'.format(pkg_name))
+      else:
+        data[dist_info['name']] = dist_info['version']
+        print('  "{}": "{}"'.format(dist_info['name'], dist_info['version']))
 
-    have_deps = package_json.get(field, {})
-    have_deps.update(dict(python_deps))
-    have_deps = sorted(have_deps.items(), key=itemgetter(0))
-    package_json[field] = collections.OrderedDict(have_deps)
+    # Sort the data and insert it back into the package manifest.
+    data = sorted(data.items(), key=itemgetter(0))
+    package_json[field] = collections.OrderedDict(data)
 
   if (save or save_dev) and (save_deps or python_deps):
     with open(packagefile, 'w') as fp:

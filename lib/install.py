@@ -44,6 +44,7 @@ _script = require('./util/script')
 refstring = require('./refstring')
 pathutils = require('./util/pathutils')
 brewfix = require('./brewfix')
+get_module_dist_info = require('./env').get_module_dist_info
 
 parse_manifest = require('./manifest').parse
 PackageManifest = require('./manifest').PackageManifest
@@ -165,6 +166,7 @@ class Installer:
     if install_location in ('local', 'global'):
       self.script.path.append(self.dirs['pip_bin'])
       self.script.pythonpath.extend(self.dirs['pip_lib'])
+    self.installed_python_libs = {}
 
   @contextlib.contextmanager
   def pythonpath_update_context(self):
@@ -399,9 +401,13 @@ class Installer:
         res = subprocess.call([sys.executable, '-m', 'pip', 'install'] + cmd)
       else:
         res = pip.commands.install.InstallCommand().main(cmd)
-    if res != 0:
-      print('Error: `pip install` failed with exit-code', res)
-      return False
+      if res != 0:
+        print('Error: `pip install` failed with exit-code', res)
+        return False
+
+      # Important to use this function from within the updated pythonpath context.
+      for dep_name in deps:
+        self.installed_python_libs[dep_name] = get_module_dist_info(dep_name)
 
     return True
 

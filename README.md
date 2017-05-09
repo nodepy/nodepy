@@ -27,6 +27,7 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   now uses `~VERSION`
 - Fix `env:get_module_dist_info()` replacing hyphens by underscores, as Pip
   does it
+- Better detection of module `.dist-info`
 
 ### v0.0.17
 
