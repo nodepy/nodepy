@@ -25,6 +25,8 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   work flawlessly, too)
 - Fix `ppym install --save` saving version as `^VERSION` which is wrong,
   now uses `~VERSION`
+- Fix `env:get_module_dist_info()` replacing hyphens by underscores, as Pip
+  does it
 
 ### v0.0.17
 

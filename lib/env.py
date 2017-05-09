@@ -69,6 +69,8 @@ def get_module_dist_info(module, pythonpath=None):
   module on PyPI and as defined in the `setup.py` script.
   """
 
+  module = module.replace('-', '_')
+
   if not pythonpath:
     pythonpath = sys.path
   sosuffix = distutils.sysconfig.get_config_var('SO')
