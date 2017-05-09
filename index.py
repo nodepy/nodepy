@@ -217,11 +217,11 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
     data = package_json.get(field, {})
     for pkg_name, dist_info in installer.installed_python_libs.items():
       if not dist_info:
-        print('warning: could not find .dist-info of module "{}"'.format(key))
+        print('warning: could not find .dist-info of module "{}"'.format(pkg_name))
         data[pkg_name] = ''
         print('  "{}": ""'.format(pkg_name))
       else:
-        data[dist_info['name']] = dist_info['version']
+        data[dist_info['name']] = '>=' + dist_info['version']
         print('  "{}": "{}"'.format(dist_info['name'], dist_info['version']))
 
     # Sort the data and insert it back into the package manifest.
