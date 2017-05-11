@@ -24,7 +24,10 @@ shell commands. Uses the Python #distlib package.
 
 import os
 import six
-from distlib.scripts import ScriptMaker as _ScriptMaker
+try:
+  from distlib.scripts import ScriptMaker as _ScriptMaker
+except ImportError as exc:
+  from pip._vendor.distlib.scripts import ScriptMaker as _ScriptMaker
 
 argschema = require('../argschema')
 

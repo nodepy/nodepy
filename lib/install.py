@@ -145,7 +145,8 @@ class Installer:
   """
 
   def __init__(self, registry=None, upgrade=False, install_location='local',
-      pip_separate_process=False, pip_use_target_option=False, recursive=False):
+      pip_separate_process=False, pip_use_target_option=False, recursive=False,
+      verbose=False):
     assert install_location in ('local', 'global', 'root')
     self.reg = registry or _registry.RegistryClient(_config['registry'])
     self.upgrade = upgrade
@@ -153,6 +154,7 @@ class Installer:
     self.pip_separate_process = pip_separate_process
     self.pip_use_target_option = pip_use_target_option
     self.recursive = recursive
+    self.verbose = verbose
     self.dirs = get_directories(install_location)
     self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
     self.script = _script.ScriptMaker(self.dirs['bin'])
@@ -387,6 +389,8 @@ class Installer:
     cmd.extend(install_modules)
     if self.ignore_installed:
       cmd += ['--ignore-installed']
+    if self.verbose:
+      cmd.append('--verbose')
 
     print('  Installing Python dependencies via Pip:', ' '.join(cmd),
         '(as a separate process)' if self.pip_separate_process else '')

@@ -73,11 +73,12 @@ def get_install_location(global_, root):
 
 
 def get_installer(global_, root, upgrade, pip_separate_process,
-                  pip_use_target_option, recursive):
+                  pip_use_target_option, recursive, verbose=False):
   location = get_install_location(global_, root)
   return _install.Installer(upgrade=upgrade, install_location=location,
       pip_separate_process=pip_separate_process,
-      pip_use_target_option=pip_use_target_option, recursive=recursive)
+      pip_use_target_option=pip_use_target_option, recursive=recursive,
+      verbose=verbose)
 
 
 def exit_with_return(func):
@@ -118,10 +119,11 @@ def main():
       'are specified, --production otherwise).')
 @click.option('--save', is_flag=True)
 @click.option('--save-dev', is_flag=True)
+@click.option('-v', '--verbose', is_flag=True)
 @exit_with_return
 def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
             root, recursive, info, dev, pip_separate_process,
-            pip_use_target_option, save, save_dev):
+            pip_use_target_option, save, save_dev, verbose):
   """
   Installs one or more Node.Py or Pip packages.
   """
@@ -142,7 +144,7 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
     dev = not packages
 
   installer = get_installer(global_, root, upgrade, pip_separate_process,
-      pip_use_target_option, recursive)
+      pip_use_target_option, recursive, verbose)
   installer.ignore_installed = ignore_installed
   if info:
     for key in sorted(installer.dirs):
