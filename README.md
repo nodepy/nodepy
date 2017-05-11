@@ -30,6 +30,8 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - Better detection of module `.dist-info`
 - Scripts installed by `ppym install` (from the package manifest's `"bin"` key)
   no longer export a `PYTHONPATH` environment variable
+- To detect the install locations for Node.py modules and scripts, PPYM now
+  uses `pip.locations.distutils_scheme()`
 
 ### v0.0.17
 

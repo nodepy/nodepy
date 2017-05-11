@@ -76,36 +76,30 @@ def get_directories(location, config=_config):
   - pip_lib
   """
 
+  assert location in ('local', 'global', 'root')
+
   pip_bin_base = os.path.basename(pip.locations.bin_py)
   pip_lib_base = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version_info)
+
   if location == 'local':
-    pip_lib_dir = 'nodepy_modules/.pip/' + pip_lib_base
+    scheme = pip.locations.distutils_scheme('', prefix='nodepy_modules/.pip')
     return {
       'packages': 'nodepy_modules',
       'bin': 'nodepy_modules/.bin',
-      'pip_prefix': 'nodepy_modules/.pip',
-      'pip_bin': os.path.join('nodepy_modules/.pip/', pip_bin_base),
-      'pip_lib': [pip_lib_dir, os.path.join(pip_lib_dir, 'site-packages')]
-    }
-  elif location == 'global':
-    prefix = os.path.expanduser(config['prefix'])
-    return {
-      'packages': os.path.join(prefix, 'share', 'nodepy_modules'),
-      'bin': os.path.join(prefix, pip_bin_base),
-      'pip_prefix': prefix,
-      'pip_bin': os.path.join(prefix, pip_bin_base),
-      'pip_lib': [os.path.join(prefix, pip_lib_base),
-                  os.path.join(prefix, pip_lib_base, 'site-packages')]
-    }
-  elif location == 'root':
-    prefix = os.path.join(os.path.normpath(sys.prefix))
-    return {
-      'packages': os.path.join(prefix, 'share', 'nodepy_modules'),
-      'bin': pip.locations.bin_py,
-      'pip_bin': os.path.join(prefix, pip_bin_base),
+      'pip_prefix': scheme['data'],
+      'pip_bin': scheme['scripts'],
+      'pip_lib': [scheme['purelib']]
     }
   else:
-    raise ValueError('invalid location: {!r}'.format(location))
+    user = (location == 'global')
+    scheme = pip.locations.distutils_scheme('', user=user)
+    return {
+      'packages': os.path.join(scheme['data'], 'nodepy_modules'),
+      'bin': scheme['scripts'],
+      'pip_prefix': scheme['data'],
+      'pip_bin': scheme['scripts'],
+      'pip_lib': [scheme['purelib']]
+    }
 
 
 def _makedirs(path):
