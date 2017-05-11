@@ -27,10 +27,10 @@ The fix will temporary set the install prefix option to an empty string in
 the `~/.pydistutils.cfg` file, and then undo that change.
 """
 
-import configparser
 import contextlib
 import os
 import sys
+from six.moves import configparser
 is_virtualenv = require('./env').is_virtualenv()
 
 
