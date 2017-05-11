@@ -37,6 +37,10 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
 - Installing Python dependencies with `--root` and `-g,--global` should now
   be consistent with Pip's default behaviour with the respective installation
   modes (`pip install` and `pip install --user`)
+- Configuration option `prefix` is no longer used, (root/global) Node.py
+  modules are now installed nearby Python's `site-packages` and Scripts
+  are placed into Python's script directory
+
 
 ### v0.0.17
 

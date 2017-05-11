@@ -144,15 +144,6 @@ class Config(object):
 
 config = Config()
 
-# The user's preferred directory to install global Node.py packages and
-# scripts to. Note that global installs inside a virtual environment will
-# ignore this option and instead place the packages under the virtualenv's
-# prefix.
-if get_python_install_type() == 'user':
-  config.defaults['prefix'] = sys.prefix
-else:
-  config.defaults['prefix'] = os.path.expanduser('~/.local')
-
 # The URL of the PPYM registry from which packages should be downloaded
 # from and uploaded to.
 config.defaults['registry'] = 'https://ppym.org'

@@ -21,6 +21,7 @@
 import distutils.sysconfig
 import json
 import os
+import pip.locations
 import sys
 
 
@@ -30,6 +31,44 @@ def is_virtualenv():
   if hasattr(sys, 'base_prefix'): # Python 3+ only
     return sys.prefix != sys.base_prefix
   return False
+
+
+def get_directories(location):
+  """
+  Returns a dictionary that contains information on the install location of
+  Node.py packages. The dictionary contains the following keys:
+
+  - packages
+  - bin
+  - pip_bin
+
+  Only when *location* is `'local'` or `'global'`, the following keys are
+  available:
+
+  - pip_prefix
+  - pip_lib
+  """
+
+  assert location in ('local', 'global', 'root')
+  if location == 'local':
+    scheme = pip.locations.distutils_scheme('', prefix='nodepy_modules/.pip')
+    return {
+      'packages': 'nodepy_modules',
+      'bin': 'nodepy_modules/.bin',
+      'pip_prefix': scheme['data'],
+      'pip_bin': scheme['scripts'],
+      'pip_lib': scheme['purelib']
+    }
+  else:
+    user = (location == 'global')
+    scheme = pip.locations.distutils_scheme('', user=user)
+    return {
+      'packages': os.path.dirname(scheme['purelib']),
+      'bin': scheme['scripts'],
+      'pip_prefix': scheme['data'],
+      'pip_bin': scheme['scripts'],
+      'pip_lib': scheme['purelib']
+    }
 
 
 def get_python_install_type():
