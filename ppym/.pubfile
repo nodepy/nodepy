@@ -1,0 +1,3 @@
+versionPatterns:
+  "package.json": "  \"version\": \"$VERSION\""
+  "docs/index.md": "# PPYM v$VERSION Documentation"

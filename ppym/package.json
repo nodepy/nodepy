@@ -1,0 +1,23 @@
+{
+  "name": "ppym",
+  "version": "0.0.17",
+  "license": "MIT",
+  "description": "The Node.py Package Manager",
+  "repository": "https://github.com/nodepy/ppym",
+  "bin": {
+    "ppym${py}": "index"
+  },
+  "engines": {
+    "nodepy": ">=0.0.6",
+    "python": ">=2.7.0 || >=3.3.0"
+  },
+  "dependencies": {},
+  "python-dependencies": {
+    "appdirs": ">=1.4.2",
+    "click": ">=6.7",
+    "distlib": ">=0.2.4",
+    "hammock": ">=0.2.4",
+    "jsonschema": ">=2.6.0",
+    "requests": ">=2.13.0"
+  }
+}
