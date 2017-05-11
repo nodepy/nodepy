@@ -43,8 +43,10 @@ import math
 import os
 import pdb
 import py_compile
+import re
 import subprocess
 import sys
+import tempfile
 import traceback
 import types
 
@@ -100,12 +102,20 @@ class ResolveError(Exception):
 class BaseModule(object):
   """
   Represents a Python module that exposes members like data, functions and
-  classes in its #namespace.
+  classes in its #namespace. In some cases, when a module is loaded from a
+  specific file, a cached version is chosen instead and the real filename
+  is different. The module is still stored under the original filename, as
+  that is the name it will be resolved as when the module is requested. That's
+  when the *real_filename* is different from the *filename* attribute.
+
+  (Storing it under the cache name would actually lead to cache misses).
   """
 
-  def __init__(self, context, filename, directory, name, parent=None, request=None):
+  def __init__(self, context, filename, directory, name,
+               parent=None, request=None, real_filename=None):
     self.context = context
     self.filename = filename
+    self.real_filename = real_filename or filename
     self.directory = directory
     self.name = name
     self.namespace = types.ModuleType(str(name))  # in Python 2, does not accept Unicode
@@ -116,7 +126,7 @@ class BaseModule(object):
     self.init_namespace()
 
   def init_namespace(self):
-    self.namespace.__file__ = self.filename
+    self.namespace.__file__ = self.real_filename
     self.namespace.__name__ = self.name
     self.namespace.require = self.require
     self.namespace.module = self
@@ -158,11 +168,14 @@ class PythonModule(BaseModule):
   respectively.
   """
 
-  def __init__(self, context, filename, name, code, parent, request):
+  def __init__(self, context, filename, real_filename, name, code, parent, request):
     super(PythonModule, self).__init__(
-        context, filename, os.path.dirname(filename), name, parent=parent,
+        context=context, filename=filename,
+        directory=os.path.dirname(filename),
+        name=name, parent=parent,
         request=request)
     self.code = code
+    self.real_filename = real_filename
 
   def exec_(self):
     if self.executed:
@@ -178,43 +191,21 @@ class PythonModule(BaseModule):
 
 class PythonLoader(object):
   """
-  Loader for Node.py Python modules.
+  Loader for Node.py Python modules. Allows for pre-processing of source code.
+  By default, the #unpack_require_preprocessor is added by default.
   """
 
   if hasattr(sys, 'implementation'):
     _impl_name = sys.implementation.name.lower()
   else:
     _impl_name = sys.subversion[0].lower()
-
   pyc_suffix = '.{}-{}{}.pyc'.format(_impl_name, *sys.version_info)
-
-  @staticmethod
-  def load_code(filename, is_compiled=None):
-    """
-    Loads a Python code object from a file. If *is_compiled*, it will be
-    treated as a bytecompiled file if it ends with `.pyc`, otherwise it will
-    be loaded as Python source. Note that any syntactical errors might be
-    raised when the file is loaded as source.
-    """
-
-    if is_compiled is None:
-      is_compiled = filename.endswith('.pyc')
-    if is_compiled:
-      with open(filename, 'rb') as fp:
-        if sys.version >= '3.5':
-          importlib._bootstrap_external._validate_bytecode_header(fp.read(12))
-        else:
-          header_size = 12 if sys.version >= '3.3' else 8
-          fp.read(header_size)
-        return marshal.load(fp)
-    else:
-      with open(filename, 'r') as fp:
-        return compile(fp.read(), filename, 'exec', dont_inherit=True)
 
   def __init__(self, write_bytecache=None):
     if write_bytecache is None:
       write_bytecache = not bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
     self._write_bytecache = write_bytecache
+    self.preprocessors = [self.unpack_require_preprocessor]
 
   def __call__(self, context, filename, load_data):
     """
@@ -235,25 +226,79 @@ class PythonLoader(object):
       can_load_bytecache = False
 
     if not can_load_bytecache and self._write_bytecache:
-      if os.access(bytecache_file, os.W_OK):
-        # TODO: It would be much better if we could just pass to it the code
-        #       object that we read in anyway.
-        try:
-          py_compile.compile(filename, bytecache_file, doraise=True)
-        except Exception as exc:
+      try:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py') as tmp:
+          with open(filename, 'r') as src:
+            tmp.write(self.preprocess(filename, src.read()))
+          tmp.file.close()
+          py_compile.compile(tmp.name, bytecache_file, doraise=True)
+      except OSError as exc:
+        if exc.errno != errno.EPERM:
           traceback.print_exc()
-        else:
-          can_load_bytecache = True
+        # Skip permission errors.
+      except Exception as exc:
+        traceback.print_exc()
+      else:
+        can_load_bytecache = True
 
     if can_load_bytecache:
       code = self.load_code(bytecache_file, is_compiled=True)
-      filename = bytecache_file
+      real_filename = bytecache_file
     else:
       code = self.load_code(filename, is_compiled=None)
+      real_filename = None
 
-    return PythonModule(context, filename, name, code,
-        parent=load_data['parent'], request=load_data['request'])
+    return PythonModule(context=context, filename=filename, name=name,
+        code=code, parent=load_data['parent'], request=load_data['request'],
+        real_filename=real_filename)
 
+  def preprocess(self, filename, code):
+    for pp in self.preprocessors:
+      code = pp(filename, code)
+    return code
+
+  def load_code(self, filename, is_compiled=None):
+    """
+    Loads a Python code object from a file. If *is_compiled*, it will be
+    treated as a bytecompiled file if it ends with `.pyc`, otherwise it will
+    be loaded as Python source. Note that any syntactical errors might be
+    raised when the file is loaded as source.
+    """
+
+    if is_compiled is None:
+      is_compiled = filename.endswith('.pyc')
+    if is_compiled:
+      with open(filename, 'rb') as fp:
+        if sys.version >= '3.5':
+          importlib._bootstrap_external._validate_bytecode_header(fp.read(12))
+        else:
+          header_size = 12 if sys.version >= '3.3' else 8
+          fp.read(header_size)
+        return marshal.load(fp)
+    else:
+      with open(filename, 'r') as fp:
+        code = self.preprocess(filename, fp.read())
+        return compile(code, filename, 'exec', dont_inherit=True)
+
+  @staticmethod
+  def unpack_require_preprocessor(filename, code):
+    """
+    Finds occurences of `{ member, ... } = require(...)` and replaces them
+    with valid Python syntax.
+    """
+
+    while True:
+      # TODO: This currently does not support nested expressions in the
+      #       require() call.
+      match = re.search('{\s*(?!,)(\w+(?:\s*,\s*\w+)*)\s*}\s*=\s*(require\([^\)]*\))', code)
+      if not match: break
+      assign = '_reqres=' + match.group(2) + ';'
+      for name in match.group(1).split(','):
+        name = name.strip()
+        assign += '{0}=getattr(_reqres, "{0}");'.format(name)
+      assign += 'del _reqres'
+      code = code[:match.start(0)] + assign + code[match.end(0):]
+    return code
 
 class Require(object):
   """
@@ -776,6 +821,10 @@ class Context(object):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
           'but instead a {!r} object'.format(
             type(loader).__name__, type(module).__name__))
+    if module.filename != filename:
+      raise RuntimeError("loaded module's filename does not match the "
+          "filename passed to the loader ({})".format(
+              getattr(loader, "__name__", None) or type(loader).__name__))
 
     if followed_from:
       nodepy_modules = find_nearest_modules_directory(followed_from[0].src)

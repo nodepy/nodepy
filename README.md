@@ -42,8 +42,14 @@ dependencies and then running the `build` script.
 
 __nodepy__
 
-- fix `nodepy.proc_args` to contain `sys.executable` if the nodepy executable
+- Fix `nodepy.proc_args` to contain `sys.executable` if the nodepy executable
   is not an `.exe` on Windows
+- Add `BaseModule.real_filename` as `BaseModule.filename` must always match
+  the filename that was passed into the loader (otherwise `BaseModule.remove()`
+  does not work)
+- Add `PythonLoader.preprocessor` list
+- Add `PythonLoader.unpack_require_preprocessor()` static method
+- Add `require()` unpack syntax by preprocessing loaded source code
 
 __nodepy-pm (PPYM post v0.0.17)__
 
