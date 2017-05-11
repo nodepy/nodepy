@@ -59,8 +59,6 @@ __nodepy-pm (PPYM post v0.0.17)__
 - Fix `env:get_module_dist_info()` replacing hyphens by underscores, as Pip
   does it
 - Better detection of module `.dist-info`
-- Scripts installed by `ppym install` (from the package manifest's `"bin"` key)
-  no longer export a `PYTHONPATH` environment variable
 - To detect the install locations for Node.py modules and scripts, PPYM now
   uses `pip.locations.distutils_scheme()`
 - Import `distlib` from `pip._vendor` if it can't be imported as is
