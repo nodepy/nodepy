@@ -43,13 +43,10 @@ _script = require('./util/script')
 refstring = require('./refstring')
 pathutils = require('./util/pathutils')
 brewfix = require('./brewfix')
-get_module_dist_info = require('./env').get_module_dist_info
-get_directories = require('./env').get_directories
-
-parse_manifest = require('./manifest').parse
-PackageManifest = require('./manifest').PackageManifest
-InvalidPackageManifest = require('./manifest').InvalidPackageManifest
 PackageLifecycle = require('./package-lifecycle')
+{ get_directories, get_module_dist_info } = require('./env')
+{ parse as parse_manifest } = require('./manifest')
+{ PackageManifest, InvalidPackageManifest } = require('./manifest')
 
 PACKAGE_LINK = '.nodepy-link'
 PPYM_INSTALLED_FILES = 'installed-files.txt'

@@ -20,8 +20,7 @@
 
 from nose.tools import *
 
-Version = require('./semver').Version
-Selector = require('./semver').Selector
+{ Version, Selector } = require('./semver')
 
 def test_version():
   assert Version('1').mmp == (1, 0, 0)

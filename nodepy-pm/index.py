@@ -40,10 +40,8 @@ config = require('./lib/config')
 logger = require('./lib/logger')
 _install = require('./lib/install')
 registry = require('./lib/registry')
-is_virtualenv = require('./lib/env').is_virtualenv
-get_module_dist_info = require('./lib/env').get_module_dist_info
-
 PackageLifecycle = require('./lib/package-lifecycle')
+{ is_virtualenv, get_module_dist_info } = require('./lib/env')
 
 
 class Less(object):
