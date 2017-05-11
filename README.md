@@ -1,12 +1,12 @@
 <img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img>
 
-# Node.py
+# nodepy
 
 [![Build Status](https://travis-ci.org/nodepy/nodepy.svg?branch=master)](https://travis-ci.org/nodepy/nodepy)
 [![GitHub version](https://badge.fury.io/gh/nodepy%2Fnodepy.svg)](https://badge.fury.io/gh/nodepy%2Fnodepy)
 [![PyPI version](https://badge.fury.io/py/node.py.svg)](https://badge.fury.io/py/node.py)
 
-Node.py is a layer on top of the Python runtime which allows to load other
+**nodepy** is a layer on top of the Python runtime which allows to load other
 modules the Node.js way, using a [require()][require] function. It has it's own
 [package ecosystem][ppym.org] and [package manager][PPYM]. Of course, standard
 Python modules can still be used and are explicitly supported by [PPYM][] and
@@ -40,12 +40,12 @@ dependencies and then running the `build` script.
 
 ### v0.0.20
 
-__Node.py__
+__nodepy__
 
 - fix `nodepy.proc_args` to contain `sys.executable` if the nodepy executable
   is not an `.exe` on Windows
 
-__Package Manager (post v0.0.17)__
+__nodepy-pm (PPYM post v0.0.17)__
 
 - merged code into Node.py repository (now developed and released alongside
   Node.py)
