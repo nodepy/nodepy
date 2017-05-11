@@ -77,10 +77,6 @@ def get_directories(location, config=_config):
   """
 
   assert location in ('local', 'global', 'root')
-
-  pip_bin_base = os.path.basename(pip.locations.bin_py)
-  pip_lib_base = 'Lib' if os.name == 'nt' else 'lib/python{}.{}'.format(*sys.version_info)
-
   if location == 'local':
     scheme = pip.locations.distutils_scheme('', prefix='nodepy_modules/.pip')
     return {
@@ -88,17 +84,17 @@ def get_directories(location, config=_config):
       'bin': 'nodepy_modules/.bin',
       'pip_prefix': scheme['data'],
       'pip_bin': scheme['scripts'],
-      'pip_lib': [scheme['purelib']]
+      'pip_lib': scheme['purelib']
     }
   else:
     user = (location == 'global')
     scheme = pip.locations.distutils_scheme('', user=user)
     return {
-      'packages': os.path.join(scheme['data'], 'nodepy_modules'),
+      'packages': os.path.dirname(scheme['purelib']),
       'bin': scheme['scripts'],
       'pip_prefix': scheme['data'],
       'pip_bin': scheme['scripts'],
-      'pip_lib': [scheme['purelib']]
+      'pip_lib': scheme['purelib']
     }
 
 
@@ -161,7 +157,7 @@ class Installer:
     self.ignore_installed = False
     if install_location in ('local', 'global'):
       self.script.path.append(self.dirs['pip_bin'])
-      self.script.pythonpath.extend(self.dirs['pip_lib'])
+      self.script.pythonpath.extend([self.dirs['pip_lib']])
     self.installed_python_libs = {}
 
   @contextlib.contextmanager
@@ -173,9 +169,9 @@ class Installer:
     # also find the already installed packages (some setup scripts might import
     # third party modules). Fix for nodepy/ppym#10.
     if self.install_location != 'root':
-      sys.path[:] = self.dirs['pip_lib'] + sys.path
-      pypath = list(map(os.path.abspath, self.dirs['pip_lib'])) + self.dirs['pip_lib']
-      os.environ['PYTHONPATH'] = os.pathsep.join(pypath) + os.pathsep + self._old_pythonpath
+      sys.path[:] = [self.dirs['pip_lib']] + sys.path
+      os.environ['PYTHONPATH'] = os.path.abspath(self.dirs['pip_lib']) \
+          + os.pathsep + self._old_pythonpath
     try:
       yield
     finally:
@@ -374,10 +370,7 @@ class Installer:
 
     if self.install_location in ('local', 'global'):
       if self.pip_use_target_option:
-        # TODO: Ths assumes that the pip_lib argument is always the
-        #       site-packages directory. While this may be true now,
-        #       if we change it later, we surely forget this line here.
-        cmd = ['--target', self.dirs['pip_lib'][-1]]
+        cmd = ['--target', self.dirs['pip_lib']]
       else:
         cmd = ['--prefix', self.dirs['pip_prefix']]
     elif self.install_location == 'root':

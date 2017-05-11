@@ -53,9 +53,11 @@ def brewfix(prefix_dir='', force=False):
 
   if not parser.has_section('install'):
     parser.add_section('install')
+
   parser.set('install', 'prefix', prefix_dir)
   with open(filename, 'w') as fp:
     parser.write(fp)
+
   try:
     yield
   finally:

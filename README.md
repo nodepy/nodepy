@@ -34,6 +34,9 @@ Node.py installed without PPYM, use the `bootstrap.py` script.
   uses `pip.locations.distutils_scheme()`
 - Import `distlib` from `pip._vendor` if it can't be imported as is
 - Add `-v,--verbose` option to `ppym install`
+- Installing Python dependencies with `--root` and `-g,--global` should now
+  be consistent with Pip's default behaviour with the respective installation
+  modes (`pip install` and `pip install --user`)
 
 ### v0.0.17
 
