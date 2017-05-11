@@ -295,7 +295,7 @@ class PythonLoader(object):
       assign = '_reqres=' + match.group(2) + ';'
       for name in match.group(1).split(','):
         name = name.strip()
-        assign += '{0}=getattr(_reqres, "{0}");'.format(name)
+        assign += '{0}=_reqres.{0};'.format(name)
       assign += 'del _reqres'
       code = code[:match.start(0)] + assign + code[match.end(0):]
     return code
