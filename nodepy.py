@@ -290,12 +290,14 @@ class PythonLoader(object):
     while True:
       # TODO: This currently does not support nested expressions in the
       #       require() call.
-      match = re.search('{\s*(?!,)(\w+(?:\s*,\s*\w+)*)\s*,?\s*}\s*=\s*(require\([^\)]*\))', code)
+      match = re.search('{\s*(?!,)(\w+(?:\s+as\s+\w+)?(?:\s*,\s*\w+)*)\s*,?\s*}\s*=\s*(require\([^\)]*\))', code)
       if not match: break
       assign = '_reqres=' + match.group(2) + ';'
       for name in match.group(1).split(','):
-        name = name.strip()
-        assign += '{0}=_reqres.{0};'.format(name)
+        left = name
+        if 'as' in name:
+          name, __, left = name.partition('as')
+        assign += '{0}=_reqres.{1};'.format(left.strip(), name.strip())
       assign += 'del _reqres'
       code = code[:match.start(0)] + assign + code[match.end(0):]
     return code
