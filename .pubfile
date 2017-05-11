@@ -1,4 +1,0 @@
-versionPatterns:
-  "setup.py": "  version = '$VERSION',"
-  "docs/source/index.md": "# Node.py v$VERSION Documentation"
-  "nodepy.py": "__version__ = '$VERSION'"

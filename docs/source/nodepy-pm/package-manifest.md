@@ -1,9 +1,9 @@
-# ppym/lib/manifest
+# nodepy-pm/lib/manifest
 
 Parse package manifests.
 
 ```python
-manifest = require('ppym/lib/manifest')
+manifest = require('nodepy-pm/lib/manifest')
 try:
   m = manifest.parse('package.json')
 except (FileNotFoundError, manifest.InvalidPackageManifest) as exc:
@@ -22,7 +22,7 @@ of the format `@scope/package-name`, or simply `package-name`. Allowed
 characters for the scope and package name are digits, ASCII letters and `-_.`.
 
 ```json
-{ "name": "@ppym/manifest" }
+{ "name": "@scope-name/package-name" }
 ```
 
 ### `version`
@@ -115,8 +115,8 @@ __Todo__
 
 ### `private`
 
-*Optional*. Prevent publication of the package with `ppym publish`. This is used
-for packages that want to take advantage of the PPYM dependency management but
+*Optional*. Prevent publication of the package with `nodepy-pm publish`. This is used
+for packages that want to take advantage of the nodepy-pm dependency management but
 are not actuall supposed to be placed into the public registry. An example
 of this would be a package that generates the documentation of another project.
 
@@ -127,7 +127,7 @@ of this would be a package that generates the documentation of another project.
 ### `dependencies`
 
 *Optional.*: An object that specifies the dependencies of the package.
-All values must be valid `ppym/lib/semver:Selector` syntax, Git URL syntax
+All values must be valid `nodepy-pm/lib/semver:Selector` syntax, Git URL syntax
 of the format `git+<url>[@<ref>]` or relative paths of the format
 `[-e] [./|../]<path>`. Dependencies declared here will be installed
 transitively.
@@ -135,8 +135,8 @@ transitively.
 ```json
 {
   "dependencies": {
-    "ppym": "~0.0.8",
-    "ppym-registry": "~0.0.3",
+    "nodepy-pm": "~0.0.8",
+    "nodepy-pm-registry": "~0.0.3",
     "some-module": "git+https://github.com/someuser/some-module.git@development",
     "local-module": "-e ../local-module"
   }
@@ -146,7 +146,7 @@ transitively.
 ### `dev-dependencies`
 
 *Optional*. Dependencies that are listed here are required only for developing
-a package, thus they will only be installed when using `ppym install` without
+a package, thus they will only be installed when using `nodepy-pm install` without
 additional arguments in the directory where the `package.json` file lives,
 unless `--production` is specified. Also, development dependencies will not be
 installed transitively.
@@ -163,7 +163,7 @@ installed transitively.
 
 *Optional.* Similar to the `dependencies` field, but it specifies actual
 Python modules that the package requires. These modules can be installed
-by [ppym] using [Pip].
+by [nodepy-pm] using [Pip].
 
 ```json
 {
@@ -192,7 +192,7 @@ installed.
 ### `dist`
 
 *Optional*. An object that specifies options for generating an archived
-distribution of the package with `ppym dist`.
+distribution of the package with `nodepy-pm dist`.
 
 ```json
   "dist": {
@@ -209,9 +209,9 @@ Matching patterns include files possibly excluded by `exclude_files`.
 #### `exclude_files`
 
 *Optional.* A list of patterns that match the files to exclude from the
-archive. Note that when installing packages with [ppym], it will add
+archive. Note that when installing packages with [nodepy-pm], it will add
 default exclude patterns to this list. The actual patterns may change
-with versions of ppym. When this document was last updated, ppym added
+with versions of nodepy-pm. When this document was last updated, nodepy-pm added
 the following patterns:
 
 - `.svn/*`
@@ -221,14 +221,7 @@ the following patterns:
 - `*.pyc`
 - `*.pyo`
 - `dist/*`
-- `ppy_modules/`
-
+- `nodepy_modules/`
 
   [Pip]: https://pypi.python.org/pypi/pip
-  [ppym]: https://github.com/ppym/ppym
-
-## Changelog
-
-### v0.0.2
-
-- Added `repository` field
+  [nodepy-pm]: https://github.com/nodepy/nodepy

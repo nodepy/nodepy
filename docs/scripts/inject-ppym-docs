@@ -1,5 +1,0 @@
-#!/bin/bash
-
-echo "Injecting ../ppym/docs into source/ppym ..."
-rm -rf source/ppym
-cp -r ../ppym/docs source/ppym

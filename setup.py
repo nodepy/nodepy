@@ -34,7 +34,7 @@ import sys
 from setuptools.command.develop import develop as _develop
 from setuptools.command.install import install as _install
 
-install_requires = ['localimport>=1.5.1', 'six>=1.10.0']
+install_requires = ['localimport>=1.5.1', 'six>=1.10.0', 'pip>=8.0.0']
 
 if 'develop' in sys.argv:
   name = 'node.py-' + sys.version[:3]
@@ -69,14 +69,14 @@ def readme():
 
 def install_deps():
   """
-  Installs the dependencies of Node.py and PPYM in a separate invokation
-  of Pip. This is necessary so that we can install PPYM after Node.py, because
-  older versions of Pip do not establish a proper dependency installation
-  order.
+  Installs the dependencies of Node.py and package manager in a separate
+  invokation of Pip. This is necessary so that we can install the PM after
+  Node.py, because older versions of Pip do not establish a proper dependency
+  installation order.
   """
 
   cmd = ['install'] + install_requires
-  print('Installing Node.py and PPYM dependencies in a separate context ...')
+  print('Installing Node.py and Node.py-PM dependencies in a separate context ...')
   print("  Command: pip {}".format(' '.join(cmd)))
 
   res = pip.main(cmd)
@@ -85,12 +85,12 @@ def install_deps():
     sys.exit(res)
 
 
-def install_ppym(user, develop=False):
+def install_pm(user, develop=False):
   """
-  Executes the PPYM `bootstrap` module to install PPYM globally.
+  Executes the nodepy-pm `bootstrap` module to install it globally.
   """
 
-  cmd = ['ppym/bootstrap', '--upgrade', '--global' if user else '--root']
+  cmd = ['nodepy-pm/bootstrap', '--upgrade', '--global' if user else '--root']
   if develop:
     cmd.append('--develop')
 
@@ -139,7 +139,7 @@ class develop(_develop):
     install_deps()
     with hook_distlib_scriptmaker():
       _develop.run(self)
-    install_ppym(develop=True, user=self.user)
+    install_pm(develop=True, user=self.user)
 
 
 class install(_install):
@@ -147,7 +147,7 @@ class install(_install):
     install_deps()
     with hook_distlib_scriptmaker():
       _install.run(self)
-    install_ppym(user=self.user)
+    install_pm(user=self.user)
 
 
 setuptools.setup(
@@ -156,7 +156,7 @@ setuptools.setup(
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
-  description = 'Node.py Python runtime',
+  description = 'the Node.py python runtime and Node.py package manager',
   long_description = readme(),
   url = 'https://github.com/nodepy/nodepy',
   py_modules = ['nodepy'],
@@ -166,9 +166,8 @@ setuptools.setup(
     # stripping the .py suffix.
     # Note: 'node.py' is deprecated for 'nodepy'.
     'console_scripts': [
-      'node{}py{} = nodepy:main'.format(d, v)
+      'nodepy{} = nodepy:main'.format(v)
       for v in ('', sys.version[0], sys.version[:3])
-      for d in ('', '.')
     ],
   },
   cmdclass = {

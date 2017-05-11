@@ -469,10 +469,12 @@ class Installer:
 
     # Create scripts for the 'bin' field in the package manifest.
     for script_name, filename in manifest.bin.items():
-      if script_name.endswith('${py}'):
-        script_name = script_name[:-5]
-        script_names = [script_name, script_name + sys.version[0],
-            script_name + sys.version[:3]]
+      if '${py}' in script_name:
+        script_names = [
+            script_name.replace('${py}', ''),
+            script_name.replace('${py}', sys.version[0]),
+            script_name.replace('${py}', sys.version[:3])
+        ]
       else:
         script_names = [script_name]
 

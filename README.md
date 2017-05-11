@@ -40,8 +40,38 @@ dependencies and then running the `build` script.
 
 ### v0.0.20
 
+__Node.py__
+
 - fix `nodepy.proc_args` to contain `sys.executable` if the nodepy executable
   is not an `.exe` on Windows
+
+__Package Manager (post v0.0.17)__
+
+- merged code into Node.py repository (now developed and released alongside
+  Node.py)
+- renamed to **nodepy-pm**
+- Fix #9 (partially): Pip install fails with FileNotFoundError: installed-files.txt
+  -- added `lib/brewfix.py` which temporarily (over)writes `~/.pydistutils.cfg`,
+  only fixes `--user` installs of Node.py (and installs in Virtualenv still
+  work flawlessly, too)
+- Fix `ppym install --save` saving version as `^VERSION` which is wrong,
+  now uses `~VERSION`
+- Fix `env:get_module_dist_info()` replacing hyphens by underscores, as Pip
+  does it
+- Better detection of module `.dist-info`
+- Scripts installed by `ppym install` (from the package manifest's `"bin"` key)
+  no longer export a `PYTHONPATH` environment variable
+- To detect the install locations for Node.py modules and scripts, PPYM now
+  uses `pip.locations.distutils_scheme()`
+- Import `distlib` from `pip._vendor` if it can't be imported as is
+- Add `-v,--verbose` option to `ppym install`
+- Installing Python dependencies with `--root` and `-g,--global` should now
+  be consistent with Pip's default behaviour with the respective installation
+  modes (`pip install` and `pip install --user`)
+- Configuration option `prefix` is no longer used, (root/global) Node.py
+  modules are now installed nearby Python's `site-packages` and Scripts
+  are placed into Python's script directory
+- Development has been merged into the Node.py repository itself
 
 ### v0.0.19
 

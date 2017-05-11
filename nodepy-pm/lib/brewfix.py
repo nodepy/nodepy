@@ -21,7 +21,7 @@
 This module provides a fix for brewed Python installations on macOS that,
 by default, have the install "prefix" option set to a path in the users
 Library directory. This option prevents successful Pip installations with
-PPYM.
+NPPM.
 
 The fix will temporary set the install prefix option to an empty string in
 the `~/.pydistutils.cfg` file, and then undo that change.

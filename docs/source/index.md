@@ -1,6 +1,8 @@
 <img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img>
 
-# Node.py v0.0.19 Documentation
+# Node.py Documentation
+
+**Version: v0.0.19**
 
 ```
 usage: nodepy [-h] [-d] [-v] [-c EXPR] [--current-dir DIR] [--version]
@@ -10,14 +12,13 @@ usage: nodepy [-h] [-d] [-v] [-c EXPR] [--current-dir DIR] [--version]
 
 Node.py is a layer on top of the Python runtime which allows to load other
 modules the Node.js way, using a [require()][require] function. It has it's own
-[package ecosystem][ppym.org] and [package manager][PPYM]. Of course, standard
-Python modules can still be used and are explicitly supported by [PPYM][] and
-the [package manifest][].
+[package ecosystem][ppym.org] and package-manager: **nodepy-pm**. Of course, standard
+Python modules can still be used and are explicitly supported by the package
+manager.
 
   [require]: require
-  [ppym]: https://github.com/nodepy/ppym
   [ppym.org]: https://ppym.org
-  [package manifest]: ppym/package-manifest
+  [package manifest]: nodepy-pm/package-manifest
 
 __Synopsis__
 

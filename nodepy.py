@@ -533,7 +533,7 @@ class Context(object):
     # The main module. Will be set by #load_module().
     self.main_module = None
 
-    # Localimport context for Python modules installed via Pip through PPYM.
+    # Localimport context for Python modules installed via Pip through nodepy-pm.
     # Find the location of where Pip modules would be installed into the Node.py
     # modules directory and add it to the importer.
     nearest_modules = find_nearest_modules_directory(current_dir)

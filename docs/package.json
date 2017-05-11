@@ -5,12 +5,10 @@
   "scripts": {
     "build": "!mkdocs build",
     "serve": "!mkdocs serve",
-    "gh-deploy": "!mkdocs gh-deploy",
-    "pre-script": "!scripts/inject-ppym-docs"
+    "gh-deploy": "!mkdocs gh-deploy"
   },
   "engines": {
-    "nodepy": ">=0.0.10",
-    "ppym": ">=0.0.9"
+    "nodepy": ">=0.0.19"
   },
   "python-dependencies": {
     "mkdocs": ">=0.16.1",

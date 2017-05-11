@@ -1,5 +1,6 @@
 .env[23]
-dist
 *.egg-info
 *.py[oc]
 *.rst
+dist/
+nodepy_modules/
