@@ -418,7 +418,7 @@ class Installer:
     sure that the respective modules can be found.
     """
 
-    if self.install_location not in ('local',):
+    if self.install_location not in ('local', 'global'):
       return
 
     if os.path.isdir(self.dirs['pip_bin']):
