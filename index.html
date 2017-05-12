@@ -138,7 +138,7 @@ package infrastructure similar to <a href="https://www.npmjs.com/">npm</a>, re-u
 modules from <a href="https://pypi.python.org/pypi">PyPI</a> is highly encouraged by the package manager, <strong>nodepy-pm</strong>,
 which is automatically installed with nodepy.</p>
 <p>A usage example to whet your appetite:</p>
-<div class="codehilite"><pre><span></span><span class="err">$</span> <span class="n">nodepy</span><span class="o">-</span><span class="n">pm</span> <span class="n">install</span> <span class="n">py</span><span class="o">/</span><span class="n">flask</span> <span class="n">werkzeug</span><span class="o">-</span><span class="n">reloader</span><span class="o">-</span><span class="n">patch</span>
+<div class="codehilite"><pre><span></span><span class="err">$</span> <span class="n">nodepy</span><span class="o">-</span><span class="n">pm</span> <span class="n">install</span> <span class="o">--</span><span class="n">save</span> <span class="n">py</span><span class="o">/</span><span class="n">flask</span> <span class="n">werkzeug</span><span class="o">-</span><span class="n">reloader</span><span class="o">-</span><span class="n">patch</span> 
 <span class="err">$</span> <span class="n">cat</span> <span class="n">index</span><span class="o">.</span><span class="n">py</span>
 <span class="kn">import</span> <span class="nn">flask</span>
 <span class="n">require</span><span class="p">(</span><span class="s1">&#39;werkzeug-reloader-patch&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
