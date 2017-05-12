@@ -63,6 +63,7 @@ def main(args=None):
   for key, value in package['python-dependencies'].items():
     cmd.append(key + value)
 
+  print('$ pip install', ' '.join(cmd))
   with brewfix():
     res = pip.commands.InstallCommand().main(cmd)
   if res != 0:
