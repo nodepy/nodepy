@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+
+	<title>CLI - Node.py Documentation</title>
+
+        <link href="../../css/bootstrap-3.0.3.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
+        <link href="../../css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">Node.py Documentation</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../../changelog/">Changelog</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../../troubleshooting/">Troubleshooting</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../../nodepy/">nodepy</a>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">nodepy-pm <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="../manifest/">package.json</a>
+                        </li>
+                    
+                        <li class="active">
+                            <a href="./">CLI</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li >
+                    <a rel="next" href="../manifest/">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li class="disabled">
+                    <a rel="prev" >
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#nodepy-pm-command-line-interface">nodepy-pm -- Command-line Interface</a></li>
+        
+            <li><a href="#bin">bin</a></li>
+        
+            <li><a href="#dist">dist</a></li>
+        
+            <li><a href="#init">init</a></li>
+        
+            <li><a href="#install">install</a></li>
+        
+            <li><a href="#publish">publish</a></li>
+        
+            <li><a href="#register">register</a></li>
+        
+            <li><a href="#run">run</a></li>
+        
+            <li><a href="#uninstall">uninstall</a></li>
+        
+            <li><a href="#upload">upload</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="nodepy-pm-command-line-interface"><code>nodepy-pm</code> &ndash; Command-line Interface</h1>
+<h2 id="bin">bin</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm bin [--global] [--pip]
+</pre></div>
+
+
+<p>Prints the local or global binary directory that <strong>nodepy-pm</strong> installs to. If
+you pass the <code>--pip</code> switch, the Pip binary directory will be printed instead.</p>
+<p>Note that <a href="../install"><code>nodepy-pm install</code></a> will automatically create wrappers in
+the Node.py binary directory that reference respective commands in the Pip
+binary directory, thus if you have Python dependencies that expose scripts,
+you only need to add the Node.py binary directory to your path.</p>
+<p>The local binary directory is <code>nodepy_modules/.bin</code>.</p>
+<hr />
+<h2 id="dist">dist</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm dist
+</pre></div>
+
+
+<p>Create a <code>.tar.gz</code> archive from your package and save it into the <code>dist/</code>
+directory. If you want to publish the package on the registry, use the
+<a href="../publish"><code>nodepy-pm publish</code></a> command.</p>
+<hr />
+<h2 id="init">init</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm init
+</pre></div>
+
+
+<p>Initialize a <code>package.json</code> file in the current working directory.</p>
+<hr />
+<h2 id="install">install</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm install [-g,--global] [--root] [-e,--develop] [-P,--packagedir]
+             [-I,--ignore-installed]
+             [--pip-separate-process] [--dev/--production] [--save]
+             [--save-dev] [--recursive] [PACKAGES]
+</pre></div>
+
+
+<p>Installs one or more Node.py packages from the package registry, package
+distribution files (see <a href="../dist"><code>nodepy-pm dist</code></a>) or a directory. If no PACKAGES
+are specified, the dependencies of the current package are installed. In that
+case, the <code>--dev</code> switch is enabled by default, otherwise <code>--production</code> is
+the default.</p>
+<p>The <em>PACKAGES</em> argument, if specified, can be of the following type:</p>
+<ul>
+<li>A package name and version selector of the format <code>&lt;package&gt;[@&lt;version&gt;]</code>,
+  in which case the package will be looked up and installed from the package
+  registry.</li>
+<li>An existing directory that contains a <code>package.json</code> to install from.</li>
+<li>A Git URL in the format <code>git+&lt;url&gt;[@&lt;ref&gt;]</code> to install the package from.</li>
+<li>A Python package requirement in the format <code>py/&lt;req&gt;</code></li>
+</ul>
+<p>With <code>--dev</code> enabled, the development dependencies of the packages are
+installed additionally to their normal runtime dependencies. Note that
+development dependencies are never installed transitively.</p>
+<p>Using <code>--global</code> will install the PACKAGES into the user-global modules directory
+and creates scripts in the global binaries directory. Note that &ldquo;global&rdquo; always
+refers to the &ldquo;User-space global&rdquo;. Global installations are only supposed to
+be used for command-line tools. Node.py will not look to resolve <code>require()</code>s
+in the global modules directory for your local project.</p>
+<p>The <code>--root</code> option will install the package into the global Python prefix and
+should only be used when a command-line utility should be installed for all
+users of a system.</p>
+<blockquote>
+<p>Note: Inside a virtual environment, <code>-g,--global</code> will be promoted to <code>--root</code>.</p>
+</blockquote>
+<p>The <code>--develop</code> flag can only be used when installing a package from a
+directory. Using this flag will install the package in development mode, which
+means that a <code>.nodepy-link</code> file will be created instead of the package
+contents being copied. Node.py will read this link and continue resolving
+<code>require()</code>s in the target directory (which is your package that you installed
+with <code>--develop</code>).</p>
+<p>The <code>-I,--ignore-installed</code> option will be passed to <code>pip install</code>.</p>
+<p>The <code>-P,--packagedir</code> option can be used to change the directory from which
+the <code>package.json</code> will be read (in case of an installation without packages
+specified on the command-line) or written to (in case of <code>--save</code> and
+<code>--save-dev</code>).</p>
+<p>Using the <code>--save</code> or <code>--save-dev</code> options requires a <code>package.json</code> in the
+current working directory to which the new dependencies can be added. Note
+also that the package manifest will be re-written with a strict 2-space
+indentation.</p>
+<p>The <code>--recursive</code> option can be used to make sure dependencies of already
+satisfied dependencies are satisfied as well. This can be useful if you
+uninstall a dependencies of another package and want to re-install them
+without remembering them all.</p>
+<hr />
+<h2 id="publish">publish</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm publish [-f,--force] [-u,--user] [-p,--password]
+</pre></div>
+
+
+<p>A combination of <a href="../dist"><code>nodepy-pm dist</code></a> and <a href="../upload"><code>nodepy-pm upload</code></a> that also
+invokes the <code>pre-publish</code> and <code>post-publish</code> <a href="../run">scripts</a>.</p>
+<p><strong>Requirements</strong></p>
+<p>In order to publish a package to <a href="https://ppym.org">ppym.org</a>, it must
+meet the following requirements:</p>
+<ul>
+<li>The <code>name</code> of the package must be scoped with your username (ie. <code>@username/packagename</code>)</li>
+<li>The <code>license</code> field in <code>package.json</code> must not be empty</li>
+</ul>
+<p>After a package version has been uploaded to the registry, arbitrary files
+may be uploaded to that version as well. This is intended to be used for
+additional files that may be downloaded by the actual package when necessary.
+Note that https://ppym.org currently has a size upload limit of 2MiB.</p>
+<p>It is important that you read and understand the <a href="https://ppym.org/terms">PPYM Registry Terms of Use</a>
+before you publish packages and upload content to the registry.</p>
+<hr />
+<h2 id="register">register</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm register [--agree-tos] [--save]
+</pre></div>
+
+
+<p>Register a new account on the package registry. Note that you can change the
+URL to the registry being used in the <code>~/.ppymrc</code> file. By default, it will
+point to https://ppym.org.</p>
+<div class="codehilite"><pre><span></span>$ cat ~/.ppymrc
+<span class="nv">registry</span><span class="o">=</span>http://localhost:8000
+</pre></div>
+
+
+<hr />
+<h2 id="run">run</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm run SCRIPT [ARGS]
+</pre></div>
+
+
+<p>Runs the SCRIPT that is specified in the current package&rsquo;s manifest. Note that
+some scripts have special meanings and will be invoked automatically by other
+actions of the package manager (eg. <code>post-install</code> or <code>pre-publish</code>).</p>
+<p><strong>Example</strong></p>
+<div class="codehilite"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;scripts&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;build-docs&quot;</span><span class="p">:</span> <span class="s2">&quot;!mkdocs build&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;pre-publish&quot;</span><span class="p">:</span> <span class="s2">&quot;scripts/pre-publish.py&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<div class="codehilite"><pre><span></span>$ nodepy-pm run build-docs
+</pre></div>
+
+
+<hr />
+<h2 id="uninstall">uninstall</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm uninstall [-g,--global] PACKAGES
+</pre></div>
+
+
+<p>Uninstalls one or more previously installed PACKAGES.</p>
+<hr />
+<h2 id="upload">upload</h2>
+<div class="codehilite"><pre><span></span>nodepy-pm upload [-f, --force] [-u, --user] [-p, --password] FILENAME
+</pre></div>
+
+
+<p>For the current version that is specified in the <code>package.json</code> of your
+project, uploads the specified FILENAME to the package registry. If the
+version and/or package does not exist at the time of the upload, the file
+will be rejected unless you upload the distribution archive created with
+<a href="../dist"><code>nodepy-pm dist</code></a> first. If you upload the distribution archive, the
+package and package version will be created and assigned to your account.</p>
+<blockquote>
+<p><strong>Note</strong>: You should prefer to use the <a href="../publish"><code>nodepy-pm publish</code></a> command
+to publish your package as it is less error prone and will also invoke
+the <code>pre-publish</code> script if you have one specified in your package manifest.</p>
+</blockquote>
+<p>Read about the <a href="../publish#requirements">Requirements</a> to publish a package.</p></div>
+        </div>
+
+	<footer class="col-md-12">
+		<hr>
+		
+		<p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+	</footer>
+
+
+        <script src="../../js/jquery-1.10.2.min.js"></script>
+        <script src="../../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
+        <script src="../../js/base.js"></script>
+    </body>
+</html>

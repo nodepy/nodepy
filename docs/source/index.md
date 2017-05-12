@@ -12,6 +12,16 @@ package infrastructure similar to [npm], re-using existing standard Python
 modules from [PyPI] is highly encouraged by the package manager, **nodepy-pm**,
 which is automatically installed with nodepy.
 
+A usage example to whet your appetite:
+
+    $ nodepy-pm install --save py/flask werkzeug-reloader-patch 
+    $ cat index.py
+    import flask
+    require('werkzeug-reloader-patch').install()
+    app = require('./app')
+    app.run()
+    $ nodepy .
+
   [Node.js]: https://nodejs.org/
   [npm]: https://www.npmjs.com/
   [PyPI]: https://pypi.python.org/pypi

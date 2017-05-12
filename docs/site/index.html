@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="./img/favicon.ico">
+
+	<title>Node.py Documentation</title>
+
+        <link href="./css/bootstrap-3.0.3.min.css" rel="stylesheet">
+        <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="./css/highlight.css">
+        <link href="./css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href=".">Node.py Documentation</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li class="active">
+                    <a href=".">Home</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="changelog/">Changelog</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="troubleshooting/">Troubleshooting</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="nodepy/">nodepy</a>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">nodepy-pm <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="nodepy-pm/manifest/">package.json</a>
+                        </li>
+                    
+                        <li >
+                            <a href="nodepy-pm/cli/">CLI</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li class="disabled">
+                    <a rel="next" >
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="changelog/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#nodepy">nodepy</a></li>
+        
+            <li><a href="#requirements">Requirements</a></li>
+        
+            <li><a href="#installation">Installation</a></li>
+        
+            <li><a href="#additional-links">Additional Links</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<p><img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img></p>
+<h1 id="nodepy">nodepy</h1>
+<p><a href="https://travis-ci.org/nodepy/nodepy"><img alt="Build Status" src="https://travis-ci.org/nodepy/nodepy.svg?branch=master" /></a>
+<a href="https://badge.fury.io/gh/nodepy%2Fnodepy"><img alt="GitHub version" src="https://badge.fury.io/gh/nodepy%2Fnodepy.svg" /></a>
+<a href="https://badge.fury.io/py/node.py"><img alt="PyPI version" src="https://badge.fury.io/py/node.py.svg" /></a></p>
+<p><strong>nodepy</strong> is a CPython platform heavily inspired by <a href="https://nodejs.org/">Node.js</a> for building
+reproducible and easily distributable applications. While it provides its own
+package infrastructure similar to <a href="https://www.npmjs.com/">npm</a>, re-using existing standard Python
+modules from <a href="https://pypi.python.org/pypi">PyPI</a> is highly encouraged by the package manager, <strong>nodepy-pm</strong>,
+which is automatically installed with nodepy.</p>
+<p>A usage example to whet your appetite:</p>
+<div class="codehilite"><pre><span></span><span class="err">$</span> <span class="n">nodepy</span><span class="o">-</span><span class="n">pm</span> <span class="n">install</span> <span class="n">py</span><span class="o">/</span><span class="n">flask</span> <span class="n">werkzeug</span><span class="o">-</span><span class="n">reloader</span><span class="o">-</span><span class="n">patch</span>
+<span class="err">$</span> <span class="n">cat</span> <span class="n">index</span><span class="o">.</span><span class="n">py</span>
+<span class="kn">import</span> <span class="nn">flask</span>
+<span class="n">require</span><span class="p">(</span><span class="s1">&#39;werkzeug-reloader-patch&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">install</span><span class="p">()</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s1">&#39;./app&#39;</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="err">$</span> <span class="n">nodepy</span> <span class="o">.</span>
+</pre></div>
+
+
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Python 2.7.x, 3.3+</li>
+<li>Pip 8.0.0+</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<div class="codehilite"><pre><span></span>pip install node.py
+</pre></div>
+
+
+<h2 id="additional-links">Additional Links</h2>
+<ul>
+<li><a href="https://nodepy.github.io/nodepy">Documentation</a></li>
+<li><a href="docs/source/changelog.md">Changelog</a></li>
+</ul></div>
+        </div>
+
+	<footer class="col-md-12">
+		<hr>
+		
+		<p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+	</footer>
+
+
+        <script src="./js/jquery-1.10.2.min.js"></script>
+        <script src="./js/bootstrap-3.0.3.min.js"></script>
+        <script src="./js/highlight.pack.js"></script>
+        <script src="./js/base.js"></script>
+    </body>
+</html>
