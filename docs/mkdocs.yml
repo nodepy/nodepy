@@ -1,13 +1,14 @@
 site_name: 'Node.py Documentation'
 docs_dir: 'source'
-theme: 'material'
-extra:
-  palette:
-    primary: 'blue grey'
-    accent: 'indigo'
-  logo: 'img/nodepy.png'
-  social:
-  - type: 'github'
-    link: 'https://github.com/NiklasRosenstein'
+theme: 'bootstrap'
 markdown_extensions:
 - codehilite
+- smarty
+pages:
+- Home: index.md
+- Changelog: changelog.md
+- Troubleshooting: troubleshooting.md
+- nodepy: nodepy.md
+- nodepy-pm:
+  - package.json: nodepy-pm/manifest.md
+  - CLI: nodepy-pm/cli.md

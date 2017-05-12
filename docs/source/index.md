@@ -1,43 +1,35 @@
 <img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img>
 
-# Node.py Documentation
+# nodepy
 
-**Version: v0.0.19**
+[![Build Status](https://travis-ci.org/nodepy/nodepy.svg?branch=master)](https://travis-ci.org/nodepy/nodepy)
+[![GitHub version](https://badge.fury.io/gh/nodepy%2Fnodepy.svg)](https://badge.fury.io/gh/nodepy%2Fnodepy)
+[![PyPI version](https://badge.fury.io/py/node.py.svg)](https://badge.fury.io/py/node.py)
 
-```
-usage: nodepy [-h] [-d] [-v] [-c EXPR] [--current-dir DIR] [--version]
-              [--keep-arg0] [-P PRELOAD] [--pymain]
-              ...
-```
+**nodepy** is a CPython platform heavily inspired by [Node.js] for building
+reproducible and easily distributable applications. While it provides its own
+package infrastructure similar to [npm], re-using existing standard Python
+modules from [PyPI] is highly encouraged by the package manager, **nodepy-pm**,
+which is automatically installed with nodepy.
 
-Node.py is a layer on top of the Python runtime which allows to load other
-modules the Node.js way, using a [require()][require] function. It has it's own
-[package ecosystem][ppym.org] and package-manager: **nodepy-pm**. Of course, standard
-Python modules can still be used and are explicitly supported by the package
-manager.
-
-  [require]: require
+  [Node.js]: https://nodejs.org/
+  [npm]: https://www.npmjs.com/
+  [PyPI]: https://pypi.python.org/pypi
+  [Pip]: https://pypi.python.org/pypi/pip
   [ppym.org]: https://ppym.org
-  [package manifest]: nodepy-pm/package-manifest
+  [Documentation]: https://nodepy.github.io/nodepy
+  [Changelog]: docs/source/changelog.md
 
-__Synopsis__
+## Requirements
 
-    nodepy                (interactive console)
-    nodepy -c EXPR [...]  (evaluate EXPR)
-    nodepy REQUEST [...]  (resolve REQUEST and execute it)
+- Python 2.7.x, 3.3+
+- Pip 8.0.0+
 
-__Positional Arguments__
+## Installation
 
-    arguments
+    pip install node.py
 
-__Optional Arguments__
+## Additional Links
 
-    -h, --help            show this help message and exit
-    -d, --debug           Enter the interactive debugger when an exception would cause the application to exit.
-    -v, --verbose         Be verbose about what's happening in the Node.py context.
-    -c EXPR, --exec EXPR  Evaluate a Python expression.
-    --current-dir DIR     Change where the initial request will be resolved in.
-    --version             Print the Node.py version and exit.
-    --keep-arg0           Do not overwrite sys.argv[0] when executing a file.
-    -P PRELOAD, --preload PRELOAD
-    --pymain
+- [Documentation]
+- [Changelog]

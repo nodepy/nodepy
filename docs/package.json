@@ -11,8 +11,9 @@
     "nodepy": ">=0.0.19"
   },
   "python-dependencies": {
+    "Pygments": ">=2.2.0",
     "mkdocs": ">=0.16.1",
-    "mkdocs-material": ">=1.2.0",
-    "Pygments": ""
+    "mkdocs-bootstrap": ">=0.1.1",
+    "setuptools": ">=34.3.3"
   }
 }
