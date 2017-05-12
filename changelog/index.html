@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>Changelog - Node.py Documentation</title>
+
+        <link href="../css/bootstrap-3.0.3.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">Node.py Documentation</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li class="active">
+                    <a href="./">Changelog</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../troubleshooting/">Troubleshooting</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../nodepy/">nodepy</a>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">nodepy-pm <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="../nodepy-pm/manifest/">package.json</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../nodepy-pm/cli/">CLI</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li >
+                    <a rel="next" href="..">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../troubleshooting/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#changelog">Changelog</a></li>
+        
+            <li><a href="#v0020">v0.0.20</a></li>
+        
+            <li><a href="#v0019">v0.0.19</a></li>
+        
+            <li><a href="#v0018">v0.0.18</a></li>
+        
+            <li><a href="#v0017">v0.0.17</a></li>
+        
+            <li><a href="#v0016">v0.0.16</a></li>
+        
+            <li><a href="#v0015">v0.0.15</a></li>
+        
+            <li><a href="#v0014">v0.0.14</a></li>
+        
+            <li><a href="#v0013">v0.0.13</a></li>
+        
+            <li><a href="#v0012">v0.0.12</a></li>
+        
+            <li><a href="#v0011">v0.0.11</a></li>
+        
+            <li><a href="#v0010">v0.0.10</a></li>
+        
+            <li><a href="#v009">v0.0.9</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="changelog">Changelog</h1>
+<h3 id="v0020">v0.0.20</h3>
+<p><strong>nodepy</strong></p>
+<ul>
+<li>Fix <code>nodepy.proc_args</code> to contain <code>sys.executable</code> if the nodepy executable
+  is not an <code>.exe</code> on Windows</li>
+<li>Add <code>BaseModule.real_filename</code> as <code>BaseModule.filename</code> must always match
+  the filename that was passed into the loader (otherwise <code>BaseModule.remove()</code>
+  does not work)</li>
+<li>Add <code>PythonLoader.preprocessor</code> list</li>
+<li>Add <code>PythonLoader.unpack_require_preprocessor()</code> static method</li>
+<li>Add <code>require()</code> unpack syntax by preprocessing loaded source code</li>
+</ul>
+<p><strong>nodepy-pm (PPYM post v0.0.17)</strong></p>
+<ul>
+<li>merged code into Node.py repository (now developed and released alongside
+  Node.py)</li>
+<li>renamed to <strong>nodepy-pm</strong></li>
+<li>Fix #9 (partially): Pip install fails with FileNotFoundError: installed-files.txt
+  &ndash; added <code>lib/brewfix.py</code> which temporarily (over)writes <code>~/.pydistutils.cfg</code>,
+  only fixes <code>--user</code> installs of Node.py (and installs in Virtualenv still
+  work flawlessly, too)</li>
+<li>Fix <code>ppym install --save</code> saving version as <code>^VERSION</code> which is wrong,
+  now uses <code>~VERSION</code></li>
+<li>Fix <code>env:get_module_dist_info()</code> replacing hyphens by underscores, as Pip
+  does it</li>
+<li>Better detection of module <code>.dist-info</code></li>
+<li>To detect the install locations for Node.py modules and scripts, PPYM now
+  uses <code>pip.locations.distutils_scheme()</code></li>
+<li>Import <code>distlib</code> from <code>pip._vendor</code> if it can&rsquo;t be imported as is</li>
+<li>Add <code>-v,--verbose</code> option to <code>ppym install</code></li>
+<li>Installing Python dependencies with <code>--root</code> and <code>-g,--global</code> should now
+  be consistent with Pip&rsquo;s default behaviour with the respective installation
+  modes (<code>pip install</code> and <code>pip install --user</code>)</li>
+<li>Configuration option <code>prefix</code> is no longer used, (root/global) Node.py
+  modules are now installed nearby Python&rsquo;s <code>site-packages</code> and Scripts
+  are placed into Python&rsquo;s script directory</li>
+<li>Development has been merged into the Node.py repository itself</li>
+</ul>
+<h3 id="v0019">v0.0.19</h3>
+<ul>
+<li>deprecate <code>node.py</code> program name for <code>nodepy</code></li>
+<li>on develop installs, use <code>node.py-X.Y</code> name for <code>setup()</code> where <code>X.Y</code> is the
+  Python major and minor version number, to avoid conflicts when installing to
+  multiple installations</li>
+<li>add <code>Require.PY2</code> and <code>Require.PY3</code></li>
+<li>add <code>require.symbols(request, symbols=None)</code> to selectively import symbols
+  from another module</li>
+<li>fix <code>-c</code> argument</li>
+<li>when a <code>nodepy_modules/</code> directory is close to a Node.py module, not only
+  Node.py dependencies will be searched in this directory also Python modules
+  can be found in it as well (from the <code>.pip</code> directory). Note that unlike for
+  Node.py modules, the farthest <code>nodepy_modules/.pip</code> directory takes precedence
+  when importing a Python module and that they are not unique for the scope
+  of that module&rsquo;s nearest <code>nodepy_modules/</code> directory, and instead will be
+  available globally even after the Node.py modules was loaded.</li>
+<li>add <code>nodepy.proc_args</code> and <code>nodepy.executable</code> data members</li>
+<li>add <code>require.subprocess()</code> function</li>
+<li>add <code>require.subprocess_args()</code> function</li>
+<li>Fix #20: py_compile causes PermissionError when file is read from an
+  unwritable location</li>
+<li>add <code>-L,--loader</code> argument to <code>nodepy</code> command-line</li>
+<li>add <code>require(loader=None)</code> argument</li>
+<li><code>nodepy</code> interactive banner now shows the Python maxsize (usually 32 or 64)</li>
+<li>add <code>BaseModule.remove()</code> method</li>
+<li>fix #19: A module that fails to execute must be automatically cleared from
+  the module cache again</li>
+<li>upgrade to PPYM v0.0.17</li>
+</ul>
+<h3 id="v0018">v0.0.18</h3>
+<ul>
+<li>Hotfix for bundled PPYM (now in version v0.0.16) &ndash; fixes installation
+  into Python root directory</li>
+</ul>
+<h3 id="v0017">v0.0.17</h3>
+<ul>
+<li>rename <code>InteractiveSessionModule</code> to <code>InitModule</code></li>
+<li>add <code>-P,--preload</code> option</li>
+<li>add <code>nodepy.get_python_library_path()</code></li>
+<li>add <code>doraise=True</code> to <code>py_compile.compile()</code> call</li>
+<li>add <code>--pymain</code> option</li>
+<li>Fix #21: Bug with Click and Py2: invalid arguments used for argument parsing
+  &ndash; by importing <code>click</code> before altering <code>sys.argv</code> if possible</li>
+<li>add <code>require(into)</code> parameter</li>
+<li>upgrade to PPYM v0.0.15</li>
+</ul>
+<h3 id="v0016">v0.0.16</h3>
+<ul>
+<li>fix <code>require('.')</code> and <code>require('..')</code> being resolved in the PATH rather
+  then relative to the current directory</li>
+<li>add <code>BaseModule.parent</code> and <code>BaseModule.request</code></li>
+<li>add <code>Context.event_handlers</code> and <code>Context.send_event()</code></li>
+<li>events <code>load</code>, <code>require</code> and <code>enter</code> are now sent via <code>Context.event_handlers</code></li>
+<li>add <code>Require.cache</code></li>
+<li>add <code>'__init__'</code> to <code>Context.index_files</code>, <code>'index'</code> might get deprecated
+  in the future</li>
+</ul>
+<h3 id="v0015">v0.0.15</h3>
+<ul>
+<li>fix interactive Node.py session (NameError variable <code>code</code>)</li>
+<li>now install multiple versions of the <code>node.py</code> command for the Python
+  version, eg. <code>node.py3</code> and <code>node.py3.5</code> for Python 3.5</li>
+<li>fix #17: Requiring another package from a develop install does not resolve
+  in the original installation directory</li>
+<li>add <code>Context.resolve(followed_from)</code> and <code>Context.load_module(followed_from)</code></li>
+<li>add <code>Context.resolve_and_load()</code> which automatically adds an element to
+  <code>Require.path</code> for package links</li>
+<li>add <code>Require.path</code></li>
+<li>add <code>BaseModule.require</code></li>
+<li>remove <code>UnknownModuleTypeError</code> for now, <code>Context.load_module()</code> now raises
+  a <code>ValueError</code> if no loader could be determined</li>
+<li>add <code>Context(bare=False)</code> parameter</li>
+<li>rename <code>NodepyModule</code> to <code>PythonModule</code></li>
+<li>remove <code>NodepyByteModule</code></li>
+<li>add <code>PythonModule(code)</code> parameter</li>
+<li>add <code>get_python_library_base()</code></li>
+<li>replace <code>_py_loader()</code> function with <code>PythonLoader</code> class</li>
+<li>the <code>PythonLoader</code> class now writes a bytecache from the source file if
+  <code>PYTHONDONTWRITEBYTECODE</code> is not set</li>
+</ul>
+<h3 id="v0014">v0.0.14</h3>
+<ul>
+<li>add nice string representation of <code>ResolveError</code></li>
+<li>Python modules loaded with <code>require()</code> no longer inherit Node.py&rsquo;s future flags</li>
+<li>upgrade PPYM to v0.0.13</li>
+</ul>
+<h3 id="v0013">v0.0.13</h3>
+<ul>
+<li><code>setup.py</code> installs PPYM into user directory if Node.py is installed
+  into user directory</li>
+<li>add <code>--keep-arg0</code> argument to <code>node.py</code>, which is used when PPYM installs
+  a command-line script</li>
+<li><code>Context.load_module()</code> now accepts an explicit <code>loader</code> argument</li>
+<li>add <code>Context.get_extension()</code></li>
+<li>add <code>Context.current_modules</code></li>
+<li>always add local <code>nodepy_modules/</code> directory to <code>Context.path</code></li>
+<li>add <code>Require.hide_main()</code></li>
+<li><code>exports</code> argument to <code>Require.__call__()</code></li>
+<li>add <code>Context.register_index_file()</code></li>
+</ul>
+<h3 id="v0012">v0.0.12</h3>
+<ul>
+<li>remove <code>nodepy.Directories</code> class again, we only need to compute the
+  local <code>nodepy_modules/.pip</code> library directory</li>
+<li>entering <code>Context</code> no longer adds to <code>PATH</code></li>
+<li>upgrade bundled PPYM to v0.0.10</li>
+<li><code>setup.py</code> no longer installs PPYM dependencies</li>
+<li>12a: Re-add <code>install_deps()</code> to <code>setup.py</code>, we need to make sure our
+  dependencies are installed before PPYM can be bootstrapped</li>
+</ul>
+<h3 id="v0011">v0.0.11</h3>
+<ul>
+<li>add <code>Require.__call__(current_dir=None, is_main=False, cache=True)</code> arguments\</li>
+<li>add <code>Require.exec_module()</code> method</li>
+<li>add <code>Session.load_module(cache=True)</code> argument</li>
+<li>add <code>Directories</code> class which generates the paths to look for Python modules
+  installed via Pip through PPYM and more</li>
+<li>entering the Node.py <code>Context</code> now adds the local <code>nodepy_modules/.bin</code>
+  directory to the <code>PATH</code> environment variable</li>
+</ul>
+<h3 id="v0010">v0.0.10</h3>
+<ul>
+<li>extensions are now checked in the order they are registered</li>
+<li>support loading bytecache files with the suffix <code>.cpython-XY.pyc</code></li>
+<li>the <code>.py</code> loader now loads the respective bytecache file if appropriate</li>
+<li><code>Context.register_binding()</code> now accepts arbitrary objects, not just
+  <code>BaseModule</code> instances</li>
+<li>add <code>require.current</code> and <code>Context.current_module</code> properties</li>
+<li>support for <code>.nodepy-link</code> files as created by <code>ppym install -e</code></li>
+<li>add <code>-v, --verbose</code> argument for debug prints when resolving module filenames</li>
+<li>use <code>argparse</code> instead of <code>click</code> due to problem with known arguments
+  being consumed and not passed to the Node.py main module</li>
+<li>upgrade bundled PPYM to v0.0.8</li>
+<li><code>setup.py develop</code> now passes <code>--develop</code> to <code>ppym/bootstrap</code></li>
+</ul>
+<h3 id="v009">v0.0.9</h3>
+<ul>
+<li><code>setup.py</code> &ndash; Fix creation of <code>node.py</code> script on Windows by hooking
+  <code>distlib.scripts.ScriptMaker</code> (see issue #11)</li>
+<li><code>require.main</code> property can now be set</li>
+<li>update bundled PPYM to v0.0.7</li>
+<li><code>setup.py</code> now always upgrades to the bundled PPYM installation</li>
+</ul></div>
+        </div>
+
+	<footer class="col-md-12">
+		<hr>
+		
+		<p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+	</footer>
+
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script src="../js/base.js"></script>
+    </body>
+</html>

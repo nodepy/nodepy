@@ -4,15 +4,31 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-03-29</lastmod>
+     <lastmod>2017-05-12</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
 
     
     <url>
-     <loc>/require/</loc>
-     <lastmod>2017-03-29</lastmod>
+     <loc>/changelog/</loc>
+     <lastmod>2017-05-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/troubleshooting/</loc>
+     <lastmod>2017-05-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/nodepy/</loc>
+     <lastmod>2017-05-12</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -20,20 +36,14 @@
     
         
     <url>
-     <loc>/ppym/</loc>
-     <lastmod>2017-03-29</lastmod>
+     <loc>/nodepy-pm/manifest/</loc>
+     <lastmod>2017-05-12</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>/ppym/package-manifest/</loc>
-     <lastmod>2017-03-29</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
-        
-    <url>
-     <loc></loc>
-     <lastmod></lastmod>
+     <loc>/nodepy-pm/cli/</loc>
+     <lastmod>2017-05-12</lastmod>
      <changefreq>daily</changefreq>
     </url>
         

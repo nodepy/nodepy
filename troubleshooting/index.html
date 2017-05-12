@@ -7,14 +7,14 @@
         
         
         
-        <link rel="shortcut icon" href="./img/favicon.ico">
+        <link rel="shortcut icon" href="../img/favicon.ico">
 
-	<title>Node.py Documentation</title>
+	<title>Troubleshooting - Node.py Documentation</title>
 
-        <link href="./css/bootstrap-3.0.3.min.css" rel="stylesheet">
-        <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link rel="stylesheet" href="./css/highlight.css">
-        <link href="./css/base.css" rel="stylesheet">
+        <link href="../css/bootstrap-3.0.3.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -41,7 +41,7 @@
             </button>
 
             <!-- Main title -->
-            <a class="navbar-brand" href=".">Node.py Documentation</a>
+            <a class="navbar-brand" href="..">Node.py Documentation</a>
         </div>
 
         <!-- Expanded navigation -->
@@ -50,26 +50,26 @@
             <ul class="nav navbar-nav">
             
             
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../changelog/">Changelog</a>
+                </li>
+            
+            
+            
                 <li class="active">
-                    <a href=".">Home</a>
+                    <a href="./">Troubleshooting</a>
                 </li>
             
             
             
                 <li >
-                    <a href="changelog/">Changelog</a>
-                </li>
-            
-            
-            
-                <li >
-                    <a href="troubleshooting/">Troubleshooting</a>
-                </li>
-            
-            
-            
-                <li >
-                    <a href="nodepy/">nodepy</a>
+                    <a href="../nodepy/">nodepy</a>
                 </li>
             
             
@@ -79,11 +79,11 @@
                     <ul class="dropdown-menu">
                     
                         <li >
-                            <a href="nodepy-pm/manifest/">package.json</a>
+                            <a href="../nodepy-pm/manifest/">package.json</a>
                         </li>
                     
                         <li >
-                            <a href="nodepy-pm/cli/">CLI</a>
+                            <a href="../nodepy-pm/cli/">CLI</a>
                         </li>
                     
                     </ul>
@@ -94,13 +94,13 @@
 
             <!-- Search, Navigation and Repo links -->
             <ul class="nav navbar-nav navbar-right">
-                <li class="disabled">
-                    <a rel="next" >
+                <li >
+                    <a rel="next" href="../changelog/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="changelog/">
+                    <a rel="prev" href="../nodepy/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -114,44 +114,26 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#nodepy">nodepy</a></li>
+        <li class="main active"><a href="#troubleshooting">Troubleshooting</a></li>
         
-            <li><a href="#requirements">Requirements</a></li>
-        
-            <li><a href="#installation">Installation</a></li>
-        
-            <li><a href="#additional-links">Additional Links</a></li>
+            <li><a href="#must-supply-either-home-or-prefixexec-prefix-not-both">must supply either home or prefix/exec-prefix -- not both</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<p><img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img></p>
-<h1 id="nodepy">nodepy</h1>
-<p><a href="https://travis-ci.org/nodepy/nodepy"><img alt="Build Status" src="https://travis-ci.org/nodepy/nodepy.svg?branch=master" /></a>
-<a href="https://badge.fury.io/gh/nodepy%2Fnodepy"><img alt="GitHub version" src="https://badge.fury.io/gh/nodepy%2Fnodepy.svg" /></a>
-<a href="https://badge.fury.io/py/node.py"><img alt="PyPI version" src="https://badge.fury.io/py/node.py.svg" /></a></p>
-<p><strong>nodepy</strong> is a CPython platform heavily inspired by <a href="https://nodejs.org/">Node.js</a> for building
-reproducible and easily distributable applications. While it provides its own
-package infrastructure similar to <a href="https://www.npmjs.com/">npm</a>, re-using existing standard Python
-modules from <a href="https://pypi.python.org/pypi">PyPI</a> is highly encouraged by the package manager, <strong>nodepy-pm</strong>,
-which is automatically installed with nodepy.</p>
-<h2 id="requirements">Requirements</h2>
-<ul>
-<li>Python 2.7.x, 3.3+</li>
-<li>Pip 8.0.0+</li>
-</ul>
-<h2 id="installation">Installation</h2>
-<div class="codehilite"><pre><span></span>pip install node.py
+<h1 id="troubleshooting">Troubleshooting</h1>
+<h3 id="must-supply-either-home-or-prefixexec-prefix-not-both">must supply either home or prefix/exec-prefix &ndash; not both</h3>
+<div class="codehilite"><pre><span></span>distutils.errors.DistutilsOptionError: must supply either home or prefix/exec-prefix -- not both
 </pre></div>
 
 
-<h2 id="additional-links">Additional Links</h2>
-<ul>
-<li><a href="https://nodepy.github.io/nodepy">Documentation</a></li>
-<li><a href="docs/source/changelog.md">Changelog</a></li>
-</ul></div>
+<p>Before <strong>nodepy-pm</strong> v0.0.20, this error could appear on macOS and Python
+versions installed via <a href="https://brew.sh">Homebrew</a> (see <a href="http://stackoverflow.com/q/24257803/791713">this StackOverflow question</a>).
+Since this version, the package manager creates or temporarily overwrites
+the file <code>~/.pydistutils.cfg</code> to set an empty <code>prefix</code>.</p>
+<p>If you still encounter this error, please <a href="https://github.com/nodepy/nodepy/issues/new">create an issue</a>.</p></div>
         </div>
 
 	<footer class="col-md-12">
@@ -161,9 +143,9 @@ which is automatically installed with nodepy.</p>
 	</footer>
 
 
-        <script src="./js/jquery-1.10.2.min.js"></script>
-        <script src="./js/bootstrap-3.0.3.min.js"></script>
-        <script src="./js/highlight.pack.js"></script>
-        <script src="./js/base.js"></script>
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script src="../js/base.js"></script>
     </body>
 </html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>nodepy - Node.py Documentation</title>
+
+        <link href="../css/bootstrap-3.0.3.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">Node.py Documentation</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../changelog/">Changelog</a>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../troubleshooting/">Troubleshooting</a>
+                </li>
+            
+            
+            
+                <li class="active">
+                    <a href="./">nodepy</a>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">nodepy-pm <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        <li >
+                            <a href="../nodepy-pm/manifest/">package.json</a>
+                        </li>
+                    
+                        <li >
+                            <a href="../nodepy-pm/cli/">CLI</a>
+                        </li>
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li >
+                    <a rel="next" href="../troubleshooting/">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../nodepy-pm/manifest/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#the-nodepy-api">The nodepy API</a></li>
+        
+            <li><a href="#require">require()</a></li>
+        
+            <li><a href="#requirecontext">require.context</a></li>
+        
+            <li><a href="#requiremain">require.main</a></li>
+        
+            <li><a href="#requirecurrent">require.current</a></li>
+        
+            <li><a href="#requireexec_main">require.exec_main()</a></li>
+        
+            <li><a href="#requirepath">require.path</a></li>
+        
+            <li><a href="#module">module</a></li>
+        
+            <li><a href="#__directory__">__directory__</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="the-nodepy-api">The nodepy API</h1>
+<p>Python code that is invoked via <strong>nodepy</strong> has a few additional built-ins
+available.</p>
+<ul>
+<li><code>require()</code></li>
+<li><code>module</code></li>
+<li><code>__directory__</code></li>
+</ul>
+<h2 id="require"><code>require()</code></h2>
+<div class="codehilite"><pre><span></span>require(request, current_dir=None, is_main=False, cache=True,
+        exports=True, exec_=True, into=None, symbols=None)
+</pre></div>
+
+
+<p>The <code>require()</code> function in <strong>nodepy</strong> is available to every module that is
+executed through the nodepy command-line or which is in turn loaded with the
+<code>require()</code> function. It is an instance of the <code>nodepy.Require</code> class,
+created uniquely for every loaded module.</p>
+<p>A special syntax loading only some components of a module is supported, which
+is called the &ldquo;require unpack&rdquo; syntax. It is turned into valid Python code
+before a module is loaded. Instead of having to assign the required module to
+a temporary variable or using the require function multiple times</p>
+<div class="codehilite"><pre><span></span><span class="n">member_1</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s1">&#39;some-module&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">member_1</span>
+<span class="n">member_2</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s1">&#39;some-module&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">this_is_called_differently</span>
+</pre></div>
+
+
+<p>you can use the &ldquo;require unpack&rdquo; syntax.</p>
+<div class="codehilite"><pre><span></span><span class="p">{</span> <span class="n">member_1</span><span class="p">,</span> <span class="n">this_is_called_differently</span> <span class="k">as</span> <span class="n">member_2</span> <span class="p">}</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="s1">&#39;some-module&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<h2 id="requirecontext"><code>require.context</code></h2>
+<p>The <code>nodepy.Context</code> object that is currently in charge of the execution.</p>
+<h2 id="requiremain"><code>require.main</code></h2>
+<p>Alias for <code>require.context.main_module</code>. Returns the main <code>nodepy.BaseModule</code>
+object that is being executed. Note that the main module can change during
+execution of a program by using <code>require.exec_main()</code>.</p>
+<h2 id="requirecurrent"><code>require.current</code></h2>
+<p>The currently executed <code>nodepy.BaseModule</code>. A module is on the stack of
+currently executed modules until the execution has reached the end of the
+script and the <code>require()</code> function that was used to load it returns.</p>
+<h2 id="requireexec_main"><code>require.exec_main()</code></h2>
+<p>Execute another module as the new main module. As soon as <code>exec_main()</code>
+returns, the original main module will be in place again.</p>
+<h2 id="requirepath"><code>require.path</code></h2>
+<p>Nodepy module search path for this <code>nodepy.Require</code> instance.</p>
+<h2 id="module"><code>module</code></h2>
+<p>This built-in is the <code>nodepy.BaseModule</code> object that represents the module
+that is being executed. This is commonly used to check if the module is
+executed as the main module.</p>
+<div class="codehilite"><pre><span></span><span class="k">if</span> <span class="n">require</span><span class="o">.</span><span class="n">main</span> <span class="o">==</span> <span class="n">module</span><span class="p">:</span>
+  <span class="c1"># ...</span>
+</pre></div>
+
+
+<h2 id="__directory__"><code>__directory__</code></h2>
+<p>Contains the parent directory of the currently executed module. This is the
+same as <code>os.path.dirname(__file__)</code> and is provided for convenience.</p></div>
+        </div>
+
+	<footer class="col-md-12">
+		<hr>
+		
+		<p>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</p>
+	</footer>
+
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script src="../js/base.js"></script>
+    </body>
+</html>
