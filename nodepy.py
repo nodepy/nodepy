@@ -55,6 +55,14 @@ try:
 except ImportError:
   pkg_resources = None
 
+try:
+  reload
+except NameError:
+  try:
+    from importlib import reload
+  except ImportError:
+    from imp import reload
+
 import localimport
 import six
 
@@ -602,13 +610,13 @@ class Context(object):
   def __enter__(self):
     self.importer.__enter__()
     if pkg_resources:
-      pkg_resources._initialize_master_working_set()
+      reload(pkg_resources)
 
   def __exit__(self, *args):
     try:
       return self.importer.__exit__(*args)
     finally:
-      pkg_resources._initialize_master_working_set()
+      reload(pkg_resources)
 
   def debug(self, *msg):
     if self.verbose:
