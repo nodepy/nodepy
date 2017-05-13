@@ -828,7 +828,7 @@ class Context(object):
       try:
         return self.resolve(os.path.abspath(os.path.join(current_dir, request)))
       except ResolveError as exc:
-        raise ResolveError(request, current_dir, is_main, path) from exc
+        raise ResolveError(request, current_dir, is_main, path)
     elif os.path.isabs(request):
       link = get_package_link(request)
       if link:
