@@ -45,6 +45,7 @@ __nodepy-pm (PPYM post v0.0.17)__
 - Add `BaseLoader` class with `suggest_try_files()`, `can_load()` and `load()`
   methods
 - Add `PythonLoader(support_require_unpack_syntax)` argument
+- Add `JsonLoader`, now you can do `require('./package.json')`
 
 ### v0.0.19
 

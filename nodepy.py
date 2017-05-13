@@ -39,6 +39,7 @@ import code
 import collections
 import contextlib
 import itertools
+import json
 import marshal
 import math
 import os
@@ -266,7 +267,7 @@ class PythonLoader(BaseLoader):
   def can_load(self, filename):
     return filename.endswith('.py') or filename.endswith(self.pyc_suffix)
 
-  def load(self,  context, filename, request, parent):
+  def load(self, context, filename, request, parent):
     """
     Called when a #Context requires to load a module for a filename. The
     #PythonLoader will always check if a byte-compiled version of the source
@@ -361,6 +362,40 @@ def preprocess_unpack_require_syntax(code):
     assign += 'del _reqres'
     code = code[:match.start(0)] + assign + code[match.end(0):]
   return code
+
+
+class JsonLoader(object):
+  """
+  Loader for `.json` files.
+  """
+
+  def __init__(self, suggest_json_suffix=False):
+    self.suggest_json_suffix = suggest_json_suffix
+
+  def suggest_try_files(self, filename):
+    if self.suggest_json_suffix:
+      yield filename + '.json'
+
+  def can_load(self, filename):
+    return filename.endswith('.json')
+
+  def load(self, context, filename, request, parent):
+    return JsonModule(context, filename, request=request, parent=parent)
+
+
+class JsonModule(BaseModule):
+
+  def __init__(self, context, filename, parent=None, request=None):
+    directory, name = os.path.split(filename)
+    super(JsonModule, self).__init__(
+      context=context, filename=filename, directory=directory, name=name,
+      parent=parent, request=request)
+
+  def exec_(self):
+    if self.executed:
+      raise RuntimeError('already loaded')
+    with open(self.filename, 'r') as fp:
+      self.namespace.exports = json.load(fp)
 
 
 class Require(object):
@@ -649,6 +684,7 @@ class Context(object):
 
     if not bare:
       self.loaders.append(PythonLoader())
+      self.loaders.append(JsonLoader())
 
   def __enter__(self):
     self.importer.__enter__()
@@ -943,7 +979,7 @@ def main(argv=None):
   parser.add_argument('--keep-arg0', action='store_true',
       help='Do not overwrite sys.argv[0] when executing a file.')
   parser.add_argument('-P', '--preload', action='append', default=[])
-  parser.add_argument('-L', '--loader', default='.py',
+  parser.add_argument('-L', '--loader', default=None,
       help='The loader that will be used to load and execute the module. '
            'This must be a filename that matches a loader in the Context. '
            'Usually the file suffix is sufficient (depending on the loader).')
@@ -988,7 +1024,7 @@ def main(argv=None):
         for request in args.preload:
           require(request)
         request = arguments.pop(0)
-        loader = context.get_loader(args.loader)
+        loader = context.get_loader(args.loader) if args.loader else None
         module = require(request, args.current_dir, is_main=True, exec_=False,
             exports=False, loader=loader)
         if args.pymain:
