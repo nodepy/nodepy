@@ -54,7 +54,7 @@ class ScriptMaker:
       path = [os.path.abspath(x) for x in self.pythonpath]
       code += '_add_pythonpath = {pythonpath!r}\n'\
               'os.environ["PYTHONPATH"] = os.pathsep.join(_add_pythonpath) '\
-                  '+ os.pathsep + os.environ.get("PYTHONPATH")\n'\
+                  '+ os.pathsep + os.environ.get("PYTHONPATH", "")\n'\
               'sys.path.extend(_add_pythonpath); del _add_pythonpath\n'.format(pythonpath=path)
     return code + '\n'
 
