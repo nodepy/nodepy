@@ -50,6 +50,11 @@ import tempfile
 import traceback
 import types
 
+try:
+  import pkg_resources
+except ImportError:
+  pkg_resources = None
+
 import localimport
 import six
 
@@ -596,9 +601,14 @@ class Context(object):
 
   def __enter__(self):
     self.importer.__enter__()
+    if pkg_resources:
+      pkg_resources._initialize_master_working_set()
 
   def __exit__(self, *args):
-    return self.importer.__exit__(*args)
+    try:
+      return self.importer.__exit__(*args)
+    finally:
+      pkg_resources._initialize_master_working_set()
 
   def debug(self, *msg):
     if self.verbose:

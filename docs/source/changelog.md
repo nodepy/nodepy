@@ -12,6 +12,7 @@ __nodepy__
 - Add `PythonLoader.preprocessor` list
 - Add `PythonLoader.unpack_require_preprocessor()` static method
 - Add `require()` unpack syntax by preprocessing loaded source code
+- Fix #36: pkg_resources DistributionNotFound for packages installed with nodepy-pm
 
 __nodepy-pm (PPYM post v0.0.17)__
 
