@@ -33,6 +33,7 @@ __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 __version__ = '0.0.19'
 __license__ = 'MIT'
 
+import abc
 import argparse
 import code
 import collections
@@ -117,7 +118,7 @@ class ResolveError(Exception):
     return msg
 
 
-class BaseModule(object):
+class BaseModule(six.with_metaclass(abc.ABCMeta)):
   """
   Represents a Python module that exposes members like data, functions and
   classes in its #namespace. In some cases, when a module is loaded from a
@@ -158,6 +159,7 @@ class BaseModule(object):
 
     del self.context._module_cache[self.filename]
 
+  @abc.abstractmethod
   def exec_(self):
     """
     Execute the module. If #BaseModule.executed is #True, a #RuntimeError
@@ -175,8 +177,10 @@ class InitModule(BaseModule):
   """
 
   def __init__(self, context):
-    super(InitModule, self).__init__(
-        context, '__init__', os.getcwd(), '__init__')
+    super(InitModule, self).__init__(context, '__init__', os.getcwd(), '__init__')
+
+  def exec_(self):
+    raise RuntimeError('can not exec InitModule')
 
 
 class PythonModule(BaseModule):
@@ -207,25 +211,62 @@ class PythonModule(BaseModule):
       raise
 
 
-class PythonLoader(object):
+class BaseLoader(six.with_metaclass(abc.ABCMeta)):
   """
-  Loader for Node.py Python modules. Allows for pre-processing of source code.
-  By default, the #unpack_require_preprocessor is added by default.
+  Interface for loader objects.
   """
 
+  @abc.abstractmethod
+  def suggest_try_files(self, filename):
+    return; yield
+
+  @abc.abstractmethod
+  def can_load(self, filename):
+    return False
+
+  @abc.abstractmethod
+  def load(self, context, filename, request, parent):
+    return BaseModule()
+
+
+class PythonLoader(BaseLoader):
+  """
+  A loader for nodepy Python modules.
+
+  # Parameters
+  write_bytecache (bool, None): Write bytecache files. If not specified,
+      checks the `PYTHONDONTWRITEBYTECODE` environment variable.
+  support_require_unpack_syntax (bool): If #True, pre-processes Python
+      source code to support the `require()` unpack syntax.
+
+  # Members
+  preprocessors (list): A list of functions that accept `(filename, code)`
+      parameters and return a modified version of *code*.
+  """
+
+  # Choose an implementation and version dependent suffix for Python
+  # bytecache files.
   if hasattr(sys, 'implementation'):
     _impl_name = sys.implementation.name.lower()
   else:
     _impl_name = sys.subversion[0].lower()
   pyc_suffix = '.{}-{}{}.pyc'.format(_impl_name, *sys.version_info)
 
-  def __init__(self, write_bytecache=None):
+  def __init__(self, write_bytecache=None, support_require_unpack_syntax=True):
     if write_bytecache is None:
       write_bytecache = not bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
-    self._write_bytecache = write_bytecache
-    self.preprocessors = [self.unpack_require_preprocessor]
+    self.write_bytecache = write_bytecache
+    self.support_require_unpack_syntax = support_require_unpack_syntax
+    self.preprocessors = []
 
-  def __call__(self, context, filename, load_data):
+  def suggest_try_files(self, filename):
+    yield filename + '.py'
+    yield filename + self.pyc_suffix
+
+  def can_load(self, filename):
+    return filename.endswith('.py') or filename.endswith(self.pyc_suffix)
+
+  def load(self,  context, filename, request, parent):
     """
     Called when a #Context requires to load a module for a filename. The
     #PythonLoader will always check if a byte-compiled version of the source
@@ -243,11 +284,11 @@ class PythonLoader(object):
     else:
       can_load_bytecache = False
 
-    if not can_load_bytecache and self._write_bytecache:
+    if not can_load_bytecache and self.write_bytecache:
       try:
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py') as tmp:
           with open(filename, 'r') as src:
-            tmp.write(self.preprocess(filename, src.read()))
+            tmp.write(self._preprocess(filename, src.read()))
           tmp.file.close()
           py_compile.compile(tmp.name, bytecache_file, doraise=True)
       except OSError as exc:
@@ -267,10 +308,11 @@ class PythonLoader(object):
       real_filename = None
 
     return PythonModule(context=context, filename=filename, name=name,
-        code=code, parent=load_data['parent'], request=load_data['request'],
-        real_filename=real_filename)
+        code=code, parent=parent, request=request, real_filename=real_filename)
 
-  def preprocess(self, filename, code):
+  def _preprocess(self, filename, code):
+    if self.support_require_unpack_syntax:
+      code = preprocess_unpack_require_syntax(code)
     for pp in self.preprocessors:
       code = pp(filename, code)
     return code
@@ -295,30 +337,31 @@ class PythonLoader(object):
         return marshal.load(fp)
     else:
       with open(filename, 'r') as fp:
-        code = self.preprocess(filename, fp.read())
+        code = self._preprocess(filename, fp.read())
         return compile(code, filename, 'exec', dont_inherit=True)
 
-  @staticmethod
-  def unpack_require_preprocessor(filename, code):
-    """
-    Finds occurences of `{ member, ... } = require(...)` and replaces them
-    with valid Python syntax.
-    """
 
-    while True:
-      # TODO: This currently does not support nested expressions in the
-      #       require() call.
-      match = re.search('{\s*(?!,)(\w+(?:\s+as\s+\w+)?(?:\s*,\s*\w+)*)\s*,?\s*}\s*=\s*(require\([^\)]*\))', code)
-      if not match: break
-      assign = '_reqres=' + match.group(2) + ';'
-      for name in match.group(1).split(','):
-        left = name
-        if 'as' in name:
-          name, __, left = name.partition('as')
-        assign += '{0}=_reqres.{1};'.format(left.strip(), name.strip())
-      assign += 'del _reqres'
-      code = code[:match.start(0)] + assign + code[match.end(0):]
-    return code
+def preprocess_unpack_require_syntax(code):
+  """
+  Takes as input Python source code and transforms occurences of the
+  Node.py `require()` unpack syntax to actual Python source code.
+  """
+
+  while True:
+    # TODO: This currently does not support nested expressions in the require() call.
+    # TODO: We can optimize this by passing a start index.
+    match = re.search('{\s*(?!,)(\w+(?:\s+as\s+\w+)?(?:\s*,\s*\w+)*)\s*,?\s*}\s*=\s*(require\([^\)]*\))', code)
+    if not match: break
+    assign = '_reqres=' + match.group(2) + ';'
+    for name in match.group(1).split(','):
+      left = name
+      if 'as' in name:
+        name, __, left = name.partition('as')
+      assign += '{0}=_reqres.{1};'.format(left.strip(), name.strip())
+    assign += 'del _reqres'
+    code = code[:match.start(0)] + assign + code[match.end(0):]
+  return code
+
 
 class Require(object):
   """
@@ -326,7 +369,6 @@ class Require(object):
   """
 
   ResolveError = ResolveError
-
   PY2 = six.PY2
   PY3 = six.PY3
 
@@ -577,10 +619,6 @@ class Context(object):
     # A list of filenames that are looked into when resolving a request to
     # a directory.
     self._index_files = ['index', '__init__']
-    # Loaders for file extensions. The default loader for `.py` files is
-    # automatically registered.
-    self._extensions = {}
-    self._extensions_order = []
     # Container for cached modules. The keys are the absolute and normalized
     # filenames of the module so that the same file will not be loaded multiple
     # times.
@@ -588,6 +626,8 @@ class Context(object):
     # A stack of modules that are currently being executed. Every module
     # should add itself on the stack when it is executed with #enter_module().
     self._module_stack = []
+    # Loaders for files that can be required.
+    self.loaders = []
     # A list of functions that are called for various events. The first
     # arugment is always the event type, followed by the event data.
     self.event_handlers = []
@@ -608,9 +648,7 @@ class Context(object):
     self.importer = localimport.localimport(parent_dir=current_dir, path=pip_lib)
 
     if not bare:
-      loader = PythonLoader()
-      self.register_extension('.py', loader)
-      self.register_extension(loader.pyc_suffix, loader)
+      self.loaders.append(PythonLoader())
 
   def __enter__(self):
     self.importer.__enter__()
@@ -717,28 +755,16 @@ class Context(object):
       raise ValueError('binding {!r} already exists'.format(binding_name))
     self._bindings[binding_name] = obj
 
-  def register_extension(self, ext, loader):
+  def get_loader(self, filename):
     """
-    Registers a loader function for the file extension *ext*. The dot should
-    be included in the *ext*. *loader* must be a callable that expects the
-    Context as its first and the filename to load as its second argument.
-
-    If a loader for *ext* is already registered, a #ValueError is raised.
+    Finds the loader that can load *filename*. Depending on the loader, only
+    the file extension might be enough to find an appropriate loader.
     """
 
-    if ext in self._extensions:
-      raise ValueError('extension {!r} already registered'.format(ext))
-    if not callable(loader):
-      raise TypeError('loader must be a callable')
-    self._extensions[ext] = loader
-    self._extensions_order.append(ext)
-
-  def get_extension(self, ext):
-    """
-    Returns the loader that was registered for the extension *ext*.
-    """
-
-    return self._extensions[ext]
+    for loader in self.loaders:
+      if loader.can_load(filename):
+        return loader
+    return None
 
   def resolve(self, request, current_dir=None, is_main=False, path=None,
               followed_from=None):
@@ -747,7 +773,7 @@ class Context(object):
     of the extension loaders. For relative requests (ones starting with `./` or
     `../`), the *current_dir* will be used to generate an absolute request.
     Absolute requests will then be resolved by using #try_file() and the
-    extensions that have been registered with #register_extension().
+    suggested files returned by #BaseLoader.suggest_try_files().
 
     Dependency requests are those that are neither relative nor absolute and
     are of the format `[@<scope>]<name>[/<module>]`. Such requests are looked
@@ -766,7 +792,7 @@ class Context(object):
       try:
         return self.resolve(os.path.abspath(os.path.join(current_dir, request)))
       except ResolveError as exc:
-        raise ResolveError(request, current_dir, is_main, path)
+        raise ResolveError(request, current_dir, is_main, path) from exc
     elif os.path.isabs(request):
       link = get_package_link(request)
       if link:
@@ -778,10 +804,10 @@ class Context(object):
       filename = try_file(request)
       if filename:
         return filename
-      for ext in self._extensions_order:
-        filename = try_file(request + ext)
-        if filename:
-          return filename
+      for loader in self.loaders:
+        for filename in loader.suggest_try_files(request):
+          filename = try_file(filename)
+          if filename: return filename
       if os.path.isdir(request):
         for choice in self._index_files:
           new_request = os.path.join(request, choice)
@@ -835,13 +861,13 @@ class Context(object):
       return self._module_cache[filename]
 
     if loader is None:
-      for ext, loader in six.iteritems(self._extensions):
-        if filename.endswith(ext):
+      for loader in self.loaders:
+        if loader.can_load(filename):
           break
       else:
         raise ValueError('no loader for {!r}'.format(filename))
 
-    module = loader(self, filename, {'request': request, 'parent': parent})
+    module = loader.load(self, filename, request, parent)
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
           'but instead a {!r} object'.format(
@@ -917,8 +943,10 @@ def main(argv=None):
   parser.add_argument('--keep-arg0', action='store_true',
       help='Do not overwrite sys.argv[0] when executing a file.')
   parser.add_argument('-P', '--preload', action='append', default=[])
-  parser.add_argument('-L', '--loader', default=None,
-      help='The loader to use to load and execute the module.')
+  parser.add_argument('-L', '--loader', default='.py',
+      help='The loader that will be used to load and execute the module. '
+           'This must be a filename that matches a loader in the Context. '
+           'Usually the file suffix is sufficient (depending on the loader).')
   parser.add_argument('--pymain', action='store_true')
   args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
@@ -960,7 +988,7 @@ def main(argv=None):
         for request in args.preload:
           require(request)
         request = arguments.pop(0)
-        loader = context.get_extension(args.loader) if args.loader else None
+        loader = context.get_loader(args.loader)
         module = require(request, args.current_dir, is_main=True, exec_=False,
             exports=False, loader=loader)
         if args.pymain:
