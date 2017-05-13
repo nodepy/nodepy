@@ -81,10 +81,10 @@ $ cat index.py
 import flask
 require('@nodepy/werkzeug-reloader-patch').install()
 app = require('./app')
-config = require('./config')
+{ host, port, debug } = require('./config')
 
 if require.main == module:
-  app.run(host=config.host, port=config.port, debug=config.debug)
+  app.run(host=host, port=port, debug=debug)
 ```
 
 ```
