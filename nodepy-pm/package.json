@@ -1,8 +1,8 @@
 {
   "name": "nodepy-pm",
-  "version": "0.0.17",
+  "version": "0.0.19",
   "license": "MIT",
-  "description": "the Node.py package manager",
+  "description": "the nodepy package manager",
   "repository": "https://github.com/nodepy/nodepy",
   "bin": {
     "nodepy${py}-pm": "index"
