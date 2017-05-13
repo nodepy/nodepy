@@ -14,6 +14,12 @@ __nodepy__
 - Add `require()` unpack syntax by preprocessing loaded source code
 - Fix #36: pkg_resources DistributionNotFound for packages installed with nodepy-pm
 - If Pygments is available, will be used to print colored exception tracebacks
+- Remove `Context.register_extension()` and `Context.get_extension()`
+- Add instead `Context.loaders` and `Context.get_loader()`
+- Add `BaseLoader` class with `suggest_try_files()`, `can_load()` and `load()`
+  methods
+- Add `PythonLoader(support_require_unpack_syntax)` argument
+- Add `JsonLoader`, now you can do `require('./package.json')`
 
 __nodepy-pm (PPYM post v0.0.17)__
 
@@ -40,12 +46,6 @@ __nodepy-pm (PPYM post v0.0.17)__
   modules are now installed nearby Python's `site-packages` and Scripts
   are placed into Python's script directory
 - Development has been merged into the Node.py repository itself
-- Remove `Context.register_extension()` and `Context.get_extension()`
-- Add instead `Context.loaders` and `Context.get_loader()`
-- Add `BaseLoader` class with `suggest_try_files()`, `can_load()` and `load()`
-  methods
-- Add `PythonLoader(support_require_unpack_syntax)` argument
-- Add `JsonLoader`, now you can do `require('./package.json')`
 
 ### v0.0.19
 
