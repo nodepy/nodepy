@@ -26,7 +26,6 @@ if require.main != module:
   raise RuntimeError('bootstrap must not be required')
 
 import argparse
-import json
 import os
 import pip.commands
 import shutil
@@ -50,8 +49,7 @@ def main(args=None):
 
   existed_before = os.path.isdir('nodepy_modules')
   print("Bootstrapping PPYM dependencies with Pip ...")
-  with open(os.path.join(__directory__, 'package.json')) as fp:
-    package = json.load(fp)
+  package = require('./package.json')
 
   # We would like to use Pip --prefix, but there seems to be a Bug on Windows
   # that lets installations fail (see nodepym/ppym#9).
