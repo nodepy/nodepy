@@ -16,3 +16,15 @@ If you still encounter this error, please [create an issue][new issue].
   [0]: http://stackoverflow.com/q/24257803/791713
   [Homebrew]: https://brew.sh
   [new issue]: https://github.com/nodepy/nodepy/issues/new
+
+### No such file or directory: '.../installed-files.txt'
+
+```
+FileNotFoundError: [Errno 2] No such file or directory: 'nodepy_modules.pip\\Lib\\site-packages\\aniso8601-1.2.1-py3.5.egg-info\\installed-files.txt'
+```
+
+This appears to be an issue with Pip that appears when installing some modules
+when using the `pip install --prefix` option. Using `pip install --target` can
+fix the problem when you experience it.
+
+Use `nodepy-pm install --pip-use-target-option` and see if it works for you.
