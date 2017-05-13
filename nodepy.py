@@ -63,6 +63,11 @@ except NameError:
   except ImportError:
     from imp import reload
 
+try:
+  import pygments.lexers, pygments.formatters
+except ImportError:
+  pygments = None
+
 import localimport
 import six
 
@@ -247,10 +252,10 @@ class PythonLoader(object):
           py_compile.compile(tmp.name, bytecache_file, doraise=True)
       except OSError as exc:
         if exc.errno != errno.EPERM:
-          traceback.print_exc()
+          print_exc()
         # Skip permission errors.
       except Exception as exc:
-        traceback.print_exc()
+        print_exc()
       else:
         can_load_bytecache = True
 
@@ -883,6 +888,17 @@ class Context(object):
         request=request, parent=parent)
 
 
+def print_exc():
+  if sys.stderr.isatty() and pygments:
+    code = traceback.format_exc()
+    lexer = pygments.lexers.PythonTracebackLexer()
+    tokens = pygments.lex(code, lexer)
+    formatter = pygments.formatters.TerminalFormatter()
+    print(pygments.format(tokens, formatter), file=sys.stderr)
+  else:
+    traceback.print_exc()
+
+
 def main(argv=None):
   parser = argparse.ArgumentParser(description=__doc__,
       formatter_class=argparse.RawTextHelpFormatter)
@@ -939,17 +955,22 @@ def main(argv=None):
       except ImportError:
         pass
 
-      require = init.require
-      for request in args.preload:
-        require(request)
-      request = arguments.pop(0)
-      loader = context.get_extension(args.loader) if args.loader else None
-      module = require(request, args.current_dir, is_main=True, exec_=False,
-          exports=False, loader=loader)
-      if args.pymain:
-        module.namespace.__name__ = '__main__'
-      sys.argv = [sys.argv[0] if args.keep_arg0 else module.filename] + arguments
-      module.exec_()
+      try:
+        require = init.require
+        for request in args.preload:
+          require(request)
+        request = arguments.pop(0)
+        loader = context.get_extension(args.loader) if args.loader else None
+        module = require(request, args.current_dir, is_main=True, exec_=False,
+            exports=False, loader=loader)
+        if args.pymain:
+          module.namespace.__name__ = '__main__'
+        sys.argv = [sys.argv[0] if args.keep_arg0 else module.filename] + arguments
+        module.exec_()
+      except SystemExit as exc:
+        raise
+      except BaseException as exc:
+        print_exc()
 
   sys.exit(0)
 

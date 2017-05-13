@@ -13,6 +13,7 @@ __nodepy__
 - Add `PythonLoader.unpack_require_preprocessor()` static method
 - Add `require()` unpack syntax by preprocessing loaded source code
 - Fix #36: pkg_resources DistributionNotFound for packages installed with nodepy-pm
+- If Pygments is available, will be used to print colored exception tracebacks
 
 __nodepy-pm (PPYM post v0.0.17)__
 
