@@ -63,7 +63,7 @@ def get_directories(location):
     user = (location == 'global')
     scheme = pip.locations.distutils_scheme('', user=user)
     return {
-      'packages': os.path.dirname(scheme['purelib']),
+      'packages': os.path.join(os.path.dirname(scheme['purelib']), 'nodepy_modules'),
       'bin': scheme['scripts'],
       'pip_prefix': scheme['data'],
       'pip_bin': scheme['scripts'],
