@@ -46,6 +46,8 @@ __nodepy-pm (PPYM post v0.0.17)__
   modules are now installed nearby Python's `site-packages` and Scripts
   are placed into Python's script directory
 - Development has been merged into the Node.py repository itself
+- `run` command now executes `!` scripts with `$SHELL` completely unprocessed
+- `pre-script` no longer recieves the arguments of the script that is being invoked
 
 ### v0.0.19
 

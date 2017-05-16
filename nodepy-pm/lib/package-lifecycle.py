@@ -150,24 +150,23 @@ class PackageLifecycle(object):
 
     if script not in self.manifest.scripts:
       return
-    args = shlex.split(self.manifest.scripts[script]) + list(args)
-    request = args.pop(0)
 
     if script != 'pre-script':
-      self._run_script('pre-script', [script] + args)
+      self._run_script('pre-script', [script])
 
+    request = self.manifest.scripts[script].strip()
     if request.startswith('!'):
       # Execute as a shell command instead.
       # TODO: On Windows, fall back to CMD.exe if SHELL is not defined.
-      cmd = request[1: ] + ' ' + ' '.join(map(shlex_quote, args))
-      command = [os.environ['SHELL'], '-c', cmd]
+      command = [os.environ['SHELL'], '-c', request[1:]]
       try:
         return subprocess.call(command)
       except (OSError, IOError):
         print('Error: can not run "{}"'.format(cmd))
         return 1
     else:
-      nodepy.main(['--current-dir', self.manifest.directory, request] + args)
+      args = shlex.split(request) + list(args)
+      nodepy.main(['--current-dir', self.manifest.directory] + args)
 
 
 exports = PackageLifecycle
