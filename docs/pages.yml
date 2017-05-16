@@ -1,0 +1,10 @@
+pages:
+- Node.py:
+  - index: index.md
+  - API: nodepy.md
+- Node.py Package Manager:
+  - index: nodepy-pm/index.md
+  - package.json: nodepy-pm/manifest.md
+  - CLI: nodepy-pm/cli.md
+- Changelog: changelog.md
+- Troubleshooting: troubleshooting.md
