@@ -288,11 +288,19 @@ class PythonLoader(BaseLoader):
 
     if not can_load_bytecache and self.write_bytecache:
       try:
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py') as tmp:
-          with open(filename, 'r') as src:
-            tmp.write(self._preprocess(filename, src.read()))
-          tmp.file.close()
-          py_compile.compile(tmp.name, bytecache_file, doraise=True)
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tmp:
+          try:
+            with open(filename, 'r') as src:
+              tmp.write(self._preprocess(filename, src.read()))
+            tmp.close()
+            py_compile.compile(tmp.name, bytecache_file, doraise=True)
+          finally:
+            # Make sure the temporary file is deleted.
+            try:
+              os.remove(tmp.name)
+            except OSError as exc:
+              if exc.errno != errno.ENOENT:
+                print_exc()
       except OSError as exc:
         if exc.errno != errno.EPERM:
           print_exc()
