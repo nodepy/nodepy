@@ -20,6 +20,8 @@ __nodepy__
   methods
 - Add `PythonLoader(support_require_unpack_syntax)` argument
 - Add `JsonLoader`, now you can do `require('./package.json')`
+- Fix missing import of `errno` module (causes exception when bytecache file
+  can not be written due to eg. permission errors)
 
 __nodepy-pm (PPYM post v0.0.17)__
 

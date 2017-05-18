@@ -35,6 +35,7 @@ __license__ = 'MIT'
 
 import abc
 import argparse
+import errno
 import code
 import collections
 import contextlib
