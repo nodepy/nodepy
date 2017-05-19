@@ -23,8 +23,9 @@ If you still encounter this error, please [create an issue][new issue].
 FileNotFoundError: [Errno 2] No such file or directory: 'nodepy_modules.pip\\Lib\\site-packages\\aniso8601-1.2.1-py3.5.egg-info\\installed-files.txt'
 ```
 
-This appears to be an issue with Pip that appears when installing some modules
+*This appears to be an issue with Pip that appears when installing some modules
 when using the `pip install --prefix` option. Using `pip install --target` can
-fix the problem when you experience it.
+fix the problem when you experience it. You can use `--pip-use-target-option`
+for `nodepy-pm install` take make it use the `--target` option instead.*
 
-Use `nodepy-pm install --pip-use-target-option` and see if it works for you.
+This bug will be/is fixed in Pip 9.0.2, so upgrade if you can.
