@@ -1,5 +1,5 @@
 {
-  "name": "nodepy-pm",
+  "name": "@nodepy/pm",
   "version": "0.0.19",
   "license": "MIT",
   "description": "the nodepy package manager",
