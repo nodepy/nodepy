@@ -97,7 +97,8 @@ $ nodepy .
 
 - Python 2.7.x, 3.3+
 - Pip 8.0.0+
-- Pygments (optional, for colored exception tracebacks)
+- Pygments (optional, for colorised exception tracebacks)
+- Colorama (optional, for colorised output on Windows)
 
 ## Installation
 

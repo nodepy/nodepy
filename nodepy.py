@@ -71,6 +71,15 @@ try:
 except ImportError:
   pygments = None
 
+try:
+  import colorama
+except ImportError:
+  # We need colorama on Windows for colorized output.
+  if os.name == 'nt':
+    pygments = None
+else:
+  colorama.init()
+
 import localimport
 import six
 

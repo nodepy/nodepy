@@ -22,6 +22,9 @@ __nodepy__
 - Add `JsonLoader`, now you can do `require('./package.json')`
 - Fix missing import of `errno` module (causes exception when bytecache file
   can not be written due to eg. permission errors)
+- Fix #41 -- Now uses `colorama.init()` if the colorama module is available.
+  If not, and the current platform is Windows, colorized traceback output
+  is disabled.
 
 __nodepy-pm (PPYM post v0.0.17)__
 
