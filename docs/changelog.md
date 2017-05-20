@@ -6,30 +6,38 @@ __nodepy__
 
 - Fix `nodepy.proc_args` to contain `sys.executable` if the nodepy executable
   is not an `.exe` on Windows
-- Add `BaseModule.real_filename` as `BaseModule.filename` must always match
-  the filename that was passed into the loader (otherwise `BaseModule.remove()`
-  does not work)
-- Add `PythonLoader.preprocessor` list
-- Add `PythonLoader.unpack_require_preprocessor()` static method
 - Add `require()` unpack syntax by preprocessing loaded source code
 - Fix #36: pkg_resources DistributionNotFound for packages installed with nodepy-pm
 - If Pygments is available, will be used to print colored exception tracebacks
-- Remove `Context.register_extension()` and `Context.get_extension()`
 - Add instead `Context.loaders` and `Context.get_loader()`
-- Add `BaseLoader` class with `suggest_try_files()`, `can_load()` and `load()`
-  methods
-- Add `PythonLoader(support_require_unpack_syntax)` argument
-- Add `JsonLoader`, now you can do `require('./package.json')`
 - Fix missing import of `errno` module (causes exception when bytecache file
   can not be written due to eg. permission errors)
 - Fix #41 -- Now uses `colorama.init()` if the colorama module is available.
   If not, and the current platform is Windows, colorized traceback output
   is disabled.
 - Implement #42 -- Support a `"main"` field in `package.json`
+- Every module that is being executed is now associated with its nearest
+  `package.json` through its `BaseModule.package` member.
 - Remove `-v,--verbose` option and `Context.debug()` for now, needs to be
   reimplemented completely with actually useful and well formatted information
+
+__nodepy API__
+
+- Remove `Context.register_extension()` and `Context.get_extension()`
+- Add `BaseModule.real_filename` as `BaseModule.filename` must always match
+  the filename that was passed into the loader (otherwise `BaseModule.remove()`
+  does not work)
+- Add `PythonLoader.preprocessor` list
+- Add `PythonLoader.unpack_require_preprocessor()` static method
+- Add ability to do `require('./package.json')` or with any other JSON file
+- Add `JsonLoader` class
+- Add `PythonLoader(support_require_unpack_syntax)` argument
 - Remove `nodepy.get_python_library_base()` and `nodepy.get_python_library_path()`
 - Add `nodepy.get_site_packages()` instead
+- Add `nodepy.Package` class
+- Add `Context._package_cache` member, `Context._get_package()` function
+- Add `BaseModule.package` member and parameter to constructor
+- Add `BaseLoader.load(package)` parameter
 
 __@nodepy/pm__ *(PPYM post v0.0.17)*
 
