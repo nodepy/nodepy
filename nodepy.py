@@ -687,6 +687,7 @@ class Package(object):
     self.filename = filename
     self.json = json
     self.module = JsonModule(context, filename, package=self)
+    self._extensions = None
 
   def __repr__(self):
     return "<Package '{}@{}' at '{}'>".format(
@@ -695,6 +696,17 @@ class Package(object):
   @property
   def directory(self):
     return os.path.dirname(filename)
+
+  def get_extensions(self):
+    if self._extensions is not None:
+      return self._extensions
+    self._extensions = []
+    for request in self.json.get('extensions', []):
+      ext = self.module.require(request)
+      if hasattr(ext, 'init_extension'):
+        ext.init_extension(self)
+      self._extensions.append(ext)
+    return self._extensions
 
 
 class Context(object):
@@ -1014,6 +1026,10 @@ class Context(object):
       raise RuntimeError("loaded module's filename does not match the "
           "filename passed to the loader ({})".format(
               getattr(loader, "__name__", None) or type(loader).__name__))
+
+    for ext in (package.get_extensions() if package else []):
+      if hasattr(ext, 'module_loaded'):
+        ext.module_loaded(module)
 
     if followed_from:
       nodepy_modules = find_nearest_modules_directory(followed_from[0].src)

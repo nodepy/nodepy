@@ -126,8 +126,8 @@ of this would be a package that generates the documentation of another project.
 
 ### `main`
 
-This field describes the name of the module to load when your package is
-required by another module. If this field is not specified, the
+*Optional*. This field describes the name of the module to load when your
+package is required by another module. If this field is not specified, the
 `Context._index_files` are tried instead (which are `index` and `__init__`).
 
 ```json
@@ -198,6 +198,20 @@ installed.
   }
 }
 ```
+
+### `extensions`
+
+*Optional*. A field that lists extension modules that will be required once
+for the package, then events will be dispatched to those extensions. The
+specified module names must be `require()`-able from directory that contains
+the `package.json`.
+
+Currently supported events are:
+
+- `init_extension(package)` -- Called when the extension is first initialized
+  for a package.
+- `module_loaded(module)` -- Called when a module that uses the extension
+  was loaded.
 
 ### `dist`
 

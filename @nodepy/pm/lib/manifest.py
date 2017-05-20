@@ -131,6 +131,10 @@ class PackageManifest:
         "type": "object",
         "additionalProperties": {"type": "string"}
       },
+      "extensions": {
+        "type": "array",
+        "items": {"type": "string"}
+      },
       "dist": {
         "type": "object",
         "properties": {
@@ -150,7 +154,7 @@ class PackageManifest:
       author=None, license=None, dependencies=None, dev_dependencies=None,
       python_dependencies=None, dev_python_dependencies=None, scripts=None,
       bin=None, engines=None, engine_props=None, dist=None, repository=None,
-      private=False, main=None):
+      private=False, main=None, extensions=None):
     if len(name) < 2 or len(name) > 127:
       raise ValueError('packag name must be at least 2 and maximum 127 characters')
     if name.startswith('_') or name.startswith('.'):
@@ -178,6 +182,7 @@ class PackageManifest:
     self.dist = {} if dist is None else dist
     self.private = private
     self.main = main
+    self.extensions = extensions
 
   def __eq__(self, other):
     if isinstance(other, PackageManifest):

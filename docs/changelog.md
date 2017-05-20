@@ -16,6 +16,8 @@ __nodepy__
   If not, and the current platform is Windows, colorized traceback output
   is disabled.
 - Implement #42 -- Support a `"main"` field in `package.json`
+- Add an `"extensions"` field to `package.json`, currently supported extension
+  event callbacks are `init_extension()` and `module_loaded()`
 - Every module that is being executed is now associated with its nearest
   `package.json` through its `BaseModule.package` member.
 - Remove `-v,--verbose` option and `Context.debug()` for now, needs to be
