@@ -663,9 +663,8 @@ class Context(object):
   central unit to control the finding, caching and loading of Python modules.
   """
 
-  def __init__(self, current_dir='.', verbose=False, bare=False):
+  def __init__(self, current_dir='.', bare=False):
     self.current_dir = current_dir
-    self.verbose = verbose
     # Container for internal modules that can be bound to the context
     # explicitly with the #register_binding() method.
     self._bindings = {}
@@ -718,10 +717,6 @@ class Context(object):
     finally:
       reload(pkg_resources)
 
-  def debug(self, *msg):
-    if self.verbose:
-      print('debug:', *msg, file=sys.stderr)
-
   @property
   def current_module(self):
     return self._module_stack[-1] if self._module_stack else None
@@ -769,7 +764,6 @@ class Context(object):
       library_path = None
 
     self._module_stack.append(module)
-    self.debug('loading module:', module.filename)
     try:
       self.send_event('enter', module)
       yield
@@ -866,8 +860,6 @@ class Context(object):
     elif os.path.isabs(request):
       link = get_package_link(request)
       if link:
-        self.debug('follow .nodepy-link \'{}\''.format(link.src))
-        self.debug('  maps to \'{}\''.format(link.dst))
         request = os.path.join(link.dst, os.path.relpath(request, link.src))
         if followed_from is not None:
           followed_from.append(link)
@@ -1010,8 +1002,6 @@ def main(argv=None):
   parser.add_argument('-d', '--debug', action='store_true',
       help='Enter the interactive debugger when an exception would cause '
         'the application to exit.')
-  parser.add_argument('-v', '--verbose', action='store_true',
-      help='Be verbose about what\'s happening in the Node.py context.')
   parser.add_argument('-c', '--exec', dest='exec_', metavar='EXPR',
       help='Evaluate a Python expression.')
   parser.add_argument('--current-dir', default='.', metavar='DIR',
@@ -1040,7 +1030,7 @@ def main(argv=None):
     proc_args.insert(0, sys.executable)
 
   arguments = args.arguments[:]
-  context = Context(args.current_dir, args.verbose)
+  context = Context(args.current_dir)
   with context, jit_debug(args.debug):
     init = InitModule(context)
     if args.exec_ or not arguments:

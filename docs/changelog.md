@@ -26,6 +26,8 @@ __nodepy__
   If not, and the current platform is Windows, colorized traceback output
   is disabled.
 - Implement #42 -- Support a `"main"` field in `package.json`
+- Remove `-v,--verbose` option and `Context.debug()` for now, needs to be
+  reimplemented completely with actually useful and well formatted information
 
 __nodepy-pm (PPYM post v0.0.17)__
 
