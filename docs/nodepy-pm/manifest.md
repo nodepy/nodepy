@@ -124,6 +124,16 @@ of this would be a package that generates the documentation of another project.
 { "private": true }
 ```
 
+### `main`
+
+This field describes the name of the module to load when your package is
+required by another module. If this field is not specified, the
+`Context._index_files` are tried instead (which are `index` and `__init__`).
+
+```json
+{ "main": "main.py" }
+```
+
 ### `dependencies`
 
 *Optional.*: An object that specifies the dependencies of the package.
@@ -195,10 +205,12 @@ installed.
 distribution of the package with `nodepy-pm dist`.
 
 ```json
+{
   "dist": {
     "include_files": [],
     "exclude_files": [".hg*"]
   }
+}
 ```
 
 #### `include_files`

@@ -672,6 +672,9 @@ class Context(object):
     # A list of filenames that are looked into when resolving a request to
     # a directory.
     self._index_files = ['index', '__init__']
+    # A cache for the package.json files that needed to be parsed while
+    # resolving require requests.
+    self._package_json_cache = {}
     # Container for cached modules. The keys are the absolute and normalized
     # filenames of the module so that the same file will not be loaded multiple
     # times.
@@ -820,6 +823,19 @@ class Context(object):
         return loader
     return None
 
+  def _get_package_main(self, dirname):
+    fn = os.path.normpath(os.path.abspath(os.path.join(dirname, 'package.json')))
+    if fn not in self._package_json_cache:
+      if os.path.isfile(fn):
+        with open(fn) as fp:
+          self._package_json_cache[fn] = json.load(fp)
+      else:
+        self._package_json_cache[fn] = None
+    manifest = self._package_json_cache[fn]
+    main = manifest.get('main') if manifest else None
+    if main: main = str(main)
+    return main
+
   def resolve(self, request, current_dir=None, is_main=False, path=None,
               followed_from=None):
     """
@@ -863,12 +879,20 @@ class Context(object):
           filename = try_file(filename)
           if filename: return filename
       if os.path.isdir(request):
-        for choice in self._index_files:
-          new_request = os.path.join(request, choice)
-          try:
-            return self.resolve(new_request, current_dir, is_main, path)
-          except ResolveError:
-            continue
+        # If there is a package.json file in this directory, we can parse
+        # it for its "main" field to find the file we should be requiring
+        # for this directory.
+        main = self._get_package_main(request)
+        if main:
+          return self.resolve(os.path.join(request, main), current_dir, is_main, path)
+        else:
+          # Otherwise, try the standard index files.
+          for choice in self._index_files:
+            new_request = os.path.join(request, choice)
+            try:
+              return self.resolve(new_request, current_dir, is_main, path)
+            except ResolveError:
+              continue
       raise ResolveError(request, current_dir, is_main, path)
 
     if current_dir is None and is_main:

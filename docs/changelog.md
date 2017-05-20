@@ -25,6 +25,7 @@ __nodepy__
 - Fix #41 -- Now uses `colorama.init()` if the colorama module is available.
   If not, and the current platform is Windows, colorized traceback output
   is disabled.
+- Implement #42 -- Support a `"main"` field in `package.json`
 
 __nodepy-pm (PPYM post v0.0.17)__
 
