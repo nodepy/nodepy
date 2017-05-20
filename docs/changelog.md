@@ -28,8 +28,10 @@ __nodepy__
 - Implement #42 -- Support a `"main"` field in `package.json`
 - Remove `-v,--verbose` option and `Context.debug()` for now, needs to be
   reimplemented completely with actually useful and well formatted information
+- Remove `nodepy.get_python_library_base()` and `nodepy.get_python_library_path()`
+- Add `nodepy.get_site_packages()` instead
 
-__nodepy-pm (PPYM post v0.0.17)__
+__@nodepy/pm__ *(PPYM post v0.0.17)*
 
 - merged code into Node.py repository (now developed and released alongside
   Node.py)

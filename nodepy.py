@@ -634,27 +634,18 @@ def try_file(filename, preserve_symlinks=True):
   return None
 
 
-def get_python_library_base():
+def get_site_packages(prefix):
   """
-  Returns the path relative to the root of a Python prefix of where the
-  standard library would be placed (i.e. `Lib/` on Windows and `lib/pythonX.Y`
-  on other systems).
+  Returns the path to the `site-packages/` directory where Python modules
+  are installed to via Pip given that the specified *prefix* is the same
+  that was passed during the Pip installation.
   """
 
   if os.name == 'nt':
-    return 'Lib'
+    lib = 'Lib'
   else:
-    return 'lib/python{}.{}'.format(*sys.version_info)
-
-
-def get_python_library_path(prefix):
-  """
-  Returns a list of two paths to the Python library inside the specified
-  *prefix* directory.
-  """
-
-  lib = os.path.join(prefix, get_python_library_base())
-  return [lib, os.path.join(lib, 'site-packages')]
+    lib = 'lib/python{}.{}'.format(*sys.version_info)
+  return os.path.join(prefix, lib, 'site-packages')
 
 
 class Context(object):
@@ -699,8 +690,8 @@ class Context(object):
     nearest_modules = find_nearest_modules_directory(current_dir)
     if not nearest_modules:
       nearest_modules = os.path.join(current_dir, 'nodepy_modules')
-    pip_lib = get_python_library_path(os.path.join(nearest_modules, '.pip'))
-    self.importer = localimport.localimport(parent_dir=current_dir, path=pip_lib)
+    pip_lib = get_site_packages(os.path.join(nearest_modules, '.pip'))
+    self.importer = localimport.localimport(parent_dir=current_dir, path=[pip_lib])
 
     if not bare:
       self.loaders.append(PythonLoader())
@@ -745,11 +736,7 @@ class Context(object):
     if module.filename:
       nearest_modules = find_nearest_modules_directory(module.filename)
       if nearest_modules:
-        # TODO: Is it only the site-packages path we have to add?
-        # TODO: If we ever change the return value of get_python_library_path(),
-        #       make sure to adjust this call or refactor it before changing the
-        #       function.
-        library_path = get_python_library_path(os.path.join(nearest_modules, '.pip'))[-1]
+        library_path = get_site_packages(os.path.join(nearest_modules, '.pip'))
         if os.path.isdir(library_path):
           library_path = os.path.normpath(library_path)
         else:
