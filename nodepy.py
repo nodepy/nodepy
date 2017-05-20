@@ -405,6 +405,7 @@ class JsonLoader(object):
       assert isinstance(package, Package), package
       assert os.path.normpath(os.path.abspath(filename)) == \
         os.path.normpath(os.path.abspath(filename))
+      return package.module
     return JsonModule(context, filename, request=request, parent=parent,
       package=package)
 
@@ -421,7 +422,7 @@ class JsonModule(BaseModule):
     if self.executed:
       raise RuntimeError('already loaded')
     if os.path.basename(self.filename) == 'package.json' and self.package:
-      self.namespace.exports = deepcopy(self.package.json)
+      self.namespace.exports = self.package.json
     else:
       with open(self.filename, 'r') as fp:
         self.namespace.exports = json.load(fp)
@@ -678,12 +679,14 @@ class Package(object):
   such a manifest, that module will be associated with the #Package.
   """
 
-  def __init__(self, filename, json=None):
+  def __init__(self, context, filename, json=None):
     if json is None:
       with open(filename) as fp:
         json = _json.load(fp)
+    self.context = context
     self.filename = filename
     self.json = json
+    self.module = JsonModule(context, filename, package=self)
 
   def __repr__(self):
     return "<Package '{}@{}' at '{}'>".format(
@@ -886,12 +889,10 @@ class Context(object):
       if doraise: raise
       package = None
     else:
-      package = Package(filename, json=manifest)
+      package = Package(self, filename, json=manifest)
       self._package_cache[filename] = package
 
     return package
-
-
 
   def resolve(self, request, current_dir=None, is_main=False, path=None,
               followed_from=None):
