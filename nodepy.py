@@ -28,6 +28,7 @@ synopsis:
 """
 
 from __future__ import absolute_import, division, print_function
+from copy import deepcopy
 
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 __version__ = '0.0.19'
@@ -40,7 +41,7 @@ import code
 import collections
 import contextlib
 import itertools
-import json
+import json, json as _json
 import marshal
 import math
 import os
@@ -141,7 +142,7 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
   (Storing it under the cache name would actually lead to cache misses).
   """
 
-  def __init__(self, context, filename, directory, name,
+  def __init__(self, context, filename, directory, name, package=None,
                parent=None, request=None, real_filename=None):
     self.context = context
     self.filename = filename
@@ -153,6 +154,7 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     self.executed = False
     self.parent = parent
     self.request = request
+    self.package = package
     self.init_namespace()
 
   def init_namespace(self):
@@ -201,11 +203,11 @@ class PythonModule(BaseModule):
   respectively.
   """
 
-  def __init__(self, context, filename, real_filename, name, code, parent, request):
+  def __init__(self, context, filename, real_filename, name, code,
+               package, parent, request):
     super(PythonModule, self).__init__(
-        context=context, filename=filename,
-        directory=os.path.dirname(filename),
-        name=name, parent=parent,
+        context=context, filename=filename, package=package,
+        directory=os.path.dirname(filename), name=name, parent=parent,
         request=request)
     self.code = code
     self.real_filename = real_filename
@@ -236,7 +238,7 @@ class BaseLoader(six.with_metaclass(abc.ABCMeta)):
     return False
 
   @abc.abstractmethod
-  def load(self, context, filename, request, parent):
+  def load(self, context, filename, request, parent, package):
     return BaseModule()
 
 
@@ -277,7 +279,7 @@ class PythonLoader(BaseLoader):
   def can_load(self, filename):
     return filename.endswith('.py') or filename.endswith(self.pyc_suffix)
 
-  def load(self, context, filename, request, parent):
+  def load(self, context, filename, request, parent, package):
     """
     Called when a #Context requires to load a module for a filename. The
     #PythonLoader will always check if a byte-compiled version of the source
@@ -327,7 +329,8 @@ class PythonLoader(BaseLoader):
       real_filename = None
 
     return PythonModule(context=context, filename=filename, name=name,
-        code=code, parent=parent, request=request, real_filename=real_filename)
+        code=code, parent=parent, request=request, real_filename=real_filename,
+        package=package)
 
   def _preprocess(self, filename, code):
     if self.support_require_unpack_syntax:
@@ -397,23 +400,31 @@ class JsonLoader(object):
   def can_load(self, filename):
     return filename.endswith('.json')
 
-  def load(self, context, filename, request, parent):
-    return JsonModule(context, filename, request=request, parent=parent)
+  def load(self, context, filename, request, parent, package):
+    if os.path.basename(filename) == 'package.json':
+      assert isinstance(package, Package), package
+      assert os.path.normpath(os.path.abspath(filename)) == \
+        os.path.normpath(os.path.abspath(filename))
+    return JsonModule(context, filename, request=request, parent=parent,
+      package=package)
 
 
 class JsonModule(BaseModule):
 
-  def __init__(self, context, filename, parent=None, request=None):
+  def __init__(self, context, filename, parent=None, request=None, package=None):
     directory, name = os.path.split(filename)
     super(JsonModule, self).__init__(
       context=context, filename=filename, directory=directory, name=name,
-      parent=parent, request=request)
+      parent=parent, request=request, package=package)
 
   def exec_(self):
     if self.executed:
       raise RuntimeError('already loaded')
-    with open(self.filename, 'r') as fp:
-      self.namespace.exports = json.load(fp)
+    if os.path.basename(self.filename) == 'package.json' and self.package:
+      self.namespace.exports = deepcopy(self.package.json)
+    else:
+      with open(self.filename, 'r') as fp:
+        self.namespace.exports = json.load(fp)
 
 
 class Require(object):
@@ -606,6 +617,19 @@ def find_nearest_modules_directory(current_dir):
   return None
 
 
+def find_nearest_package_json(current_file):
+  """
+  Finds the nearest `package.json` relative to *current_file* and returns it.
+  If no such file exists, #None will be returned.
+  """
+
+  for directory in upiter_directory(current_file):
+    result = os.path.join(directory, 'package.json')
+    if os.path.isfile(result):
+      return result
+  return None
+
+
 def get_package_link(current_dir):
   """
   Finds a `.nodepy-link` file in *path* or any of its parent directories,
@@ -648,6 +672,28 @@ def get_site_packages(prefix):
   return os.path.join(prefix, lib, 'site-packages')
 
 
+class Package(object):
+  """
+  Represents a `package.json` file. If a module is loaded that lives near
+  such a manifest, that module will be associated with the #Package.
+  """
+
+  def __init__(self, filename, json=None):
+    if json is None:
+      with open(filename) as fp:
+        json = _json.load(fp)
+    self.filename = filename
+    self.json = json
+
+  def __repr__(self):
+    return "<Package '{}@{}' at '{}'>".format(
+      self.json.get('name'), self.json.get('version'), self.filename)
+
+  @property
+  def directory(self):
+    return os.path.dirname(filename)
+
+
 class Context(object):
   """
   The context encapsulates the execution of Python modules. It serves as the
@@ -664,7 +710,7 @@ class Context(object):
     self._index_files = ['index', '__init__']
     # A cache for the package.json files that needed to be parsed while
     # resolving require requests.
-    self._package_json_cache = {}
+    self._package_cache = {}
     # Container for cached modules. The keys are the absolute and normalized
     # filenames of the module so that the same file will not be loaded multiple
     # times.
@@ -805,17 +851,47 @@ class Context(object):
     return None
 
   def _get_package_main(self, dirname):
-    fn = os.path.normpath(os.path.abspath(os.path.join(dirname, 'package.json')))
-    if fn not in self._package_json_cache:
-      if os.path.isfile(fn):
-        with open(fn) as fp:
-          self._package_json_cache[fn] = json.load(fp)
-      else:
-        self._package_json_cache[fn] = None
-    manifest = self._package_json_cache[fn]
-    main = manifest.get('main') if manifest else None
-    if main: main = str(main)
-    return main
+    """
+    Checks if there exists a `package.json` in the specified *dirname*, loads
+    it and then returns the value of its `"main"` field. If the field or the
+    manifest does not exist, #None is returned.
+    """
+
+    fn = os.path.abspath(os.path.join(dirname, 'package.json'))
+    package = self._get_package(fn, doraise=False)
+    if package:
+      main = package.json.get('main')
+      if main: main = str(main)
+      return main
+    else:
+      return None
+
+  def _get_package(self, filename, doraise=True):
+    """
+    Loads a `package.json` file, caches it and returns a #Package instance.
+    If the *filename* does not exist and *doraise* is #False, #None will
+    be returned instead of an #IOError being raised.
+    """
+
+    filename = os.path.normpath(filename)
+    try:
+      return self._package_cache[filename]
+    except KeyError:
+      pass
+    try:
+      with open(filename) as fp:
+        manifest = json.load(fp)
+    except IOError:
+      self._package_cache[filename] = None
+      if doraise: raise
+      package = None
+    else:
+      package = Package(filename, json=manifest)
+      self._package_cache[filename] = package
+
+    return package
+
+
 
   def resolve(self, request, current_dir=None, is_main=False, path=None,
               followed_from=None):
@@ -924,7 +1000,11 @@ class Context(object):
       else:
         raise ValueError('no loader for {!r}'.format(filename))
 
-    module = loader.load(self, filename, request, parent)
+    # Find the nearest package for the module.
+    pfn = find_nearest_package_json(filename)
+    package = self._get_package(pfn) if pfn else None
+
+    module = loader.load(self, filename, request, parent, package)
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
           'but instead a {!r} object'.format(
