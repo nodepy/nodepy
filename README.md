@@ -58,40 +58,7 @@ so easily possible for Cinema 4D plugins before.
 - Package manager with capabilities to install Node.py and Python modules
 - `require()` makes tracking the origin of a dependency more clear and
   enables an arbitrary project structure
-- Enables a new syntax to unpack components from a required module similar
-  to Python's `from ... import ...`
-
-## Example
-
-```
-$ nodepy-pm init
-Package Name? myapp
-Package Version [1.0.0]?
-Description?
-Author (Name <Email>)?
-License? MIT
-$ nodepy-pm install --save py/flask @nodepy/werkzeug-reloader-patch
-[ ... ]
-$ ls
-app.py config.py index.py nodepy_modules/
-$ cat index.py
-```
-
-```python
-import flask
-require('@nodepy/werkzeug-reloader-patch').install()
-app = require('./app')
-{ host, port, debug } = require('./config')
-version = require('./package.json')['version']
-
-if require.main == module:
-  app.run(host=host, port=port, debug=debug)
-```
-
-```
-$ nodepy .
-```
-
+- Run-time extensions (eg. source code preprocessors)
 
 ## Requirements
 
@@ -103,6 +70,67 @@ $ nodepy .
 ## Installation
 
     pip install node.py
+
+## Example: Flask Web Application
+
+We can use the `nodepy-pm init` command to create an initial `package.json`
+manifest file. Say "yes" when it asks you whether you want to use the
+`require-unpack-syntax` extension a
+
+    $ nodepy-pm init
+    Package Name? myapp
+    Package Version [1.0.0]? 
+    Description? My first Node.py app.
+    Author (Name <Email>)? Niklas Rosenstein <rosensteinniklas@gmail.com>
+    License? MIT
+    Main? main
+    Do you want to use the require-unpack-syntax extension? [Y/n] y
+
+Then we can install some third-party modules that we want to use. Say, we
+want to make a Flask web application, we can install a Python third party
+module using the `py/` prefix. We use the `--save` option to save the
+dependency in our `package.json` manifest.
+
+    nodepy-pm install --save py/flask
+
+It is also reccomended to use the `@nodepy/werkzeug-reloader-patch` when
+creating Flask applications with Node.py, as Werkzeug, and thus Flask, does
+not have native support for reloading Node.py applications. We use the
+`--save-ext` flag which implies `--save` and adds the package to the
+`"extensions"` field.
+
+    nodepy-pm install --save-ext @nodepy/werkzeug-reloader-patch
+
+Alternatively, instead of adding the package as an extensions, we could
+install the patch manully using the following:
+
+```python
+require('@nodepy/werkzeug-reloader-patch').install()
+```
+
+Now on to the Flask application. Create a `config.py` file.
+
+```python
+host = "localhost"
+port = 8000
+debug = True
+```
+
+And finally our `main.py` file.
+
+```python
+from flask import Flask
+{ host, port, debug } = require('./config')
+
+app = Flask('myapp')
+app.debug = debug
+app.jinja_env.globals.update({
+  'app_version': require('./package.json')['version']
+})
+
+if require.main == module:
+  app.run(host=host, port=port)
+```
 
 ## Additional Links
 
