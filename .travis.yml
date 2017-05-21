@@ -12,5 +12,5 @@ install:
 - pip install . -v
 script:
 - nodepy --version
-- export PATH=${PATH}:$(nodepy nodepy-pm bin --global)
+- export PATH=${PATH}:$(nodepy @nodepy/pm bin --global)
 - nodepy-pm
