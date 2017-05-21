@@ -256,12 +256,6 @@ class PythonLoader(BaseLoader):
   # Parameters
   write_bytecache (bool, None): Write bytecache files. If not specified,
       checks the `PYTHONDONTWRITEBYTECODE` environment variable.
-  support_require_unpack_syntax (bool): If #True, pre-processes Python
-      source code to support the `require()` unpack syntax.
-
-  # Members
-  preprocessors (list): A list of functions that accept `(filename, code)`
-      parameters and return a modified version of *code*.
   """
 
   # Choose an implementation and version dependent suffix for Python
@@ -272,12 +266,10 @@ class PythonLoader(BaseLoader):
     _impl_name = sys.subversion[0].lower()
   pyc_suffix = '.{}-{}{}.pyc'.format(_impl_name, *sys.version_info)
 
-  def __init__(self, write_bytecache=None, support_require_unpack_syntax=True):
+  def __init__(self, write_bytecache=None):
     if write_bytecache is None:
       write_bytecache = not bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
     self.write_bytecache = write_bytecache
-    self.support_require_unpack_syntax = support_require_unpack_syntax
-    self.preprocessors = []
 
   def suggest_try_files(self, filename):
     yield filename + '.py'
@@ -340,8 +332,6 @@ class PythonLoader(BaseLoader):
         package=package)
 
   def _preprocess(self, package, filename, source):
-    if self.support_require_unpack_syntax:
-      source = preprocess_unpack_require_syntax(source)
     for ext in (package.get_extensions() if package else []):
       if hasattr(ext, 'preprocess_python_source'):
         source = ext.preprocess_python_source(package, filename, source)
@@ -371,26 +361,40 @@ class PythonLoader(BaseLoader):
         return compile(source, filename, 'exec', dont_inherit=True)
 
 
-def preprocess_unpack_require_syntax(code):
+class RequireUnpackSyntaxExtension(object):
   """
-  Takes as input Python source code and transforms occurences of the
-  Node.py `require()` unpack syntax to actual Python source code.
+  This is an extension that is registered to the #Context as a binding
+  that preprocesses Python source code to allow unpacking of members from
+  a `require()` call.
+
+  # Example
+
+  ```python
+  { app, config } = require('./app')
+
+  # equivalent of
+  temp = require('./app')
+  app = temp.app
+  config = temp.config
+  del temp
+  ```
   """
 
-  while True:
-    # TODO: This currently does not support nested expressions in the require() call.
-    # TODO: We can optimize this by passing a start index.
-    match = re.search('{\s*(?!,)(\w+(?:\s+as\s+\w+)?(?:\s*,\s*\w+)*)\s*,?\s*}\s*=\s*(require\([^\)]*\))', code)
-    if not match: break
-    assign = '_reqres=' + match.group(2) + ';'
-    for name in match.group(1).split(','):
-      left = name
-      if 'as' in name:
-        name, __, left = name.partition('as')
-      assign += '{0}=_reqres.{1};'.format(left.strip(), name.strip())
-    assign += 'del _reqres'
-    code = code[:match.start(0)] + assign + code[match.end(0):]
-  return code
+  def preprocess_python_source(self, package, filename, code):
+    while True:
+      # TODO: This currently does not support nested expressions in the require() call.
+      # TODO: We can optimize this by passing a start index.
+      match = re.search('{\s*(?!,)(\w+(?:\s+as\s+\w+)?(?:\s*,\s*\w+)*)\s*,?\s*}\s*=\s*(require\([^\)]*\))', code)
+      if not match: break
+      assign = '_reqres=' + match.group(2) + ';'
+      for name in match.group(1).split(','):
+        left = name
+        if 'as' in name:
+          name, __, left = name.partition('as')
+        assign += '{0}=_reqres.{1};'.format(left.strip(), name.strip())
+      assign += 'del _reqres'
+      code = code[:match.start(0)] + assign + code[match.end(0):]
+    return code
 
 
 class JsonLoader(object):
@@ -771,6 +775,7 @@ class Context(object):
     if not bare:
       self.loaders.append(PythonLoader())
       self.loaders.append(JsonLoader())
+      self.register_binding('require-unpack-syntax', RequireUnpackSyntaxExtension())
 
   def __enter__(self):
     self.importer.__enter__()

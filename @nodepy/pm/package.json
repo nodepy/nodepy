@@ -19,5 +19,8 @@
     "hammock": ">=0.2.4",
     "jsonschema": ">=2.6.0",
     "requests": ">=2.13.0"
-  }
+  },
+  "extensions": [
+    "!require-unpack-syntax"
+  ]
 }

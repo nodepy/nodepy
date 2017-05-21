@@ -6,7 +6,6 @@ __nodepy__
 
 - Fix `nodepy.proc_args` to contain `sys.executable` if the nodepy executable
   is not an `.exe` on Windows
-- Add `require()` unpack syntax by preprocessing loaded source code
 - Fix #36: pkg_resources DistributionNotFound for packages installed with nodepy-pm
 - If Pygments is available, will be used to print colored exception tracebacks
 - Add instead `Context.loaders` and `Context.get_loader()`
@@ -15,6 +14,7 @@ __nodepy__
 - Fix #41 -- Now uses `colorama.init()` if the colorama module is available.
   If not, and the current platform is Windows, colorized traceback output
   is disabled.
+- Add ability to do `require('./package.json')` or with any other JSON file
 - Implement #42 -- Support a `"main"` field in `package.json`
 - Add an `"extensions"` field to `package.json`, currently supported extension
   event callbacks are `init_extension()` and `module_loaded()`
@@ -25,6 +25,8 @@ __nodepy__
 - `Context.binding()` now raises a `NoSuchBindingError`
 - `require()` requests beginning with an `!` (exclamation mark) will be
   forwarded to `Context.binding()` (without the exclamation mark)
+- Add `require-unpack-syntax` binding to `Context` class, which can be added
+  to the extensions listed in a `package.json`
 
 __nodepy internal__
 
@@ -32,9 +34,6 @@ __nodepy internal__
 - Add `BaseModule.real_filename` as `BaseModule.filename` must always match
   the filename that was passed into the loader (otherwise `BaseModule.remove()`
   does not work)
-- Add `PythonLoader.preprocessor` list
-- Add `PythonLoader.unpack_require_preprocessor()` static method
-- Add ability to do `require('./package.json')` or with any other JSON file
 - Add `JsonLoader` class
 - Add `PythonLoader(support_require_unpack_syntax)` argument
 - Remove `nodepy.get_python_library_base()` and `nodepy.get_python_library_path()`
@@ -44,6 +43,7 @@ __nodepy internal__
 - Add `BaseModule.package` member and parameter to constructor
 - Add `BaseLoader.load(package)` parameter
 - Add `NoSuchBindingError` class
+- Add `RequireUnpackSyntaxExtension` class
 
 __@nodepy/pm__ *(PPYM post v0.0.17)*
 
