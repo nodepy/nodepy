@@ -115,18 +115,33 @@ def main():
     help='Specify whether to install development dependencies or not. The '
       'default value depends on the installation type (--dev when no packages '
       'are specified, --production otherwise).')
-@click.option('--save', is_flag=True)
-@click.option('--save-dev', is_flag=True)
+@click.option('--save', is_flag=True,
+    help='Save the installed dependencies into the "dependencies" or '
+      '"python-dependencies" field, respectively.')
+@click.option('--save-dev', is_flag=True,
+    help='Save the installed dependencies into the "dev-dependencies" or '
+      '"dev-python-dependencies" field, respectively.')
+@click.option('--save-ext', is_flag=True,
+    help='Save the installed dependencies into the "extensions" field. '
+      'Installed Python modules are ignored for this one. Implies --save')
 @click.option('-v', '--verbose', is_flag=True)
 @exit_with_return
 def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
             root, recursive, info, dev, pip_separate_process,
-            pip_use_target_option, save, save_dev, verbose):
+            pip_use_target_option, save, save_dev, save_ext, verbose):
   """
   Installs one or more Node.Py or Pip packages.
   """
 
   packagefile = os.path.join(packagedir, 'package.json')
+
+  if save_ext:
+    if save_dev:
+      print('Warning: --save-ext should not be combined with --save-dev')
+      print('  Extensions must be available during runtime.')
+    else:
+      # Implying --save
+      save = True
 
   if save and save_dev:
     print('Error: decide for either --save or --save-dev')
@@ -227,6 +242,12 @@ def install(packages, develop, upgrade, global_, ignore_installed, packagedir,
     # Sort the data and insert it back into the package manifest.
     data = sorted(data.items(), key=itemgetter(0))
     package_json[field] = collections.OrderedDict(data)
+
+  if save_ext and save_deps:
+    extensions = package_json.setdefault('extensions', [])
+    for ext_name in sorted(map(itemgetter(0), save_deps)):
+      if ext_name not in extensions:
+        extensions.append(ext_name)
 
   if (save or save_dev) and (save_deps or python_deps):
     with open(packagefile, 'w') as fp:
@@ -381,7 +402,7 @@ def init(directory):
     if reply and reply != '-':
       results[qu[1]] = reply
 
-  reply = input('Do you want to use the require-unpack-syntax extension? [Y/n]')
+  reply = input('Do you want to use the require-unpack-syntax extension? [Y/n] ')
   if reply.lower() not in ('n', 'no', 'off'):
     results['extensions'] = ['!require-unpack-syntax']
 

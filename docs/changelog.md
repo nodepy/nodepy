@@ -74,6 +74,7 @@ __@nodepy/pm__ *(PPYM post v0.0.17)*
 - `pre-script` no longer recieves the arguments of the script that is being invoked
 - Add questions for `"main"` and the `require-unpack-syntax` extension to
   `nodepy-pm init`
+- Add `--save-ext` option to `nodepy-pm install` command
 
 ### v0.0.19
 
