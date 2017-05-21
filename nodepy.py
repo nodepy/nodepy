@@ -371,7 +371,6 @@ class RequireUnpackSyntaxExtension(object):
   a `require()` call.
 
   # Example
-
   ```python
   { app, config } = require('./app')
 
@@ -383,21 +382,117 @@ class RequireUnpackSyntaxExtension(object):
   ```
   """
 
+  _regex = re.compile(
+    r'''{\s*(?!,)(?P<members>\w+(?:\s+as\s+\w+)?(?:\s*,\s*\w+)*)\s*,?\s*}\s*=\s*require\((?P<q>["'])(?P<mod>.*?)(?P=q)\)'''
+  )
+
   def preprocess_python_source(self, package, filename, code):
     while True:
       # TODO: This currently does not support nested expressions in the require() call.
       # TODO: We can optimize this by passing a start index.
-      match = re.search('{\s*(?!,)(\w+(?:\s+as\s+\w+)?(?:\s*,\s*\w+)*)\s*,?\s*}\s*=\s*(require\([^\)]*\))', code)
+      match = self._regex.search(code)
       if not match: break
-      assign = '_reqres=' + match.group(2) + ';'
-      for name in match.group(1).split(','):
-        left = name
-        if 'as' in name:
-          name, __, left = name.partition('as')
-        assign += '{0}=_reqres.{1};'.format(left.strip(), name.strip())
-      assign += 'del _reqres'
-      code = code[:match.start(0)] + assign + code[match.end(0):]
+      stmt = self.import_symbols_from_stmt(match.group('mod'), match.group('members').split(','))
+      code = code[:match.start(0)] + stmt + code[match.end(0):]
     return code
+
+  @staticmethod
+  def import_symbols_from_stmt(module, symbols):
+    stmt = '_reqres=require({!r}, exports=False).namespace;'.format(module)
+    for name in symbols:
+      left = name
+      if 'as' in name:
+        name, __, left = name.partition('as')
+      stmt += '{0}=_reqres.{1};'.format(left.strip(), name.strip())
+    return stmt + 'del _reqres'
+
+
+class RequireImportSyntaxExtension(object):
+  """
+  Similar to the #RequireUnpackSyntaxExtension, this extension allows the use
+  of JavaScript-like ES6 module imports. These look very similar to Python
+  imports.
+
+  # Examples & Explanations
+
+  Import the default member from the specified module. If no member is
+  exported in the module, the module itself is returned. Note that this is
+  the same as `require()`-ing the module. The two statements below are
+  equivalent.
+
+      import defaultMember from "module-name"
+
+  You can also avoid importing the default member by using this syntax instead:
+
+      import "module-name" as defaultMember
+
+  The module can also be imported without exporting a symbol into the current
+  namespace, just for the side-effects of the module import.
+
+      import "module-name"
+
+  Import a single member from a module. This inserts `myMember` into the
+  current scope.
+
+      import {myMember} from "module-name"
+
+  Import multiple members of a module.
+
+      import {foo, bar} from "module-name"
+
+  Import a member under a different name. Note how line-breaks are supported
+  in this new import statement syntax (it is still not supported in the old
+  Python import).
+
+      import {reallyReallyLongMemberName as shortName}
+          from "module-name"
+  """
+
+  _re_import_as = re.compile(
+    r'''^(?P<indent>[^\S\n]*)import\s+(?P<q>"|')(?P<mod>.*?)(?P=q)(?:\s+as\s+(?P<n>\w+))?[^\S\n]*$''',
+    re.M
+  )
+  _re_import_from = re.compile(
+    r'''^(?P<indent>[^\S\n]*)import\s+(?P<members>(?:\w+|\{[^}]+\}))\s+from\s+(?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$''',
+    re.M
+  )
+  _regexes = [(_re_import_as, 'as'), (_re_import_from, 'from')]
+
+  def preprocess_python_source(self, package, filename, source):
+    while True:
+      for regex, kind in self._regexes:
+        match = regex.search(source)
+        if match: break
+      else:
+        break
+
+      if kind == 'as':
+        as_name = match.group('n')
+        if as_name:
+          repl = '{} = require({!r})'.format(as_name, match.group('mod'))
+        else:
+          repl = 'require({!r})'.format(match.group('mod'))
+      elif kind == 'from':
+        module = match.group('mod')
+        members = match.group('members')
+        if members.startswith('{'):
+          assert members.endswith('}')
+          repl = RequireUnpackSyntaxExtension.import_symbols_from_stmt(
+            module, members[1:-1].split(',')
+          )
+        else:
+          repl = '{} = require({!r})'.format(members, module)
+      else:
+        raise RuntimeError
+
+      # Add additional newlines to the replacement until it spans
+      # the same number of newlines than the matched sequence. This
+      # is to keep error message more consistent.
+      repl = match.group('indent') + repl + '\n' * match.group(0).count('\n')
+
+      source = source[:match.start()] + repl + source[match.end():]
+
+    return source
 
 
 class JsonLoader(object):
@@ -779,6 +874,7 @@ class Context(object):
       self.loaders.append(PythonLoader())
       self.loaders.append(JsonLoader())
       self.register_binding('require-unpack-syntax', RequireUnpackSyntaxExtension())
+      self.register_binding('require-import-syntax', RequireImportSyntaxExtension())
 
   def __enter__(self):
     self.importer.__enter__()

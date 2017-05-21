@@ -26,7 +26,9 @@ __nodepy__
 - `require()` requests beginning with an `!` (exclamation mark) will be
   forwarded to `Context.binding()` (without the exclamation mark)
 - Add `require-unpack-syntax` binding to `Context` class, which can be added
-  to the extensions listed in a `package.json`
+  to the extensions listed in a `package.json` manifest
+- Add `require-import-syntax` binding to `Context` class, which can be added
+  to the extensions listed in a `package.json` manifest
 - `nodepy --version` now prints Python implementation name
 
 __nodepy internal__
@@ -44,7 +46,8 @@ __nodepy internal__
 - Add `BaseModule.package` member and parameter to constructor
 - Add `BaseLoader.load(package)` parameter
 - Add `NoSuchBindingError` class
-- Add `RequireUnpackSyntaxExtension` class
+- Add `RequireUnpackSyntaxExtension` class and `require-unpack-syntax` binding
+- Add `RequireImportSyntaxExtension` class and `require-import-syntax` binding
 - Add `nodepy.python_impl` member
 
 __@nodepy/pm__ *(PPYM post v0.0.17)*
