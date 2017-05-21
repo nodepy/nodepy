@@ -364,7 +364,8 @@ def init(directory):
     ('Package Version', 'version', '1.0.0'),
     ('?Description', 'description', None),
     ('?Author (Name <Email>)', 'author', config.get('author')),
-    ('?License', 'license', config.get('license'))
+    ('?License', 'license', config.get('license')),
+    ('?Main', 'main', None)
   ]
 
   results = collections.OrderedDict()
@@ -380,11 +381,13 @@ def init(directory):
     if reply and reply != '-':
       results[qu[1]] = reply
 
-  results['dependencies'] = {}
-  results['python-dependencies'] = {}
+  reply = input('Do you want to use the require-unpack-syntax extension? [Y/n]')
+  if reply.lower() not in ('n', 'no', 'off'):
+    results['extensions'] = ['!require-unpack-syntax']
 
   with open(filename, 'w') as fp:
     json.dump(results, fp, indent=2)
+    fp.write('\n')
 
 
 @main.command()
