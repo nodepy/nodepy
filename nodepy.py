@@ -458,7 +458,7 @@ class RequireImportSyntaxExtension(object):
     re.M
   )
   _re_import_from = re.compile(
-    r'''^(?P<indent>[^\S\n]*)import\s+(?P<members>(?:\w+|(?:\w+\s*,\s*)\{[^}]+\}))\s+from\s+(?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$''',
+    r'''^(?P<indent>[^\S\n]*)import\s+(?P<members>(?:\w+|(?:\w+\s*,\s*)?\{[^}]+\}))\s+from\s+(?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$''',
     re.M
   )
   _regexes = [(_re_import_as, 'as'), (_re_import_from, 'from')]
