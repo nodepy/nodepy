@@ -27,6 +27,7 @@ __nodepy__
   forwarded to `Context.binding()` (without the exclamation mark)
 - Add `require-unpack-syntax` binding to `Context` class, which can be added
   to the extensions listed in a `package.json`
+- `nodepy --version` now prints Python implementation name
 
 __nodepy internal__
 
@@ -44,6 +45,7 @@ __nodepy internal__
 - Add `BaseLoader.load(package)` parameter
 - Add `NoSuchBindingError` class
 - Add `RequireUnpackSyntaxExtension` class
+- Add `nodepy.python_impl` member
 
 __@nodepy/pm__ *(PPYM post v0.0.17)*
 

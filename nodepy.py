@@ -87,12 +87,19 @@ import six
 if sys.version >= '3.5':
   import importlib._bootstrap_external
 
-VERSION = 'Node.py-{0} [Python {1[0]}.{1[1]}.{1[2]} {2}-bit]'.format(
-    __version__, sys.version_info, int(round(math.log(sys.maxsize, 2))) + 1)
 PackageLink = collections.namedtuple('PackageLink', 'src dst')
 
 proc_args = [sys.executable, __file__]
 executable = None
+
+if hasattr(sys, 'implementation'):
+  python_impl = sys.implementation.name.lower()
+else:
+  python_impl = sys.subversion[0].lower()
+
+VERSION = 'Node.py-{0} [{3} {1[0]}.{1[1]}.{1[2]} {2}-bit]'.format(
+    __version__, sys.version_info, int(round(math.log(sys.maxsize, 2))) + 1,
+    python_impl)
 
 
 @contextlib.contextmanager
@@ -260,11 +267,7 @@ class PythonLoader(BaseLoader):
 
   # Choose an implementation and version dependent suffix for Python
   # bytecache files.
-  if hasattr(sys, 'implementation'):
-    _impl_name = sys.implementation.name.lower()
-  else:
-    _impl_name = sys.subversion[0].lower()
-  pyc_suffix = '.{}-{}{}.pyc'.format(_impl_name, *sys.version_info)
+  pyc_suffix = '.{}-{}{}.pyc'.format(python_impl.lower(), *sys.version_info)
 
   def __init__(self, write_bytecache=None):
     if write_bytecache is None:
