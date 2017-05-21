@@ -111,6 +111,10 @@ def jit_debug(debug=True):
     raise
 
 
+class NoSuchBindingError(Exception):
+  pass
+
+
 class ResolveError(Exception):
 
   def __init__(self, request, current_dir, is_main, path):
@@ -437,6 +441,7 @@ class Require(object):
   The `require()` function for #PythonModule#s.
   """
 
+  NoSuchBindingError = NoSuchBindingError
   ResolveError = ResolveError
   PY2 = six.PY2
   PY3 = six.PY3
@@ -474,7 +479,9 @@ class Require(object):
     """
     Resolve *request* into a module filename and load that module. For relative
     paths, the *current_dir* will be used to resolve the request (defaults to
-    the parent directory of the module that owns the #Require instance).
+    the parent directory of the module that owns the #Require instance). If
+    the request starts with `!` (exclamation mark), the request will be
+    forwarded to #Context.binding().
 
     If *is_main* is True, non-relative requests will also be resolved in the
     *current_dir* first. Note that the #Context will raise a #RuntimeError when
@@ -496,6 +503,9 @@ class Require(object):
     the specified dictionary. Usually, you'll want to pass `globals()` to this
     parameter.
     """
+
+    if request.startswith('!'):
+      return self.context.binding(request[1:])
 
     if cache and request in self.cache:
       module = self.cache[request]
@@ -837,7 +847,10 @@ class Context(object):
     to a Context using the #register_binding() method.
     """
 
-    return self._bindings[binding_name]
+    try:
+      return self._bindings[binding_name]
+    except KeyError as exc:
+      raise NoSuchBindingError(binding_name)
 
   def register_index_file(self, filename):
     """

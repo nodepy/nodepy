@@ -22,8 +22,11 @@ __nodepy__
   `package.json` through its `BaseModule.package` member.
 - Remove `-v,--verbose` option and `Context.debug()` for now, needs to be
   reimplemented completely with actually useful and well formatted information
+- `Context.binding()` now raises a `NoSuchBindingError`
+- `require()` requests beginning with an `!` (exclamation mark) will be
+  forwarded to `Context.binding()` (without the exclamation mark)
 
-__nodepy API__
+__nodepy internal__
 
 - Remove `Context.register_extension()` and `Context.get_extension()`
 - Add `BaseModule.real_filename` as `BaseModule.filename` must always match
@@ -40,6 +43,7 @@ __nodepy API__
 - Add `Context._package_cache` member, `Context._get_package()` function
 - Add `BaseModule.package` member and parameter to constructor
 - Add `BaseLoader.load(package)` parameter
+- Add `NoSuchBindingError` class
 
 __@nodepy/pm__ *(PPYM post v0.0.17)*
 
