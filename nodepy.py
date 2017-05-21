@@ -420,7 +420,7 @@ class RequireImportSyntaxExtension(object):
   the same as `require()`-ing the module. The two statements below are
   equivalent.
 
-      import defaultMember from "module-name"
+      import default_member from "module-name"
 
   You can also avoid importing the default member by using this syntax instead:
 
@@ -446,6 +446,11 @@ class RequireImportSyntaxExtension(object):
 
       import {reallyReallyLongMemberName as shortName}
           from "module-name"
+
+  You can also import the default member and other members.
+
+      import default_member, {member1, reallyReallyLongMemberName as shortName}
+          from "module-name"
   """
 
   _re_import_as = re.compile(
@@ -453,7 +458,7 @@ class RequireImportSyntaxExtension(object):
     re.M
   )
   _re_import_from = re.compile(
-    r'''^(?P<indent>[^\S\n]*)import\s+(?P<members>(?:\w+|\{[^}]+\}))\s+from\s+(?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$''',
+    r'''^(?P<indent>[^\S\n]*)import\s+(?P<members>(?:\w+|(?:\w+\s*,\s*)\{[^}]+\}))\s+from\s+(?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$''',
     re.M
   )
   _regexes = [(_re_import_as, 'as'), (_re_import_from, 'from')]
@@ -475,11 +480,19 @@ class RequireImportSyntaxExtension(object):
       elif kind == 'from':
         module = match.group('mod')
         members = match.group('members')
-        if members.startswith('{'):
+        if '{' in members:
+          if members.startswith('{'):
+            default_name = None
+          else:
+            default_name, members = members.partition(',')[::2]
+            members = members.lstrip()
+            assert members.startswith('{')
           assert members.endswith('}')
           repl = RequireUnpackSyntaxExtension.import_symbols_from_stmt(
             module, members[1:-1].split(',')
           )
+          if default_name:
+            repl = '{}=require({!r});'.format(default_name, module) + repl
         else:
           repl = '{} = require({!r})'.format(members, module)
       else:

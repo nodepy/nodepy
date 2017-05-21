@@ -76,6 +76,12 @@ import {
   really_long_member1 as member1,
   member2
 } from "module-name"
+
+# Import the default member and also other members from the module.
+import default_member, {
+  really_long_member1 as member1,
+  member2
+} from "module-name"
 ```
 
 ### require-unpack-syntax
