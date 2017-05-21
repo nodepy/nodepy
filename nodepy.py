@@ -157,6 +157,9 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     self.package = package
     self.init_namespace()
 
+  def __repr__(self):
+    return "<{} from '{}'>".format(type(self).__name__, self.filename)
+
   def init_namespace(self):
     self.namespace.__file__ = self.real_filename
     self.namespace.__name__ = self.name
