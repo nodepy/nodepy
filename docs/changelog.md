@@ -30,6 +30,8 @@ __nodepy__
 - Add `require-import-syntax` binding to `Context` class, which can be added
   to the extensions listed in a `package.json` manifest
 - `nodepy --version` now prints Python implementation name
+- Add `--profile FILENAME` argument that will save a profile of the execution
+  to the specified file.
 
 __nodepy internal__
 

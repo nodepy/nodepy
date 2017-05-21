@@ -46,6 +46,7 @@ import marshal
 import math
 import os
 import pdb
+import pstats
 import py_compile
 import re
 import subprocess
@@ -53,6 +54,11 @@ import sys
 import tempfile
 import traceback
 import types
+
+try:
+  import cProfile as profile
+except ImportError:
+  import profile
 
 try:
   import pkg_resources
@@ -1219,7 +1225,7 @@ def main(argv=None):
   parser.add_argument('arguments', nargs='...')
   parser.add_argument('-d', '--debug', action='store_true',
       help='Enter the interactive debugger when an exception would cause '
-        'the application to exit.')
+           'the application to exit.')
   parser.add_argument('-c', '--exec', dest='exec_', metavar='EXPR',
       help='Evaluate a Python expression.')
   parser.add_argument('--current-dir', default='.', metavar='DIR',
@@ -1234,8 +1240,24 @@ def main(argv=None):
            'This must be a filename that matches a loader in the Context. '
            'Usually the file suffix is sufficient (depending on the loader).')
   parser.add_argument('--pymain', action='store_true')
+  parser.add_argument('--profile', type=argparse.FileType('wb'),
+      help='Profile the execution and save the stats to the specified file.')
   args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
+  if args.profile:
+    prf = profile.Profile()
+    try:
+      prf.runcall(_main, args)
+    finally:
+      prf.create_stats()
+      stats = pstats.Stats(prf)
+      stats.dump_stats(args.profile.name)
+      raise
+  else:
+    _main(args)
+
+
+def _main(args):
   if args.version:
     print(VERSION)
     sys.exit(0)
