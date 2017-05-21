@@ -305,7 +305,7 @@ class PythonLoader(BaseLoader):
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tmp:
           try:
             with open(filename, 'r') as src:
-              tmp.write(self._preprocess(filename, src.read()))
+              tmp.write(self._preprocess(package, filename, src.read()))
             tmp.close()
             py_compile.compile(tmp.name, bytecache_file, doraise=True)
           finally:
@@ -325,24 +325,25 @@ class PythonLoader(BaseLoader):
         can_load_bytecache = True
 
     if can_load_bytecache:
-      code = self.load_code(bytecache_file, is_compiled=True)
+      code = self.load_code(package, bytecache_file, is_compiled=True)
       real_filename = bytecache_file
     else:
-      code = self.load_code(filename, is_compiled=None)
+      code = self.load_code(package, filename, is_compiled=None)
       real_filename = None
 
     return PythonModule(context=context, filename=filename, name=name,
         code=code, parent=parent, request=request, real_filename=real_filename,
         package=package)
 
-  def _preprocess(self, filename, code):
+  def _preprocess(self, package, filename, source):
     if self.support_require_unpack_syntax:
-      code = preprocess_unpack_require_syntax(code)
-    for pp in self.preprocessors:
-      code = pp(filename, code)
-    return code
+      source = preprocess_unpack_require_syntax(source)
+    for ext in (package.get_extensions() if package else []):
+      if hasattr(ext, 'preprocess_python_source'):
+        source = ext.preprocess_python_source(package, filename, source)
+    return source
 
-  def load_code(self, filename, is_compiled=None):
+  def load_code(self, package, filename, is_compiled=None):
     """
     Loads a Python code object from a file. If *is_compiled*, it will be
     treated as a bytecompiled file if it ends with `.pyc`, otherwise it will
@@ -362,8 +363,8 @@ class PythonLoader(BaseLoader):
         return marshal.load(fp)
     else:
       with open(filename, 'r') as fp:
-        code = self._preprocess(filename, fp.read())
-        return compile(code, filename, 'exec', dont_inherit=True)
+        source = self._preprocess(package, filename, fp.read())
+        return compile(source, filename, 'exec', dont_inherit=True)
 
 
 def preprocess_unpack_require_syntax(code):

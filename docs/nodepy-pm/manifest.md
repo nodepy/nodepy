@@ -212,6 +212,9 @@ Currently supported events are:
   for a package.
 - `module_loaded(module)` -- Called when a module that uses the extension
   was loaded.
+- `preprocess_python_source(package, filename, source)` -- Called by the
+  `nodepy.PythonLoader` class when a Python source file is loaded, allowing
+  to transform the code before it is executed.
 
 ### `dist`
 
