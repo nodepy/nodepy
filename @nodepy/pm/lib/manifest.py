@@ -24,9 +24,9 @@ import re
 import six
 import string
 
-semver = require('./semver')
-refstring = require('./refstring')
-json = require('./util/json')
+import semver from './semver'
+import refstring from './refstring'
+import json from './util/json'
 
 # Django's URL validation regex.
 url_regex = re.compile(

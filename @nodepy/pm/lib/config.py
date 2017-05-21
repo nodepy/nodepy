@@ -23,7 +23,7 @@ import errno
 import os
 import sys
 
-{ get_python_install_type } = require('./env')
+import { get_python_install_type } from './env'
 
 PPYM_CONFIG = '~/.ppymrc'
 

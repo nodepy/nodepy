@@ -19,6 +19,9 @@
 # THE SOFTWARE.
 
 from __future__ import print_function
+from operator import itemgetter
+from six.moves import input
+from sys import exit
 
 import click
 import collections
@@ -29,19 +32,15 @@ import os
 import pip.req
 import six
 
-from operator import itemgetter
-from six.moves import input
-from sys import exit
-
-manifest = require('./lib/manifest')
-semver = require('./lib/semver')
-refstring = require('./lib/refstring')
-config = require('./lib/config')
-logger = require('./lib/logger')
-_install = require('./lib/install')
-registry = require('./lib/registry')
-PackageLifecycle = require('./lib/package-lifecycle')
-{ is_virtualenv, get_module_dist_info } = require('./lib/env')
+import manifest from './lib/manifest'
+import semver from './lib/semver'
+import refstring from './lib/refstring'
+import config from './lib/config'
+import logger from './lib/logger'
+import install from './lib/install'
+import registry from './lib/registry'
+import PackageLifecycle from './lib/package-lifecycle'
+import { is_virtualenv, get_module_dist_info } from './lib/env'
 
 
 class Less(object):
@@ -402,9 +401,13 @@ def init(directory):
     if reply and reply != '-':
       results[qu[1]] = reply
 
-  reply = input('Do you want to use the require-unpack-syntax extension? [Y/n] ')
+  reply = input('Do you want to use the require-import-syntax extension? [Y/n] ')
   if reply.lower() not in ('n', 'no', 'off'):
-    results['extensions'] = ['!require-unpack-syntax']
+    results.setdefault('extensions', []).append('!require-import-syntax')
+  else:
+    reply = input('Do you want to use the require-unpack-syntax extension? [Y/n] ')
+    if reply.lower() not in ('n', 'no', 'off'):
+      results.setdefault('extensions', []).append('!require-unpack-syntax')
 
   with open(filename, 'w') as fp:
     json.dump(results, fp, indent=2)

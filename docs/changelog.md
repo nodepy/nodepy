@@ -77,8 +77,8 @@ __@nodepy/pm__ *(PPYM post v0.0.17)*
 - Development has been merged into the Node.py repository itself
 - `run` command now executes `!` scripts with `$SHELL` completely unprocessed
 - `pre-script` no longer recieves the arguments of the script that is being invoked
-- Add questions for `"main"` and the `require-unpack-syntax` extension to
-  `nodepy-pm init`
+- Add questions for `"main"` and the `require-unpack-syntax` and
+  `require-import-syntax` extensions `nodepy-pm init`
 - Add `--save-ext` option to `nodepy-pm install` command
 
 ### v0.0.19

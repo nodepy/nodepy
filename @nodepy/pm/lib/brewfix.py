@@ -27,17 +27,18 @@ The fix will temporary set the install prefix option to an empty string in
 the `~/.pydistutils.cfg` file, and then undo that change.
 """
 
+from six.moves import configparser
 import contextlib
 import os
 import sys
-from six.moves import configparser
-is_virtualenv = require('./env').is_virtualenv()
+
+import { is_virtualenv } from './env'
 
 
 @contextlib.contextmanager
 def brewfix(prefix_dir='', force=False):
   if not force:
-    if not sys.platform.startswith('darwin') or is_virtualenv:
+    if not sys.platform.startswith('darwin') or is_virtualenv():
       yield
       return
 

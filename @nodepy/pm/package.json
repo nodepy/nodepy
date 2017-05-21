@@ -21,6 +21,6 @@
     "requests": ">=2.13.0"
   },
   "extensions": [
-    "!require-unpack-syntax"
+    "!require-import-syntax"
   ]
 }

@@ -21,9 +21,9 @@
 import collections
 import re
 
-argschema = require('./argschema')
-semver = require('./semver')
-manifest = require('./manifest')
+import argschema from './argschema'
+import semver from './semver'
+import manifest from './manifest'
 
 spec = '[[@<scope>/]<name>[@<version>]][/<module>][:<member>]'
 

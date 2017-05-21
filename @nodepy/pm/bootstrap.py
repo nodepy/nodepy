@@ -31,7 +31,7 @@ import pip.commands
 import shutil
 import sys
 
-brewfix = require('./lib/brewfix')
+import brewfix from './lib/brewfix'
 
 
 def main(args=None):

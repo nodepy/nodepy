@@ -29,7 +29,7 @@ try:
 except ImportError as exc:
   from pip._vendor.distlib.scripts import ScriptMaker as _ScriptMaker
 
-argschema = require('../argschema')
+import argschema from '../argschema'
 
 
 class ScriptMaker:

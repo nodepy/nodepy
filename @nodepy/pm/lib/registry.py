@@ -31,12 +31,12 @@ import os
 import requests
 import six
 
-argschema = require('./argschema')
-manifest = require('./manifest')
-semver = require('./semver')
-refstring = require('./refstring')
-text = require('./util/text')
-json = require('./util/json')
+import argschema from './argschema'
+import manifest from './manifest'
+import semver from './semver'
+import refstring from './refstring'
+import text from './util/text'
+import json from './util/json'
 
 
 def get_package_archive_name(package_name, version):

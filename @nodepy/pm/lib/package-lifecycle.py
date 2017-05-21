@@ -35,10 +35,10 @@ try:
 except ImportError:
   from pipes import quote as shlex_quote
 
-config = require('./config')
-_install = require('./install')
-_manifest = require('./manifest')
-registry = require('./registry')
+import config from './config'
+import _install from './install'
+import _manifest from './manifest'
+import registry from './registry'
 
 
 class PackageLifecycle(object):

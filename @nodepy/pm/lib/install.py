@@ -36,17 +36,17 @@ import traceback
 
 from fnmatch import fnmatch
 
-_registry = require('./registry')
-_config = require('./config')
-_download = require('./util/download')
-_script = require('./util/script')
-refstring = require('./refstring')
-pathutils = require('./util/pathutils')
-brewfix = require('./brewfix')
-PackageLifecycle = require('./package-lifecycle')
-{ get_directories, get_module_dist_info } = require('./env')
-{ parse as parse_manifest } = require('./manifest')
-{ PackageManifest, InvalidPackageManifest } = require('./manifest')
+import _registry from './registry'
+import _config from './config'
+import _download from './util/download'
+import _script from './util/script'
+import refstring from './refstring'
+import pathutils from './util/pathutils'
+import brewfix from './brewfix'
+import PackageLifecycle from './package-lifecycle'
+import { get_directories, get_module_dist_info } from './env'
+import { parse as parse_manifest } from './manifest'
+import { PackageManifest, InvalidPackageManifest } from './manifest'
 
 PACKAGE_LINK = '.nodepy-link'
 PPYM_INSTALLED_FILES = 'installed-files.txt'
