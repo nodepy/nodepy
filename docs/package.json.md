@@ -1,5 +1,3 @@
-# nodepy-pm/lib/manifest
-
 Parse package manifests.
 
 ```python

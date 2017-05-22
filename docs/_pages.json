@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Node.py",
+    "path": "",
+    "file": "index.md"
+  },
+  {
+    "name": "Extensions",
+    "path": "extensions",
+    "file": "extensions.md"
+  },
+  {
+    "name": "Require API",
+    "path": "require",
+    "file": "require.md"
+  },
+  {
+    "name": "Package Manifest",
+    "path": "package.json",
+    "file": "package.json.md"
+  },
+  {
+    "name": "Command-line Interface",
+    "path": "cli",
+    "file": "cli.md"
+  },
+  {
+    "name": "Changelog",
+    "path": "changelog",
+    "file": "changelog.md"
+  },
+  {
+    "name": "FAQ & Troubleshooting",
+    "path": "faq",
+    "file": "faq.md"
+  }
+]

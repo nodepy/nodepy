@@ -1,5 +1,3 @@
-# Changelog
-
 ### v0.0.20
 
 __nodepy__

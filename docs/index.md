@@ -1,7 +1,5 @@
 <img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img>
 
-# nodepy
-
 [![Build Status](https://travis-ci.org/nodepy/nodepy.svg?branch=master)](https://travis-ci.org/nodepy/nodepy)
 [![GitHub version](https://badge.fury.io/gh/nodepy%2Fnodepy.svg)](https://badge.fury.io/gh/nodepy%2Fnodepy)
 [![PyPI version](https://badge.fury.io/py/node.py.svg)](https://badge.fury.io/py/node.py)
