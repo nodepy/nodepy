@@ -32,6 +32,8 @@ __nodepy__
 - `nodepy --version` now prints Python implementation name
 - Add `--profile FILENAME` argument that will save a profile of the execution
   to the specified file.
+- Fix issue with reloading `pkg_resources` module when the Node.py `Context`
+  exits, when another module has changed or reloaded the module already.
 
 __nodepy internal__
 

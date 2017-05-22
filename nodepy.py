@@ -897,14 +897,15 @@ class Context(object):
 
   def __enter__(self):
     self.importer.__enter__()
-    if pkg_resources:
-      reload(pkg_resources)
+    if 'pkg_resources' in sys.modules:
+      reload(sys.modules['pkg_resources'])
 
   def __exit__(self, *args):
     try:
       return self.importer.__exit__(*args)
     finally:
-      reload(pkg_resources)
+      if 'pkg_resources' in sys.modules:
+        reload(sys.modules['pkg_resources'])
 
   @property
   def current_module(self):
