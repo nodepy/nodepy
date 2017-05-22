@@ -1,11 +1,11 @@
 {
-  "name": "@nodepy/pm",
+  "name": "@nodepy/nppm",
   "version": "0.0.19",
   "license": "MIT",
   "description": "the nodepy package manager",
   "repository": "https://github.com/nodepy/nodepy",
   "bin": {
-    "nodepy${py}-pm": "index"
+    "nppm${py}": "index"
   },
   "engines": {
     "nodepy": ">=0.0.6",

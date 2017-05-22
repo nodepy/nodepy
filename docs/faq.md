@@ -4,7 +4,7 @@
 distutils.errors.DistutilsOptionError: must supply either home or prefix/exec-prefix -- not both
 ```
 
-Before **nodepy-pm** v0.0.20, this error could appear on macOS and Python
+Before **nppm** v0.0.20, this error could appear on macOS and Python
 versions installed via [Homebrew] (see [this StackOverflow question][0]).
 Since this version, the package manager creates or temporarily overwrites
 the file `~/.pydistutils.cfg` to set an empty `prefix`.
@@ -24,6 +24,6 @@ FileNotFoundError: [Errno 2] No such file or directory: 'nodepy_modules.pip\\Lib
 *This appears to be an issue with Pip that appears when installing some modules
 when using the `pip install --prefix` option. Using `pip install --target` can
 fix the problem when you experience it. You can use `--pip-use-target-option`
-for `nodepy-pm install` take make it use the `--target` option instead.*
+for `nppm install` take make it use the `--target` option instead.*
 
 This bug will be/is fixed in Pip 9.0.2, so upgrade if you can.

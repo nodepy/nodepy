@@ -87,10 +87,10 @@ def install_deps():
 
 def install_pm(user, develop=False):
   """
-  Executes the nodepy-pm `bootstrap` module to install it globally.
+  Executes the nppm `bootstrap` module to install it globally.
   """
 
-  cmd = ['@nodepy/pm/bootstrap', '--upgrade', '--global' if user else '--root']
+  cmd = ['nppm/bootstrap', '--upgrade', '--global' if user else '--root']
   if develop:
     cmd.append('--develop')
 

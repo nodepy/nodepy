@@ -8,7 +8,7 @@
 
 **nodepy** is a CPython platform heavily inspired by [Node.js] for building
 reproducible and easily distributable applications. While it provides its own
-package manager **nodepy-pm** (similar to  [npm]), re-using existing standard
+package manager **nppm** (similar to  [npm]), re-using existing standard
 Python modules from [PyPI] is highly encouraged.
 
 ## Motivation
@@ -38,8 +38,8 @@ To see Node.py integrated in a pluggable environment, check out [c4ddev] which
 can produce a standalone version of Node.py using [standalone-builder]. This
 standalone version of Node.py is loaded once for a component and provides a
 fully isolated environment for Cinema 4D Python plugins. Additionally,
-**nodepy-pm** provides third-party package installation which has not been
-so easily possible for Cinema 4D plugins before.
+**nppm** provides third-party package installation which has not been so
+easily possible for Cinema 4D plugins before.
 
   [c4ddev]: https://github.com/NiklasRosenstein/c4ddev
   [Changelog]: docs/source/changelog.md
@@ -73,11 +73,11 @@ so easily possible for Cinema 4D plugins before.
 
 ## Example: Flask Web Application
 
-We can use the `nodepy-pm init` command to create an initial `package.json`
+We can use the `nppm init` command to create an initial `package.json`
 manifest file. Say "yes" when it asks you whether you want to use the
 `require-unpack-syntax` extension a
 
-    $ nodepy-pm init
+    $ nppm init
     Package Name? myapp
     Package Version [1.0.0]? 
     Description? My first Node.py app.
@@ -91,7 +91,7 @@ want to make a Flask web application, we can install a Python third party
 module using the `py/` prefix. We use the `--save` option to save the
 dependency in our `package.json` manifest.
 
-    nodepy-pm install --save py/flask
+    nppm install --save py/flask
 
 It is also reccomended to use the `@nodepy/werkzeug-reloader-patch` when
 creating Flask applications with Node.py, as Werkzeug, and thus Flask, does
@@ -99,7 +99,7 @@ not have native support for reloading Node.py applications. We use the
 `--save-ext` flag which implies `--save` and adds the package to the
 `"extensions"` field.
 
-    nodepy-pm install --save-ext @nodepy/werkzeug-reloader-patch
+    nppm install --save-ext @nodepy/werkzeug-reloader-patch
 
 Alternatively, instead of adding the package as an extensions, we could
 install the patch manully using the following:

@@ -1,7 +1,7 @@
 Parse package manifests.
 
 ```python
-manifest = require('nodepy-pm/lib/manifest')
+manifest = require('nppm/lib/manifest')
 try:
   m = manifest.parse('package.json')
 except (FileNotFoundError, manifest.InvalidPackageManifest) as exc:
@@ -113,8 +113,8 @@ __Todo__
 
 ### `private`
 
-*Optional*. Prevent publication of the package with `nodepy-pm publish`. This is used
-for packages that want to take advantage of the nodepy-pm dependency management but
+*Optional*. Prevent publication of the package with `nppm publish`. This is used
+for packages that want to take advantage of the nppm dependency management but
 are not actuall supposed to be placed into the public registry. An example
 of this would be a package that generates the documentation of another project.
 
@@ -135,7 +135,7 @@ package is required by another module. If this field is not specified, the
 ### `dependencies`
 
 *Optional.*: An object that specifies the dependencies of the package.
-All values must be valid `nodepy-pm/lib/semver:Selector` syntax, Git URL syntax
+All values must be valid `nppm/lib/semver:Selector` syntax, Git URL syntax
 of the format `git+<url>[@<ref>]` or relative paths of the format
 `[-e] [./|../]<path>`. Dependencies declared here will be installed
 transitively.
@@ -143,8 +143,8 @@ transitively.
 ```json
 {
   "dependencies": {
-    "nodepy-pm": "~0.0.8",
-    "nodepy-pm-registry": "~0.0.3",
+    "nppm": "~0.0.8",
+    "nppm-registry": "~0.0.3",
     "some-module": "git+https://github.com/someuser/some-module.git@development",
     "local-module": "-e ../local-module"
   }
@@ -154,7 +154,7 @@ transitively.
 ### `dev-dependencies`
 
 *Optional*. Dependencies that are listed here are required only for developing
-a package, thus they will only be installed when using `nodepy-pm install` without
+a package, thus they will only be installed when using `nppm install` without
 additional arguments in the directory where the `package.json` file lives,
 unless `--production` is specified. Also, development dependencies will not be
 installed transitively.
@@ -171,7 +171,7 @@ installed transitively.
 
 *Optional.* Similar to the `dependencies` field, but it specifies actual
 Python modules that the package requires. These modules can be installed
-by [nodepy-pm] using [Pip].
+by [nppm] using [Pip].
 
 ```json
 {
@@ -217,7 +217,7 @@ Currently supported events are:
 ### `dist`
 
 *Optional*. An object that specifies options for generating an archived
-distribution of the package with `nodepy-pm dist`.
+distribution of the package with `nppm dist`.
 
 ```json
 {
@@ -236,9 +236,9 @@ Matching patterns include files possibly excluded by `exclude_files`.
 #### `exclude_files`
 
 *Optional.* A list of patterns that match the files to exclude from the
-archive. Note that when installing packages with [nodepy-pm], it will add
+archive. Note that when installing packages with [nppm], it will add
 default exclude patterns to this list. The actual patterns may change
-with versions of nodepy-pm. When this document was last updated, nodepy-pm added
+with versions of nppm. When this document was last updated, nppm added
 the following patterns:
 
 - `.svn/*`
@@ -251,4 +251,4 @@ the following patterns:
 - `nodepy_modules/`
 
   [Pip]: https://pypi.python.org/pypi/pip
-  [nodepy-pm]: https://github.com/nodepy/nodepy
+  [nppm]: https://github.com/nodepy/nodepy

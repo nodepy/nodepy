@@ -1,29 +1,29 @@
-**nodepy-pm** is the [Node.py] package manager.
+**nppm** is the [Node.py] package manager.
 
   [Node.py]: https://github.com/nodepy/nodepy
 
 __Synopsis__
 
-    nodepy-pm bin
-    nodepy-pm dist
-    nodepy-pm init
-    nodepy-pm install
-    nodepy-pm publish
-    nodepy-pm register
-    nodepy-pm run
-    nodepy-pm uninstall
-    nodepy-pm upload
+    nppm bin
+    nppm dist
+    nppm init
+    nppm install
+    nppm publish
+    nppm register
+    nppm run
+    nppm uninstall
+    nppm upload
 
 ## bin
 
 ```
-nodepy-pm bin [--global] [--pip]
+nppm bin [--global] [--pip]
 ```
 
-Prints the local or global binary directory that **nodepy-pm** installs to. If
+Prints the local or global binary directory that **nppm** installs to. If
 you pass the `--pip` switch, the Pip binary directory will be printed instead.
 
-Note that [`nodepy-pm install`](install) will automatically create wrappers in
+Note that [`nppm install`](install) will automatically create wrappers in
 the Node.py binary directory that reference respective commands in the Pip
 binary directory, thus if you have Python dependencies that expose scripts,
 you only need to add the Node.py binary directory to your path.
@@ -35,19 +35,19 @@ The local binary directory is `nodepy_modules/.bin`.
 ## dist
 
 ```
-nodepy-pm dist
+nppm dist
 ```
 
 Create a `.tar.gz` archive from your package and save it into the `dist/`
 directory. If you want to publish the package on the registry, use the
-[`nodepy-pm publish`](publish) command.
+[`nppm publish`](publish) command.
 
 ---
 
 ## init
 
 ```
-nodepy-pm init
+nppm init
 ```
 
 Initialize a `package.json` file in the current working directory.
@@ -57,14 +57,14 @@ Initialize a `package.json` file in the current working directory.
 ## install
 
 ```
-nodepy-pm install [-g,--global] [--root] [-e,--develop] [-P,--packagedir]
+nppm install [-g,--global] [--root] [-e,--develop] [-P,--packagedir]
              [-I,--ignore-installed]
              [--pip-separate-process] [--dev/--production] [--save]
              [--save-dev] [--recursive] [PACKAGES]
 ```
 
 Installs one or more Node.py packages from the package registry, package
-distribution files (see [`nodepy-pm dist`](dist)) or a directory. If no PACKAGES
+distribution files (see [`nppm dist`](dist)) or a directory. If no PACKAGES
 are specified, the dependencies of the current package are installed. In that
 case, the `--dev` switch is enabled by default, otherwise `--production` is
 the default.
@@ -123,10 +123,10 @@ without remembering them all.
 ## publish
 
 ```
-nodepy-pm publish [-f,--force] [-u,--user] [-p,--password]
+nppm publish [-f,--force] [-u,--user] [-p,--password]
 ```
 
-A combination of [`nodepy-pm dist`](dist) and [`nodepy-pm upload`](upload) that also
+A combination of [`nppm dist`](dist) and [`nppm upload`](upload) that also
 invokes the `pre-publish` and `post-publish` [scripts](run).
 
 __Requirements__
@@ -152,7 +152,7 @@ before you publish packages and upload content to the registry.
 ## register
 
 ```
-nodepy-pm register [--agree-tos] [--save]
+nppm register [--agree-tos] [--save]
 ```
 
 Register a new account on the package registry. Note that you can change the
@@ -167,7 +167,7 @@ point to https://ppym.org.
 ## run
 
 ```
-nodepy-pm run SCRIPT [ARGS]
+nppm run SCRIPT [ARGS]
 ```
 
 Runs the SCRIPT that is specified in the current package's manifest. Note that
@@ -185,14 +185,14 @@ __Example__
 }
 ```
 
-    $ nodepy-pm run build-docs
+    $ nppm run build-docs
 
 ---
 
 ## uninstall
 
 ```
-nodepy-pm uninstall [-g,--global] PACKAGES
+nppm uninstall [-g,--global] PACKAGES
 ```
 
 Uninstalls one or more previously installed PACKAGES.
@@ -202,17 +202,17 @@ Uninstalls one or more previously installed PACKAGES.
 ## upload
 
 ```
-nodepy-pm upload [-f, --force] [-u, --user] [-p, --password] FILENAME
+nppm upload [-f, --force] [-u, --user] [-p, --password] FILENAME
 ```
 
 For the current version that is specified in the `package.json` of your
 project, uploads the specified FILENAME to the package registry. If the
 version and/or package does not exist at the time of the upload, the file
 will be rejected unless you upload the distribution archive created with
-[`nodepy-pm dist`](dist) first. If you upload the distribution archive, the
+[`nppm dist`](dist) first. If you upload the distribution archive, the
 package and package version will be created and assigned to your account.
 
-> __Note__: You should prefer to use the [`nodepy-pm publish`](publish) command
+> __Note__: You should prefer to use the [`nppm publish`](publish) command
 > to publish your package as it is less error prone and will also invoke
 > the `pre-publish` script if you have one specified in your package manifest.
 

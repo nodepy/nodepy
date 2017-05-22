@@ -4,7 +4,7 @@ __nodepy__
 
 - Fix `nodepy.proc_args` to contain `sys.executable` if the nodepy executable
   is not an `.exe` on Windows
-- Fix #36: pkg_resources DistributionNotFound for packages installed with nodepy-pm
+- Fix #36: pkg_resources DistributionNotFound for packages installed with nppm
 - If Pygments is available, will be used to print colored exception tracebacks
 - Add instead `Context.loaders` and `Context.get_loader()`
 - Fix missing import of `errno` module (causes exception when bytecache file
@@ -52,11 +52,11 @@ __nodepy internal__
 - Add `RequireImportSyntaxExtension` class and `require-import-syntax` binding
 - Add `nodepy.python_impl` member
 
-__@nodepy/pm__ *(PPYM post v0.0.17)*
+__nppm__ *(PPYM post v0.0.17)*
 
 - merged code into Node.py repository (now developed and released alongside
   Node.py)
-- renamed to **nodepy-pm**
+- renamed to **nppm**
 - Fix #9 (partially): Pip install fails with FileNotFoundError: installed-files.txt
   -- added `lib/brewfix.py` which temporarily (over)writes `~/.pydistutils.cfg`,
   only fixes `--user` installs of Node.py (and installs in Virtualenv still
@@ -80,8 +80,8 @@ __@nodepy/pm__ *(PPYM post v0.0.17)*
 - `run` command now executes `!` scripts with `$SHELL` completely unprocessed
 - `pre-script` no longer recieves the arguments of the script that is being invoked
 - Add questions for `"main"` and the `require-unpack-syntax` and
-  `require-import-syntax` extensions `nodepy-pm init`
-- Add `--save-ext` option to `nodepy-pm install` command
+  `require-import-syntax` extensions `nppm init`
+- Add `--save-ext` option to `nppm install` command
 
 ### v0.0.19
 

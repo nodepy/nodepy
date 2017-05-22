@@ -1,5 +1,5 @@
 include README.md
 include LICENSE.txt
-recursive-include nodepy-pm *
-prune nodepy-pm/dist
-prune nodepy-pm/nodepy_modules
+recursive-include nppm *
+prune nppm/dist
+prune nppm/nodepy_modules

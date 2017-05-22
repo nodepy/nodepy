@@ -7,12 +7,12 @@
 **nodepy** is a CPython platform heavily inspired by [Node.js] for building
 reproducible and easily distributable applications. While it provides its own
 package infrastructure similar to [npm], re-using existing standard Python
-modules from [PyPI] is highly encouraged by the package manager, **nodepy-pm**,
+modules from [PyPI] is highly encouraged by the package manager, **nppm**,
 which is automatically installed with nodepy.
 
 A usage example to whet your appetite:
 
-    $ nodepy-pm install --save py/flask werkzeug-reloader-patch 
+    $ nppm install --save py/flask werkzeug-reloader-patch 
     $ cat index.py
     import flask
     require('werkzeug-reloader-patch').install()
