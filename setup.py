@@ -34,7 +34,7 @@ import sys
 from setuptools.command.develop import develop as _develop
 from setuptools.command.install import install as _install
 
-install_requires = ['colorama>=0.3.9', 'localimport>=1.5.1', 'six>=1.10.0', 'pip>=8.0.0']
+install_requires = ['colorama>=0.3.9', 'localimport>=1.5.1', 'six>=1.10.0', 'pip>=8.0.0', 'wheel>=0.29.0']
 
 if 'develop' in sys.argv:
   name = 'node.py-' + sys.version[:3]

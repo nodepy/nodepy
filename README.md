@@ -64,6 +64,7 @@ easily possible for Cinema 4D plugins before.
 
 - Python 2.7.x, 3.3+
 - Pip 8.0.0+
+- Wheel 0.29.0+ (for correct Pip installations with `--prefix`)
 - Pygments (optional, for colorised exception tracebacks)
 - Colorama (optional, for colorised output on Windows)
 

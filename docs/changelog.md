@@ -32,6 +32,7 @@ __nodepy__
   to the specified file.
 - Fix issue with reloading `pkg_resources` module when the Node.py `Context`
   exits, when another module has changed or reloaded the module already.
+- Add `wheel` as a dependency for Node.py
 
 __nodepy internal__
 
