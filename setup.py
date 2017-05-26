@@ -152,7 +152,7 @@ class install(_install):
 
 setuptools.setup(
   name = name,
-  version = '0.0.19',
+  version = '0.0.20',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
