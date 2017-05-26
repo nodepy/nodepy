@@ -1,5 +1,4 @@
 tag v{VERSION}
-upgrade setup.py:   version = '{VERSION}',
-upgrade docs/source/index.md:**Version: v{VERSION}**
+upgrade setup.py:  version = '{VERSION}',
 upgrade nodepy.py:__version__ = '{VERSION}'
 upgrade nppm/package.json:  "version": "{VERSION}"
