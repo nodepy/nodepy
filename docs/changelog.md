@@ -33,6 +33,8 @@ __nodepy__
 - Fix issue with reloading `pkg_resources` module when the Node.py `Context`
   exits, when another module has changed or reloaded the module already.
 - Add `wheel` as a dependency for Node.py
+- Add `--isolated` command-line option (not usually necessary)
+- Default has switched to non-isolated mode
 
 __nodepy internal__
 
@@ -52,6 +54,8 @@ __nodepy internal__
 - Add `RequireUnpackSyntaxExtension` class and `require-unpack-syntax` binding
 - Add `RequireImportSyntaxExtension` class and `require-import-syntax` binding
 - Add `nodepy.python_impl` member
+- Add `Context(isolated=True)` parameter
+- Add `Context.init` member (an instance of `InitModule`)
 
 __nppm__ *(PPYM post v0.0.17)*
 

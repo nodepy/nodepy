@@ -210,7 +210,7 @@ class InitModule(BaseModule):
   """
 
   def __init__(self, context):
-    super(InitModule, self).__init__(context, '__init__', os.getcwd(), '__init__')
+    super(InitModule, self).__init__(context, '__init__', context.current_dir, '__init__')
 
   def exec_(self):
     raise RuntimeError('can not exec InitModule')
@@ -850,8 +850,9 @@ class Context(object):
   central unit to control the finding, caching and loading of Python modules.
   """
 
-  def __init__(self, current_dir='.', bare=False):
+  def __init__(self, current_dir='.', bare=False, isolated=True):
     self.current_dir = current_dir
+    self.isolated = isolated
     # Container for internal modules that can be bound to the context
     # explicitly with the #register_binding() method.
     self._bindings = {}
@@ -879,6 +880,8 @@ class Context(object):
     self.path.insert(0, 'nodepy_modules')
     # The main module. Will be set by #load_module().
     self.main_module = None
+    # The initial module object, used to have access to #require.
+    self.init = InitModule(self)
 
     # Localimport context for Python modules installed via Pip through nppm.
     # Find the location of where Pip modules would be installed into the Node.py
@@ -897,15 +900,26 @@ class Context(object):
 
   def __enter__(self):
     self.importer.__enter__()
+    if not self.isolated:
+      # FIXME: Add function to localimport to update the environment without
+      # preserving the original state.
+      self.importer.meta_path = []
+      self.importer.in_context = False
+      del self.importer.state
     if 'pkg_resources' in sys.modules:
       reload(sys.modules['pkg_resources'])
 
   def __exit__(self, *args):
-    try:
-      return self.importer.__exit__(*args)
-    finally:
-      if 'pkg_resources' in sys.modules:
-        reload(sys.modules['pkg_resources'])
+    if self.isolated:
+      try:
+        return self.importer.__exit__(*args)
+      finally:
+        if 'pkg_resources' in sys.modules:
+          reload(sys.modules['pkg_resources'])
+
+  @property
+  def require(self):
+    return self.init.require
 
   @property
   def current_module(self):
@@ -1243,6 +1257,8 @@ def main(argv=None):
   parser.add_argument('--pymain', action='store_true')
   parser.add_argument('--profile', type=argparse.FileType('wb'),
       help='Profile the execution and save the stats to the specified file.')
+  parser.add_argument('--isolated', action='store_true',
+      help='Create the runtime context in isolated mode.')
   args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
   if args.profile:
@@ -1278,15 +1294,14 @@ def _main(args):
     proc_args.insert(0, sys.executable)
 
   arguments = args.arguments[:]
-  context = Context(args.current_dir)
+  context = Context(args.current_dir, isolated=args.isolated)
   with context, jit_debug(args.debug):
-    init = InitModule(context)
     if args.exec_ or not arguments:
       sys.argv = [sys.argv[0]] + arguments
       if args.exec_:
-        exec(compile(args.exec_, '<commandline>', 'exec', dont_inherit=True), vars(init.namespace))
+        exec(compile(args.exec_, '<commandline>', 'exec', dont_inherit=True), vars(context.init.namespace))
       else:
-        code.interact(VERSION, local=vars(init.namespace))
+        code.interact(VERSION, local=vars(context.init.namespace))
     else:
       # A special fix for when Click is used in Python 2. A hash is generated
       # for sys.argv when Click is imported, and it gives invalid results if
@@ -1300,12 +1315,11 @@ def _main(args):
         pass
 
       try:
-        require = init.require
         for request in args.preload:
-          require(request)
+          context.require(request)
         request = arguments.pop(0)
         loader = context.get_loader(args.loader) if args.loader else None
-        module = require(request, args.current_dir, is_main=True, exec_=False,
+        module = context.require(request, args.current_dir, is_main=True, exec_=False,
             exports=False, loader=loader)
         if args.pymain:
           module.namespace.__name__ = '__main__'
