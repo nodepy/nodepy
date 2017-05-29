@@ -906,7 +906,7 @@ class Context(object):
       self.importer.meta_path = []
       self.importer.in_context = False
       del self.importer.state
-    reload_pkg_resources()
+    reload_pkg_resources(insert_paths_index=len(self.importer.path))
     return self
 
   def __exit__(self, *args):
@@ -1222,7 +1222,7 @@ class Context(object):
         request=request, parent=parent)
 
 
-def reload_pkg_resources():
+def reload_pkg_resources(insert_paths_index=None):
   """
   Reload the `pkg_resources` module.
   """
@@ -1239,7 +1239,10 @@ def reload_pkg_resources():
   # Transfer missing paths added by pkg_resources.
   for p in sys.path:
     if p not in path:
-      path.insert(len(self.importer.path), p)
+      if insert_paths_index is None:
+        path.append(p)
+      else:
+        path.insert(insert_paths_index, p)
   sys.path[:] = path
 
 
