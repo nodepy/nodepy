@@ -28,6 +28,7 @@ import collections
 import functools
 import getpass
 import json
+import nodepy
 import os
 import pip.req
 import six
@@ -85,11 +86,18 @@ def exit_with_return(func):
     exit(res)
   return wrapper
 
-@click.group()
+@click.group(help="""
+  Node.py Package Manager (on {})
+  """.format(nodepy.VERSION))
 def main():
   if not config['registry'].startswith('https://'):
     logger.warning('config value `registry` is not an HTTPS url ({})'
         .format(config['registry']))
+
+
+@main.command()
+def version():
+  print('nppm-{} (on {})'.format(require('./package.json')['version'], nodepy.VERSION))
 
 
 @main.command()

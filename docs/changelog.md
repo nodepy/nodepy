@@ -7,6 +7,7 @@ __Node.py__
 
 __nppm__
 
+- Add `nppm version` command
 - `@nodepy/nppm/lib/env:get_module_dist_info()` -- Added keys `.dist-info`
   and `top_level` to the returned dictionary
 
