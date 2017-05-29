@@ -13,7 +13,9 @@ __nppm__
   and `top_level` to the returned dictionary
 - `-e,--develop` option now requires a `PACKAGE` argument
 - `-U,--upgrade` is now passed on to Pip
-- PIp packages can now be installed from a directory and with the `-e` option
+- Pip packages can now be installed from a directory and with the `-e` option
+- Add `-py,--python` and `-epy,--develop-python` arguments in faviour of
+  the `py/` package prefix
 
 ### v0.0.20
 

@@ -102,7 +102,9 @@ def version():
 
 @main.command()
 @click.argument('packages', nargs=-1)
-@click.option('-e', '--develop', help='Install a package in development mode.')
+@click.option('-e', '--develop', help='Install a package in development mode.', multiple=True)
+@click.option('-py', '--python', help='Specify a package to install via Pip.', multiple=True)
+@click.option('-epy', '--develop-python', help='Specify a package to install via Pip in develop mode.', multiple=True)
 @click.option('-U', '--upgrade', is_flag=True)
 @click.option('-g', '--global/--local', 'global_', is_flag=True)
 @click.option('-I', '--ignore-installed', is_flag=True,
@@ -134,9 +136,10 @@ def version():
 @click.option('-v', '--verbose', is_flag=True)
 @click.pass_context
 @exit_with_return
-def install(ctx, packages, develop, upgrade, global_, ignore_installed, packagedir,
-            root, recursive, info, dev, pip_separate_process,
-            pip_use_target_option, save, save_dev, save_ext, verbose):
+def install(ctx, packages, develop, python, develop_python, upgrade, global_,
+            ignore_installed, packagedir, root, recursive, info, dev,
+            pip_separate_process, pip_use_target_option, save, save_dev,
+            save_ext, verbose):
   """
   Installs one or more Node.Py or Pip packages.
   """
@@ -172,7 +175,7 @@ def install(ctx, packages, develop, upgrade, global_, ignore_installed, packaged
       print('{}: {}'.format(key, installer.dirs[key]))
     return 0
 
-  if not packages and not develop:
+  if not any((packages, develop, python, develop_python)):
     success = installer.install_dependencies_for(manifest.parse(packagefile), dev=dev)
     if not success:
       return 1
@@ -180,31 +183,7 @@ def install(ctx, packages, develop, upgrade, global_, ignore_installed, packaged
     return 0
 
   save_deps = []
-  python_deps = {}
-  python_additional_install = []
-
   def handle_package(package, develop=False):
-    if package.startswith('py/'):
-      package = os.path.expanduser(package[3:])
-      if os.path.isdir(package):
-        if develop:
-          python_additional_install.append('-e')
-        python_additional_install.append(package)
-      else:
-        try:
-          spec = pip.req.InstallRequirement.from_line(package)
-        except (pip.exceptions.InstallationError, pip._vendor.packaging.requirements.InvalidRequirement) as exc:
-          return ctx.fail(exc)
-        if (save or save_dev) and not spec.req:
-          return ctx.fail("'{}' is not something we can install via PPYM with --save/--save-dev".format(package[3:]))
-        if spec.req:
-          python_deps[spec.req.name] = str(spec.req.specifier)
-        else:
-          if develop:
-            python_additional_install.append('-e')
-          python_additional_install.append(str(spec))
-      return
-
     if package.startswith('git+'):
       success, package_info = installer.install_from_git(package[4:])
       if success:
@@ -222,18 +201,44 @@ def install(ctx, packages, develop, upgrade, global_, ignore_installed, packaged
     if not success:
       ctx.fail('Installation failed')
 
-  for package in packages:
-    handle_package(package)
-  if develop:
-    handle_package(develop, develop=True)
+  python_deps = {}
+  python_additional_install = []
+  def handle_python_package(package, develop=False):
+    package = os.path.expanduser(package)
+    if os.path.isdir(package):
+      if develop:
+        python_additional_install.append('-e')
+      python_additional_install.append(package)
+    else:
+      try:
+        spec = pip.req.InstallRequirement.from_line(package)
+      except (pip.exceptions.InstallationError, pip._vendor.packaging.requirements.InvalidRequirement) as exc:
+        return ctx.fail(exc)
+      if (save or save_dev) and not spec.req:
+        return ctx.fail("'{}' is not something we can install via PPYM with --save/--save-dev".format(package[3:]))
+      if spec.req:
+        python_deps[spec.req.name] = str(spec.req.specifier)
+      else:
+        if develop:
+          python_additional_install.append('-e')
+        python_additional_install.append(str(spec))
 
-  # We pass as additional arguments since that allows us to avoid parsing
-  # the requirement.
+  # Parse and install Python packages.
+  for package in python:
+    handle_python_package(package)
+  for package in develop_python:
+    handle_python_package(package, develop=True)
   if (python_deps or python_additional_install):
     if not installer.install_python_dependencies(
         python_deps, args=python_additional_install):
       print('Installation failed')
       return 1
+
+  # Parse and install Node.py packages.
+  for package in packages:
+    handle_package(package)
+  for package in develop:
+    handle_package(package, develop=True)
 
   installer.relink_pip_scripts()
 
