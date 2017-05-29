@@ -906,8 +906,7 @@ class Context(object):
       self.importer.meta_path = []
       self.importer.in_context = False
       del self.importer.state
-    if 'pkg_resources' in sys.modules:
-      reload(sys.modules['pkg_resources'])
+    reload_pkg_resources()
     return self
 
   def __exit__(self, *args):
@@ -915,8 +914,7 @@ class Context(object):
       try:
         return self.importer.__exit__(*args)
       finally:
-        if 'pkg_resources' in sys.modules:
-          reload(sys.modules['pkg_resources'])
+        reload_pkg_resources()
 
   @property
   def require(self):
@@ -1222,6 +1220,27 @@ class Context(object):
     return self.load_module(filename, is_main=is_main, cache=cache,
         exec_=exec_, loader=loader, followed_from=followed_from,
         request=request, parent=parent)
+
+
+def reload_pkg_resources():
+  """
+  Reload the `pkg_resources` module.
+  """
+
+  if 'pkg_resources' not in sys.modules:
+    return
+
+  # Reloading pkg_resources will prepend new (or sometimes already
+  # existing items) in sys.path. This will give precedence to system
+  # installed packages rather than local packages that we added
+  # through self.importer. See nodepy/nodepy#49
+  path = sys.path[:]
+  reload(sys.modules['pkg_resources'])
+  # Transfer missing paths added by pkg_resources.
+  for p in sys.path:
+    if p not in path:
+      path.insert(len(self.importer.path), p)
+  sys.path[:] = path
 
 
 def print_exc():
