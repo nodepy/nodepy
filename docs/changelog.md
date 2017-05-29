@@ -1,3 +1,7 @@
+### v0.0.21
+
+- Fix #48 -- Pip Install on Windows: Underlying buffer has been detached
+
 ### v0.0.20
 
 __nodepy__

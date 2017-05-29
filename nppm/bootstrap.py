@@ -27,8 +27,8 @@ if require.main != module:
 
 import argparse
 import os
-import pip.commands
 import shutil
+import subprocess
 import sys
 
 import brewfix from './lib/brewfix'
@@ -63,7 +63,10 @@ def main(args=None):
 
   print('$ pip install', ' '.join(cmd))
   with brewfix():
-    res = pip.commands.InstallCommand().main(cmd)
+    # We use a subprocess here as otherwise we run into nodepy/nodepy#48,
+    # "underlying buffer has been detached" when Pip uses the spinner or
+    # download progress bar.
+    res = subprocess.call([sys.executable, '-m', 'pip', 'install'] + cmd)
   if res != 0:
     print('error: Pip installation failed')
     sys.exit(res)
