@@ -341,6 +341,8 @@ class Installer:
     cmd.extend(install_modules)
     if self.ignore_installed:
       cmd += ['--ignore-installed']
+    if self.upgrade:
+      cmd += ['--upgrade']
     if self.verbose:
       cmd.append('--verbose')
 

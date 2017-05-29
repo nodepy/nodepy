@@ -11,6 +11,8 @@ __nppm__
 - Add `nppm version` command
 - `@nodepy/nppm/lib/env:get_module_dist_info()` -- Added keys `.dist-info`
   and `top_level` to the returned dictionary
+- `-e,--develop` option now requires a `PACKAGE` argument
+- `-U,--upgrade` is now passed on to Pip
 
 ### v0.0.20
 
