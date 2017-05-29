@@ -16,6 +16,9 @@ __nppm__
 - Pip packages can now be installed from a directory and with the `-e` option
 - Add `-py,--python` and `-epy,--develop-python` arguments in faviour of
   the `py/` package prefix
+- Normalize package install locations, Pip packages are now always installed
+  under `nodepy_modules/.pip`, even for `-g,--global` and `--root` installations
+- Add `nppm dirs` command
 
 ### v0.0.20
 

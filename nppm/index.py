@@ -460,6 +460,23 @@ def bin(global_, root, pip):
     print(dirs['bin'])
 
 
+@main.command()
+@click.option('-g', '--global', 'global_', is_flag=True)
+@click.option('--root', is_flag=True)
+def dirs(global_, root):
+  """
+  Print install target directories.
+  """
+
+  location = get_install_location(global_, root)
+  dirs = _install.get_directories(location)
+  print('Packages:\t', dirs['packages'])
+  print('Bin:\t\t', dirs['bin'])
+  print('Pip Prefix:\t', dirs['pip_prefix'])
+  print('Pip Bin:\t', dirs['pip_bin'])
+  print('Pip Lib:\t', dirs['pip_lib'])
+
+
 @main.command(context_settings={'ignore_unknown_options': True})
 @click.argument('script')
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)

@@ -50,25 +50,27 @@ def get_directories(location):
   """
 
   assert location in ('local', 'global', 'root')
+  local = pip.locations.distutils_scheme('', prefix='nodepy_modules/.pip')
   if location == 'local':
-    scheme = pip.locations.distutils_scheme('', prefix='nodepy_modules/.pip')
     return {
       'packages': 'nodepy_modules',
       'bin': 'nodepy_modules/.bin',
-      'pip_prefix': scheme['data'],
-      'pip_bin': scheme['scripts'],
-      'pip_lib': scheme['purelib']
+      'pip_prefix': local['data'],
+      'pip_bin': local['scripts'],
+      'pip_lib': local['purelib']
     }
-  else:
-    user = (location == 'global')
-    scheme = pip.locations.distutils_scheme('', user=user)
-    return {
-      'packages': os.path.join(os.path.dirname(scheme['purelib']), 'nodepy_modules'),
-      'bin': scheme['scripts'],
-      'pip_prefix': scheme['data'],
-      'pip_bin': scheme['scripts'],
-      'pip_lib': scheme['purelib']
-    }
+
+  user = (location == 'global')
+  scheme = pip.locations.distutils_scheme('', user=user)
+  prefix = os.path.dirname(scheme['purelib'])
+
+  return {
+    'packages': os.path.join(prefix, 'nodepy_modules'),
+    'bin': scheme['scripts'],
+    'pip_prefix': os.path.join(prefix, local['data']),
+    'pip_bin': scheme['scripts'],
+    'pip_lib': os.path.join(prefix, local['purelib'])
+  }
 
 
 def get_python_install_type():
