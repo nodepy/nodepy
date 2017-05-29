@@ -908,6 +908,7 @@ class Context(object):
       del self.importer.state
     if 'pkg_resources' in sys.modules:
       reload(sys.modules['pkg_resources'])
+    return self
 
   def __exit__(self, *args):
     if self.isolated:

@@ -1,5 +1,6 @@
 ### v0.0.21
 
+- Fix #47 -- Context.__enter__() should return self
 - Fix #48 -- Pip Install on Windows: Underlying buffer has been detached
 
 ### v0.0.20
