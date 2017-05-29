@@ -1,7 +1,14 @@
 ### v0.0.21
 
-- Fix #47 -- Context.__enter__() should return self
+__Node.py__
+
+- Fix #47 -- `Context.__enter__()` should return self
 - Fix #48 -- Pip Install on Windows: Underlying buffer has been detached
+
+__nppm__
+
+- `@nodepy/nppm/lib/env:get_module_dist_info()` -- Added keys `.dist-info`
+  and `top_level` to the returned dictionary
 
 ### v0.0.20
 

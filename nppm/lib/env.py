@@ -121,13 +121,27 @@ def get_module_dist_info(module, pythonpath=None):
       break
     else:
       continue
+    dist_info = os.path.join(dirname, fn)
     version = fn[len(module) + 1:-len('.dist-info')]
-    fn = os.path.join(dirname, fn, 'metadata.json')
+
+    # Load the metadata.json.
+    fn = os.path.join(dist_info, 'metadata.json')
     if not os.path.isfile(fn):
       # TODO: Don't show if no verbose output is desired.
       print('warning: file \'{}\' does not exist'.format(fn))
       continue
     with open(fn) as fp:
-      return json.load(fp)
+      data =json.load(fp)
+    data['.dist-info'] = dist_info
+
+    # Load the top-level file.
+    fn = os.path.join(dist_info, 'top_level.txt')
+    if os.path.isfile(fn):
+      with open(fn) as fp:
+        data['top_level'] = fp.read().splitlines()
+    else:
+      data['top_level'] = []
+
+    return data
 
   return None
