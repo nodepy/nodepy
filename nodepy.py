@@ -1247,7 +1247,8 @@ def reload_pkg_resources(insert_paths_index=None):
 
 
 def print_exc():
-  if sys.stderr.isatty() and pygments:
+  isatty = getattr(sys.stderr, 'isatty', lambda: False)
+  if isatty() and pygments:
     code = traceback.format_exc()
     lexer = pygments.lexers.PythonTracebackLexer()
     tokens = pygments.lex(code, lexer)

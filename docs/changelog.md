@@ -5,6 +5,7 @@ __Node.py__
 - Fix #47 -- `Context.__enter__()` should return self
 - Fix #48 -- Pip Install on Windows: Underlying buffer has been detached
 - Fix #49 -- Importing local Python packages should be preferred over globally installed packages
+- `nodepy.print_exc()` now tolerates `sys.stderr` not having an `isatty()` member
 
 __nppm__
 
