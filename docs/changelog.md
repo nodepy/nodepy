@@ -13,6 +13,7 @@ __nppm__
   and `top_level` to the returned dictionary
 - `-e,--develop` option now requires a `PACKAGE` argument
 - `-U,--upgrade` is now passed on to Pip
+- PIp packages can now be installed from a directory and with the `-e` option
 
 ### v0.0.20
 
