@@ -457,6 +457,12 @@ class RequireImportSyntaxExtension(object):
 
       import default_member, {member1, reallyReallyLongMemberName as shortName}
           from "module-name"
+
+  To import all public members of a module (which is either all members
+  without an underscore prefix or all listed in the `__all__` member), use
+  starred import.
+
+      import * from "module-name"
   """
 
   _re_import_as = re.compile(
@@ -464,7 +470,7 @@ class RequireImportSyntaxExtension(object):
     re.M
   )
   _re_import_from = re.compile(
-    r'''^(?P<indent>[^\S\n]*)import\s+(?P<members>(?:\w+|(?:\w+\s*,\s*)?\{[^}]+\}))\s+from\s+(?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$''',
+    r'''^(?P<indent>[^\S\n]*)import\s+(?P<members>(?:\w+|\*|(?:\w+\s*,\s*)?\{[^}]+\}))\s+from\s+(?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$''',
     re.M
   )
   _regexes = [(_re_import_as, 'as'), (_re_import_from, 'from')]
@@ -486,7 +492,9 @@ class RequireImportSyntaxExtension(object):
       elif kind == 'from':
         module = match.group('mod')
         members = match.group('members')
-        if '{' in members:
+        if members == '*':
+          repl = 'require.symbols({!r})'.format(module)
+        elif '{' in members:
           if members.startswith('{'):
             default_name = None
           else:
