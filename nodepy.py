@@ -363,7 +363,7 @@ class PythonLoader(BaseLoader):
         extensions = line[18:].split(',')
         break
 
-    require = package.require if package else context.require
+    require = package.module.require if package else context.require
     extensions = [require(x.strip()) for x in extensions]
     if package:
       extensions.extend(package.get_extensions())
