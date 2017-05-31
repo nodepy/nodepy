@@ -7,6 +7,7 @@ __Node.py__
 - Fix #49 -- Importing local Python packages should be preferred over globally installed packages
 - `nodepy.print_exc()` now tolerates `sys.stderr` not having an `isatty()` member
 - Support `import * from 'module-name'` syntax with `!require-import-syntax` extension
+- Support `# nodepy-extensions: ...` special comment in Python file headers
 
 __nppm__
 

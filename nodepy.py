@@ -310,7 +310,7 @@ class PythonLoader(BaseLoader):
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tmp:
           try:
             with open(filename, 'r') as src:
-              tmp.write(self._preprocess(package, filename, src.read()))
+              tmp.write(self._preprocess(context, package, filename, src.read()))
             tmp.close()
             py_compile.compile(tmp.name, bytecache_file, doraise=True)
           finally:
@@ -330,23 +330,50 @@ class PythonLoader(BaseLoader):
         can_load_bytecache = True
 
     if can_load_bytecache:
-      code = self.load_code(package, bytecache_file, is_compiled=True)
+      code = self.load_code(context, package, bytecache_file, is_compiled=True)
       real_filename = bytecache_file
     else:
-      code = self.load_code(package, filename, is_compiled=None)
+      code = self.load_code(context, package, filename, is_compiled=None)
       real_filename = None
 
     return PythonModule(context=context, filename=filename, name=name,
         code=code, parent=parent, request=request, real_filename=real_filename,
         package=package)
 
-  def _preprocess(self, package, filename, source):
-    for ext in (package.get_extensions() if package else []):
+  @staticmethod
+  def _iter_lines(string):
+    """
+    Efficiently iterate over the lines of a string.
+    """
+
+    prevnl = -1
+    while True:
+      nextnl = string.find('\n', prevnl + 1)
+      if nextnl < 0: break
+      yield string[prevnl + 1:nextnl]
+      prevnl = nextnl
+
+  def _preprocess(self, context, package, filename, source):
+    # Find per-source code extensions.
+    extensions = []
+    for line in self._iter_lines(source):
+      if not line.startswith('#'): break
+      line = line[1:].lstrip()
+      if line.startswith('nodepy-extensions:'):
+        extensions = line[18:].split(',')
+        break
+
+    require = package.require if package else context.require
+    extensions = [require(x.strip()) for x in extensions]
+    if package:
+      extensions.extend(package.get_extensions())
+
+    for ext in extensions:
       if hasattr(ext, 'preprocess_python_source'):
         source = ext.preprocess_python_source(package, filename, source)
     return source
 
-  def load_code(self, package, filename, is_compiled=None):
+  def load_code(self, context, package, filename, is_compiled=None):
     """
     Loads a Python code object from a file. If *is_compiled*, it will be
     treated as a bytecompiled file if it ends with `.pyc`, otherwise it will
@@ -366,7 +393,7 @@ class PythonLoader(BaseLoader):
         return marshal.load(fp)
     else:
       with open(filename, 'r') as fp:
-        source = self._preprocess(package, filename, fp.read())
+        source = self._preprocess(context, package, filename, fp.read())
         return compile(source, filename, 'exec', dont_inherit=True)
 
 

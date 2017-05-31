@@ -19,6 +19,24 @@ __Example__
 }
 ```
 
+## Per-file extensions
+
+A file not associated with a `package.json` may also specify extensions using
+a special comment in the file header. The comment must be in the first comment
+block in the file, with not a single non-comment line preceeding it.
+
+```python
+#!/usr/bin/env nodepy
+# Some info ...
+# nodepy-extensions: !require-import-syntax, another-extension
+
+import * from './utils'
+```
+
+> **Note**: These extensions are currently only used for source code
+> preprocessing and only `preprocess_python_source()` will be called
+> for them.
+
 ## Extension callbacks
 
 Every extension can provide one of the following member functions that will
