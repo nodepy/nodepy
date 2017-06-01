@@ -76,6 +76,11 @@ def install_deps():
   """
 
   cmd = ['install'] + install_requires
+  if 'PIPTARGETDIR' in os.environ:
+    # When using the -t,--target option, this setup doesn't know about it
+    # and will install the dependencies globally.
+    cmd += ['-t', os.environ['PIPTARGETDIR']]
+
   print('Installing Node.py and Node.py-PM dependencies in a separate context ...')
   print("  Command: pip {}".format(' '.join(cmd)))
 
