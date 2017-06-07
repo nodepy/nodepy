@@ -434,8 +434,9 @@ class RequireUnpackSyntaxExtension(object):
     stmt = '_reqres=require({!r}, exports=False).namespace;'.format(module)
     for name in symbols:
       left = name
-      if 'as' in name:
-        name, __, left = name.partition('as')
+      parts = re.split('\s+', name)
+      if len(parts) == 3 and parts[1] == 'as':
+        name, __, left = parts
       stmt += '{0}=_reqres.{1};'.format(left.strip(), name.strip())
     return stmt + 'del _reqres'
 

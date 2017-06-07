@@ -8,6 +8,8 @@ __Node.py__
 - `nodepy.print_exc()` now tolerates `sys.stderr` not having an `isatty()` member
 - Support `import * from 'module-name'` syntax with `!require-import-syntax` extension
 - Support `# nodepy-extensions: ...` special comment in Python file headers
+- Fix #56: "as" in member name when using require-import-syntax extension
+  causes SyntaxError
 
 __nppm__
 
@@ -22,6 +24,8 @@ __nppm__
 - Normalize package install locations, Pip packages are now always installed
   under `nodepy_modules/.pip`, even for `-g,--global` and `--root` installations
 - Add `nppm dirs` command
+- Files passed to `-py` argument are now passed directly to the Pip command-line
+- Now prints the location scripts are installed to during the installation
 
 ### v0.0.20
 
