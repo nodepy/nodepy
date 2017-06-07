@@ -478,7 +478,7 @@ class Installer:
         script_names = [script_name]
 
       for script_name in script_names:
-        print('  Installing script "{}"...'.format(script_name))
+        print('  Installing script "{}" to "{}"...'.format(script_name, self.script.directory))
         filename = os.path.abspath(os.path.join(target_dir, filename))
         installed_files += self.script.make_nodepy(
             script_name, filename, self.dirs['reference_dir'])
