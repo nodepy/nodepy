@@ -205,7 +205,7 @@ def install(ctx, packages, develop, python, develop_python, upgrade, global_,
   python_additional_install = []
   def handle_python_package(package, develop=False):
     package = os.path.expanduser(package)
-    if os.path.isdir(package):
+    if os.path.isdir(package) or os.path.isfile(package):
       if develop:
         python_additional_install.append('-e')
       python_additional_install.append(package)
