@@ -84,6 +84,7 @@ def main(args=None):
     cmd.append('--root')
   if args.develop:
     cmd.append('--develop')
+  cmd.append(__directory__)
 
   # We need to set this option as otherwise the dependencies that we JUST
   # bootstrapped will be considered as already satsified, even though they
@@ -91,7 +92,6 @@ def main(args=None):
   cmd.append('--pip-separate-process')
 
   print("Installing PPYM ({}) ...".format(' '.join(cmd)))
-  cmd.append(__directory__)
   require('./index').main(cmd, standalone_mode=False)
 
   local = (not args.global_ and not args.root)
