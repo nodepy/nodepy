@@ -411,9 +411,11 @@ class Installer:
 
     try:
       manifest = parse_manifest(filename)
-    except FileNotFoundError:
-      print('Error: directory "{}" contains no package manifest'.format(directory))
-      return False, None
+    except (IOError, OSError) as exc:
+      if exc.errno == errno.ENOENT:
+        print('Error: directory "{}" contains no package manifest'.format(directory))
+        return False, None
+      raise
     except InvalidPackageManifest as exc:
       print('Error: directory "{}":'.format(directory), exc)
       return False, None
