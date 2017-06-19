@@ -131,8 +131,8 @@ invokes the `pre-publish` and `post-publish` [scripts](run).
 
 __Requirements__
 
-In order to publish a package to [ppym.org](https://ppym.org), it must
-meet the following requirements:
+In order to publish a package to [registry.nodepy.org](https://registry.nodepy.org),
+it must meet the following requirements:
 
 - The `name` of the package must be scoped with your username (ie. `@username/packagename`)
 - The `license` field in `package.json` must not be empty
@@ -140,12 +140,12 @@ meet the following requirements:
 After a package version has been uploaded to the registry, arbitrary files
 may be uploaded to that version as well. This is intended to be used for
 additional files that may be downloaded by the actual package when necessary.
-Note that https://ppym.org currently has a size upload limit of 2MiB.
+Note that https://registry.nodepy.org currently has a size upload limit of 2MiB.
 
-It is important that you read and understand the [PPYM Registry Terms of Use][0]
+It is important that you read and understand the [NPPM Registry Terms of Use][0]
 before you publish packages and upload content to the registry.
 
-  [0]: https://ppym.org/terms
+  [0]: https://registry.nodepy.org/terms
 
 ---
 
@@ -156,10 +156,10 @@ nppm register [--agree-tos] [--save]
 ```
 
 Register a new account on the package registry. Note that you can change the
-URL to the registry being used in the `~/.ppymrc` file. By default, it will
-point to https://ppym.org.
+URL to the registry being used in the `~/.nppmrc` file. By default, it will
+point to https://registry.nodepy.org.
 
-    $ cat ~/.ppymrc
+    $ cat ~/.nppmrc
     registry=http://localhost:8000
 
 ---

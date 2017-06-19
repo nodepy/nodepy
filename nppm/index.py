@@ -215,7 +215,7 @@ def install(ctx, packages, develop, python, develop_python, upgrade, global_,
       except (pip.exceptions.InstallationError, pip._vendor.packaging.requirements.InvalidRequirement) as exc:
         return ctx.fail(exc)
       if (save or save_dev) and not spec.req:
-        return ctx.fail("'{}' is not something we can install via PPYM with --save/--save-dev".format(package[3:]))
+        return ctx.fail("'{}' is not something we can install via NPPM with --save/--save-dev".format(package[3:]))
       if spec.req:
         python_deps[spec.req.name] = str(spec.req.specifier)
       else:
@@ -323,7 +323,7 @@ def upload(filename, force, user, password, dry):
   Upload a file to the current version to the registry. If the package does
   not already exist on the registry, it will be added to your account
   automatically. The first package that is uploaded must be the package
-  source distribution that can be created with 'ppym dist'.
+  source distribution that can be created with 'nppm dist'.
   """
 
   PackageLifecycle().upload(filename, user, password, force, dry)
@@ -337,7 +337,7 @@ def upload(filename, force, user, password, dry):
 @exit_with_return
 def publish(force, user, password, dry):
   """
-  Combination of `ppym dist` and `ppym upload`. Also invokes the `pre-publish`
+  Combination of `nppm dist` and `nppm upload`. Also invokes the `pre-publish`
   and `post-publish` scripts.
   """
 

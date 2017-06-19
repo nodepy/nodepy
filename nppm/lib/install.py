@@ -49,7 +49,7 @@ import { parse as parse_manifest } from './manifest'
 import { PackageManifest, InvalidPackageManifest } from './manifest'
 
 PACKAGE_LINK = '.nodepy-link'
-PPYM_INSTALLED_FILES = 'installed-files.txt'
+NPPM_INSTALLED_FILES = 'installed-files.txt'
 
 
 default_exclude_patterns = [
@@ -220,10 +220,10 @@ class Installer:
       print('Error: pre-uninstall script failed.')
       return False
 
-    filelist_fn = os.path.join(directory, PPYM_INSTALLED_FILES)
+    filelist_fn = os.path.join(directory, NPPM_INSTALLED_FILES)
     installed_files = []
     if not os.path.isfile(filelist_fn):
-      print('  Warning: No `{}` found in package directory'.format(PPYM_INSTALLED_FILES))
+      print('  Warning: No `{}` found in package directory'.format(NPPM_INSTALLED_FILES))
     else:
       with open(filelist_fn, 'r') as fp:
         for line in fp:
@@ -486,7 +486,7 @@ class Installer:
             script_name, filename, self.dirs['reference_dir'])
 
     # Write down the names of the installed files.
-    with open(os.path.join(target_dir, PPYM_INSTALLED_FILES), 'w') as fp:
+    with open(os.path.join(target_dir, NPPM_INSTALLED_FILES), 'w') as fp:
       for fn in installed_files:
         fp.write(fn)
         fp.write('\n')

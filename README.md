@@ -48,7 +48,6 @@ easily possible for Cinema 4D plugins before.
   [Node.js]: https://nodejs.org/
   [npm]: https://www.npmjs.com/
   [Pip]: https://pypi.python.org/pypi/pip
-  [ppym.org]: https://ppym.org
   [PyPI]: https://pypi.python.org/pypi
   [standalone-builder]: https://github.com/nodepy/standalone-builder
 

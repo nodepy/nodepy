@@ -45,7 +45,7 @@ def brewfix(prefix_dir='', force=False):
   print("Note: macOS detected, applying homebrew fix (see nodepy/ppym#9)")
   print("      [install] prefix={}".format(prefix_dir))
   filename = os.path.expanduser('~/.pydistutils.cfg')
-  backupfile = filename + '.ppym-backup'
+  backupfile = filename + '.nppm-backup'
   parser = configparser.SafeConfigParser()
 
   if os.path.isfile(filename):

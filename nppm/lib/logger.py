@@ -20,7 +20,7 @@
 
 import logging
 
-logger = logging.getLogger('ppym')
+logger = logging.getLogger('nppm')
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))

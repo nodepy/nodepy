@@ -25,26 +25,26 @@ import sys
 
 import { get_python_install_type } from './env'
 
-PPYM_CONFIG = '~/.ppymrc'
+NPPM_CONFIG = '~/.nppmrc'
 
 
 class Config(object):
   """
-  Reader/writer for the PPYM configuration file. The file format must be in
+  Reader/writer for the NPPM configuration file. The file format must be in
   plain `key=value` format, one per line. Lines starting with a hash (`#`)
   will be ignored.
 
   # Parameters
   filename (str): The config file to parse, and optionally save to. Pass
       #NotImplemented to prevent the #Config object from actually loading any
-      configuration file. Defaults to the value of the `PPYM_CONFIG` environment
-      variable or `~/.ppymrc`.
+      configuration file. Defaults to the value of the `NPPM_CONFIG` environment
+      variable or `~/.nppmrc`.
   defaults (dict): A dictionary of default values.
   """
 
   def __init__(self, filename=NotImplemented, defaults=None):
     if filename is NotImplemented:
-      filename = os.getenv('PPYM_CONFIG', PPYM_CONFIG)
+      filename = os.getenv('NPPM_CONFIG', NPPM_CONFIG)
     if filename:
       filename = os.path.normpath(os.path.expanduser(filename))
     if defaults is None:
@@ -144,8 +144,8 @@ class Config(object):
 
 config = Config()
 
-# The URL of the PPYM registry from which packages should be downloaded
+# The URL of the NPPM registry from which packages should be downloaded
 # from and uploaded to.
-config.defaults['registry'] = 'https://ppym.org'
+config.defaults['registry'] = 'https://registry.nodepy.org'
 
 exports = config

@@ -24,7 +24,6 @@ A usage example to whet your appetite:
   [npm]: https://www.npmjs.com/
   [PyPI]: https://pypi.python.org/pypi
   [Pip]: https://pypi.python.org/pypi/pip
-  [ppym.org]: https://ppym.org
   [Documentation]: https://nodepy.github.io/nodepy
   [Changelog]: docs/source/changelog.md
 

@@ -18,7 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """
-Bootstrap the installation of the PPYM, installing all Python dependencies
+Bootstrap the installation of the NPPM, installing all Python dependencies
 into `nodepy_modules/.pip`.
 """
 
@@ -35,24 +35,24 @@ import brewfix from './lib/brewfix'
 
 
 def main(args=None):
-  parser = argparse.ArgumentParser(description='Bootstrap the PPYM installation.')
+  parser = argparse.ArgumentParser(description='Bootstrap the NPPM installation.')
   parser.add_argument('--root', action='store_true',
-      help='Install PPYM into the Python root prefix.')
+      help='Install NPPM into the Python root prefix.')
   parser.add_argument('--global', dest='global_', action='store_true',
-      help='Install PPYM into the user-local prefix directory.')
+      help='Install NPPM into the user-local prefix directory.')
   parser.add_argument('--upgrade', action='store_true',
-      help='Overwrite an existing PPYM installation.')
+      help='Overwrite an existing NPPM installation.')
   parser.add_argument('--develop', action='store_true',
-      help='Install PPYM in develop mode, creating a .nodepy-link instead '
-        'of copying the PPYM package files.')
+      help='Install NPPM in develop mode, creating a .nodepy-link instead '
+        'of copying the NPPM package files.')
   args = parser.parse_args(sys.argv[1:] if args is None else args)
 
   existed_before = os.path.isdir('nodepy_modules')
-  print("Bootstrapping PPYM dependencies with Pip ...")
+  print("Bootstrapping NPPM dependencies with Pip ...")
   package = require('./package.json')
 
   # We would like to use Pip --prefix, but there seems to be a Bug on Windows
-  # that lets installations fail (see nodepym/ppym#9).
+  # that lets installations fail (see nodepym/NPPM#9).
   if os.name == 'nt':
     site_packages = 'Lib/site-packages'
   else:
@@ -88,10 +88,10 @@ def main(args=None):
 
   # We need to set this option as otherwise the dependencies that we JUST
   # bootstrapped will be considered as already satsified, even though they
-  # will not be after PPYM was installed in root or global level.
+  # will not be after NPPM was installed in root or global level.
   cmd.append('--pip-separate-process')
 
-  print("Installing PPYM ({}) ...".format(' '.join(cmd)))
+  print("Installing NPPM ({}) ...".format(' '.join(cmd)))
   require('./index').main(cmd, standalone_mode=False)
 
   local = (not args.global_ and not args.root)
