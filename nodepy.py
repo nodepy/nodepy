@@ -28,7 +28,6 @@ synopsis:
 """
 
 from __future__ import absolute_import, division, print_function
-from copy import deepcopy
 
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 __version__ = '0.0.20'
@@ -93,36 +92,33 @@ import six
 if sys.version >= '3.5':
   import importlib._bootstrap_external
 
-PackageLink = collections.namedtuple('PackageLink', 'src dst')
 
+# ====================
+# Globals
+# ====================
+
+#: Arguments to spawn a Node.py child-process.
 proc_args = [sys.executable, __file__]
+
+#: The executbale that is running Node.py.
 executable = None
 
+#: Name of the Python implementation that we're running on.
+python_impl = None
 if hasattr(sys, 'implementation'):
   python_impl = sys.implementation.name.lower()
 else:
   python_impl = sys.subversion[0].lower()
 
+#: Node.py and Python versions and platform architecture.
 VERSION = 'Node.py-{0} [{3} {1[0]}.{1[1]}.{1[2]} {2}-bit]'.format(
     __version__, sys.version_info, int(round(math.log(sys.maxsize, 2))) + 1,
     python_impl)
 
 
-@contextlib.contextmanager
-def jit_debug(debug=True):
-  """
-  A context-manager that debugs the exception being raised inside the context.
-  Can be disabled by setting *debug* to #False. The exception will be re-raised
-  either way.
-  """
-
-  try:
-    yield
-  except BaseException as exc:
-    if debug:
-      pdb.post_mortem(sys.exc_info()[2])
-    raise
-
+# ====================
+# Exceptions
+# ====================
 
 class NoSuchBindingError(Exception):
   pass
@@ -145,6 +141,46 @@ class ResolveError(Exception):
     if self.path:
       msg += ' searched in:\n  - ' + '\n  - '.join(map(repr, self.path))
     return msg
+
+
+# ====================
+# Packages & Modules
+# ====================
+
+class Package(object):
+  """
+  Represents a `package.json` file. If a module is loaded that lives near
+  such a manifest, that module will be associated with the #Package.
+  """
+
+  def __init__(self, context, filename, json=None):
+    if json is None:
+      with open(filename) as fp:
+        json = _json.load(fp)
+    self.context = context
+    self.filename = filename
+    self.json = json
+    self.module = JsonModule(context, filename, package=self)
+    self._extensions = None
+
+  def __repr__(self):
+    return "<Package '{}@{}' at '{}'>".format(
+      self.json.get('name'), self.json.get('version'), self.filename)
+
+  @property
+  def directory(self):
+    return os.path.dirname(filename)
+
+  def get_extensions(self):
+    if self._extensions is not None:
+      return self._extensions
+    self._extensions = []
+    for request in self.json.get('extensions', []):
+      ext = self.module.require(request)
+      if hasattr(ext, 'init_extension'):
+        ext.init_extension(self)
+      self._extensions.append(ext)
+    return self._extensions
 
 
 class BaseModule(six.with_metaclass(abc.ABCMeta)):
@@ -243,6 +279,28 @@ class PythonModule(BaseModule):
       self.remove()
       raise
 
+
+class JsonModule(BaseModule):
+
+  def __init__(self, context, filename, parent=None, request=None, package=None):
+    directory, name = os.path.split(filename)
+    super(JsonModule, self).__init__(
+      context=context, filename=filename, directory=directory, name=name,
+      parent=parent, request=request, package=package)
+
+  def exec_(self):
+    if self.executed:
+      raise RuntimeError('already loaded')
+    if os.path.basename(self.filename) == 'package.json' and self.package:
+      self.namespace.exports = self.package.json
+    else:
+      with open(self.filename, 'r') as fp:
+        self.namespace.exports = json.load(fp)
+
+
+# ====================
+# Loaders
+# ====================
 
 class BaseLoader(six.with_metaclass(abc.ABCMeta)):
   """
@@ -397,6 +455,35 @@ class PythonLoader(BaseLoader):
         return compile(source, filename, 'exec', dont_inherit=True)
 
 
+class JsonLoader(object):
+  """
+  Loader for `.json` files.
+  """
+
+  def __init__(self, suggest_json_suffix=False):
+    self.suggest_json_suffix = suggest_json_suffix
+
+  def suggest_try_files(self, filename):
+    if self.suggest_json_suffix:
+      yield filename + '.json'
+
+  def can_load(self, filename):
+    return filename.endswith('.json')
+
+  def load(self, context, filename, request, parent, package):
+    if os.path.basename(filename) == 'package.json':
+      assert isinstance(package, Package), package
+      assert os.path.normpath(os.path.abspath(filename)) == \
+        os.path.normpath(os.path.abspath(filename))
+      return package.module
+    return JsonModule(context, filename, request=request, parent=parent,
+      package=package)
+
+
+# ====================
+# Extensions
+# ====================
+
 class RequireUnpackSyntaxExtension(object):
   """
   This is an extension that is registered to the #Context as a binding
@@ -550,48 +637,9 @@ class RequireImportSyntaxExtension(object):
     return source
 
 
-class JsonLoader(object):
-  """
-  Loader for `.json` files.
-  """
-
-  def __init__(self, suggest_json_suffix=False):
-    self.suggest_json_suffix = suggest_json_suffix
-
-  def suggest_try_files(self, filename):
-    if self.suggest_json_suffix:
-      yield filename + '.json'
-
-  def can_load(self, filename):
-    return filename.endswith('.json')
-
-  def load(self, context, filename, request, parent, package):
-    if os.path.basename(filename) == 'package.json':
-      assert isinstance(package, Package), package
-      assert os.path.normpath(os.path.abspath(filename)) == \
-        os.path.normpath(os.path.abspath(filename))
-      return package.module
-    return JsonModule(context, filename, request=request, parent=parent,
-      package=package)
-
-
-class JsonModule(BaseModule):
-
-  def __init__(self, context, filename, parent=None, request=None, package=None):
-    directory, name = os.path.split(filename)
-    super(JsonModule, self).__init__(
-      context=context, filename=filename, directory=directory, name=name,
-      parent=parent, request=request, package=package)
-
-  def exec_(self):
-    if self.executed:
-      raise RuntimeError('already loaded')
-    if os.path.basename(self.filename) == 'package.json' and self.package:
-      self.namespace.exports = self.package.json
-    else:
-      with open(self.filename, 'r') as fp:
-        self.namespace.exports = json.load(fp)
-
+# ====================
+# Runtime Layer
+# ====================
 
 class Require(object):
   """
@@ -744,140 +792,6 @@ class Require(object):
 
     filename = self.context.resolve(request, self.module.directory)
     return proc_args + list(nodepy_args) + [filename] + list(args)
-
-
-def get_exports(module):
-  """
-  Returns the `exports` member of a #BaseModule.namespace if the member exists,
-  otherwise the #BaseModule.namespace is returned.
-  """
-
-  if not isinstance(module, BaseModule):
-    raise TypeError('module must be a BaseModule instance')
-  return getattr(module.namespace, 'exports', module.namespace)
-
-
-def upiter_directory(current_dir):
-  """
-  A helper function to iterate over the directory *current_dir* and all of
-  its parent directories, excluding `nodepy_modules/` and package-scope
-  directories (starting with `@`).
-  """
-
-  current_dir = os.path.abspath(current_dir)
-  while True:
-    dirname, base = os.path.split(current_dir)
-    if not base.startswith('@') and base != 'nodepy_modules':
-      yield current_dir
-    if dirname == current_dir:
-      # Can happen on Windows for drive letters.
-      break
-    current_dir = dirname
-  return
-
-
-def find_nearest_modules_directory(current_dir):
-  """
-  Finds the nearest `nodepy_modules/` directory to *current_dir* and returns
-  it. If no such directory exists, #None is returned.
-  """
-
-  for directory in upiter_directory(current_dir):
-    result = os.path.join(directory, 'nodepy_modules')
-    if os.path.isdir(result):
-      return result
-  return None
-
-
-def find_nearest_package_json(current_file):
-  """
-  Finds the nearest `package.json` relative to *current_file* and returns it.
-  If no such file exists, #None will be returned.
-  """
-
-  for directory in upiter_directory(current_file):
-    result = os.path.join(directory, 'package.json')
-    if os.path.isfile(result):
-      return result
-  return None
-
-
-def get_package_link(current_dir):
-  """
-  Finds a `.nodepy-link` file in *path* or any of its parent directories,
-  stopping at the first encounter of a `nodepy_modules/` directory. Returns
-  a #PackageLink tuple or #None if no link was found.
-  """
-
-  for directory in upiter_directory(current_dir):
-    link_file = os.path.join(directory, '.nodepy-link')
-    if os.path.isfile(link_file):
-      with open(link_file) as fp:
-        dst = fp.read().rstrip('\n')
-      return PackageLink(directory, dst)
-  return None
-
-
-def try_file(filename, preserve_symlinks=True):
-  """
-  Returns *filename* if it exists, otherwise #None.
-  """
-
-  if os.path.isfile(filename):
-    if not preserve_symlinks and not is_main and os.path.islink(filename):
-      return os.path.realpath(filename)
-    return filename
-  return None
-
-
-def get_site_packages(prefix):
-  """
-  Returns the path to the `site-packages/` directory where Python modules
-  are installed to via Pip given that the specified *prefix* is the same
-  that was passed during the Pip installation.
-  """
-
-  if os.name == 'nt':
-    lib = 'Lib'
-  else:
-    lib = 'lib/python{}.{}'.format(*sys.version_info)
-  return os.path.join(prefix, lib, 'site-packages')
-
-
-class Package(object):
-  """
-  Represents a `package.json` file. If a module is loaded that lives near
-  such a manifest, that module will be associated with the #Package.
-  """
-
-  def __init__(self, context, filename, json=None):
-    if json is None:
-      with open(filename) as fp:
-        json = _json.load(fp)
-    self.context = context
-    self.filename = filename
-    self.json = json
-    self.module = JsonModule(context, filename, package=self)
-    self._extensions = None
-
-  def __repr__(self):
-    return "<Package '{}@{}' at '{}'>".format(
-      self.json.get('name'), self.json.get('version'), self.filename)
-
-  @property
-  def directory(self):
-    return os.path.dirname(filename)
-
-  def get_extensions(self):
-    if self._extensions is not None:
-      return self._extensions
-    self._extensions = []
-    for request in self.json.get('extensions', []):
-      ext = self.module.require(request)
-      if hasattr(ext, 'init_extension'):
-        ext.init_extension(self)
-      self._extensions.append(ext)
-    return self._extensions
 
 
 class Context(object):
@@ -1258,6 +1172,127 @@ class Context(object):
         request=request, parent=parent)
 
 
+# ====================
+# Helper Functions
+# ====================
+
+PackageLink = collections.namedtuple('PackageLink', 'src dst')
+
+@contextlib.contextmanager
+def jit_debug(debug=True):
+  """
+  A context-manager that debugs the exception being raised inside the context.
+  Can be disabled by setting *debug* to #False. The exception will be re-raised
+  either way.
+  """
+
+  try:
+    yield
+  except BaseException as exc:
+    if debug:
+      pdb.post_mortem(sys.exc_info()[2])
+    raise
+
+
+def get_exports(module):
+  """
+  Returns the `exports` member of a #BaseModule.namespace if the member exists,
+  otherwise the #BaseModule.namespace is returned.
+  """
+
+  if not isinstance(module, BaseModule):
+    raise TypeError('module must be a BaseModule instance')
+  return getattr(module.namespace, 'exports', module.namespace)
+
+
+def upiter_directory(current_dir):
+  """
+  A helper function to iterate over the directory *current_dir* and all of
+  its parent directories, excluding `nodepy_modules/` and package-scope
+  directories (starting with `@`).
+  """
+
+  current_dir = os.path.abspath(current_dir)
+  while True:
+    dirname, base = os.path.split(current_dir)
+    if not base.startswith('@') and base != 'nodepy_modules':
+      yield current_dir
+    if dirname == current_dir:
+      # Can happen on Windows for drive letters.
+      break
+    current_dir = dirname
+  return
+
+
+def find_nearest_modules_directory(current_dir):
+  """
+  Finds the nearest `nodepy_modules/` directory to *current_dir* and returns
+  it. If no such directory exists, #None is returned.
+  """
+
+  for directory in upiter_directory(current_dir):
+    result = os.path.join(directory, 'nodepy_modules')
+    if os.path.isdir(result):
+      return result
+  return None
+
+
+def find_nearest_package_json(current_file):
+  """
+  Finds the nearest `package.json` relative to *current_file* and returns it.
+  If no such file exists, #None will be returned.
+  """
+
+  for directory in upiter_directory(current_file):
+    result = os.path.join(directory, 'package.json')
+    if os.path.isfile(result):
+      return result
+  return None
+
+
+def get_package_link(current_dir):
+  """
+  Finds a `.nodepy-link` file in *path* or any of its parent directories,
+  stopping at the first encounter of a `nodepy_modules/` directory. Returns
+  a #PackageLink tuple or #None if no link was found.
+  """
+
+  for directory in upiter_directory(current_dir):
+    link_file = os.path.join(directory, '.nodepy-link')
+    if os.path.isfile(link_file):
+      with open(link_file) as fp:
+        dst = fp.read().rstrip('\n')
+      return PackageLink(directory, dst)
+  return None
+
+
+def try_file(filename, preserve_symlinks=True):
+  """
+  Returns *filename* if it exists, otherwise #None.
+  """
+
+  if os.path.isfile(filename):
+    if not preserve_symlinks and not is_main and os.path.islink(filename):
+      return os.path.realpath(filename)
+    return filename
+  return None
+
+
+def get_site_packages(prefix):
+  """
+  Returns the path to the `site-packages/` directory where Python modules
+  are installed to via Pip given that the specified *prefix* is the same
+  that was passed during the Pip installation.
+  """
+
+  if os.name == 'nt':
+    lib = 'Lib'
+  else:
+    lib = 'lib/python{}.{}'.format(*sys.version_info)
+  return os.path.join(prefix, lib, 'site-packages')
+
+
+
 def reload_pkg_resources(insert_paths_index=None):
   """
   Reload the `pkg_resources` module.
@@ -1293,6 +1328,10 @@ def print_exc():
   else:
     traceback.print_exc()
 
+
+# ====================
+# Main
+# ====================
 
 def main(argv=None):
   parser = argparse.ArgumentParser(description=__doc__,
