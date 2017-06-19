@@ -30,6 +30,9 @@ __nppm__
 - Files passed to `-py` argument are now passed directly to the Pip command-line
 - Now prints the location scripts are installed to during the installation
 - Fix `NameError: FileNotFoundError` in `nppm` on Python 2
+- Fix #40 -- Ignore .py scripts when wrapping Pip installed scripts, or handle
+  them properly
+
 
 ### v0.0.20
 

@@ -373,18 +373,27 @@ class Installer:
     if self.install_location not in ('local',):
       return
 
+    if os.name == 'nt':
+      pathext = os.environ['PATHEXT'].lower().split(';')
     if os.path.isdir(self.dirs['pip_bin']):
       print('Relinking Pip-installed proxy scripts ...')
       for fn in os.listdir(self.dirs['pip_bin']):
+        prefix = []
         if os.name == 'nt':
           script_name, ext = os.path.splitext(fn)
-          if not ext: continue  # Bash script for Git-Bash..?
+          ext = ext.lower()
+          if not ext or ext not in pathext: continue
+          if ext != '.exe':
+            # If there is the same program as .exe, skip this one.
+            if os.path.isfile(os.path.join(self.dirs['pip_bin'], script_name + '.exe')):
+              continue
+            prefix = ['cmd', '/C']
         else:
           script_name = fn
 
-        print('  Creating', script_name, '...')
         target_prog = os.path.abspath(os.path.join(self.dirs['pip_bin'], fn))
-        self.script.make_wrapper(script_name, target_prog)
+        print('  Creating', script_name, 'from', target_prog, '...')
+        self.script.make_wrapper(script_name, prefix + [target_prog])
 
   def install_from_directory(self, directory, develop=False, dev=False, expect=None):
     """

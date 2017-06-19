@@ -126,10 +126,12 @@ class ScriptMaker:
     be prefixed with the paths from *path* and *pythonpath*.
     """
 
-    if not os.path.isabs(target_program):
-      raise ValueError('target_program must be an absolute path')
+    if isinstance(target_program, str):
+      if not os.path.isabs(target_program):
+        raise ValueError('target_program must be an absolute path')
+      target_program = [target_program]
 
     code = 'import subprocess, sys\n'\
-           'sys.exit(subprocess.call([{program!r}] + sys.argv[1:]))\n'\
-             .format(program=target_program)
+           'sys.exit(subprocess.call({program!r} + sys.argv[1:]))\n'\
+             .format(program=list(target_program))
     return self.make_python(script_name, code)
