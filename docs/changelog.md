@@ -13,6 +13,9 @@ __Node.py__
   causes SyntaxError
 - `Context.enter_module()` now catches potential `ValueError` when removing
   a path from `sys.path`
+- Add `ExtensionHandlerRunner` class and the way extensions are invoked
+- Add `BaseModule.extensions` property
+- Replace `Package.get_extensions()` with `Package.extensions` member
 
 __nppm__
 

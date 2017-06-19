@@ -44,9 +44,9 @@ be invoked on certain events.
 
 ### init_extension
 
-    init_extension(package)
+    init_extension(package, module)
 
-Called when the extension is loaded for a package.
+Called when the extension is loaded for a package or a module.
 
 ### module_loaded
 

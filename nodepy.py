@@ -147,6 +147,57 @@ class ResolveError(Exception):
 # Packages & Modules
 # ====================
 
+class ExtensionHandlerRunner(object):
+  """
+  This class is used to invoke handler functions on extension modules and
+  objects. It supports stepwise modification of each subsequent handler
+  call by invoking a *collector* function after every handler.
+  """
+
+  def __init__(self, handler_name, runner, require=None, module=None,
+               package=None, context=None, result=None):
+    self.handler_name = handler_name
+    self.runner = runner
+    if not require:
+      if module:
+        require = module.require
+      elif package:
+        require = package.require
+      else:
+        require = context.require
+    self.require = require
+    self.module = None
+    self.package = package
+    self.context = context
+    self.result = result
+
+  def __call__(self, ext):
+    if isinstance(ext, str):
+      ext = self.require(ext)
+    try:
+      handler = getattr(ext, self.handler_name)
+    except AttributeError:
+      return
+    self.runner(self, handler)
+
+  def runall(self, extensions, require=None):
+    if require is None:
+      require = self.require
+    for ext in extensions:
+      init = ext not in require.cache
+      module = require(ext)
+      if init and hasattr(module, 'init_extension'):
+        module.init_extension(self.package, self.module)
+      self(module)
+    return self.result
+
+  @classmethod
+  def wrap(cls, handler_name, *args, **kwargs):
+    def decorator(func):
+      return cls(handler_name, func, *args, **kwargs)
+    return decorator
+
+
 class Package(object):
   """
   Represents a `package.json` file. If a module is loaded that lives near
@@ -161,7 +212,7 @@ class Package(object):
     self.filename = filename
     self.json = json
     self.module = JsonModule(context, filename, package=self)
-    self._extensions = None
+    self.extensions = list(json.get('extensions', []))
 
   def __repr__(self):
     return "<Package '{}@{}' at '{}'>".format(
@@ -171,16 +222,9 @@ class Package(object):
   def directory(self):
     return os.path.dirname(filename)
 
-  def get_extensions(self):
-    if self._extensions is not None:
-      return self._extensions
-    self._extensions = []
-    for request in self.json.get('extensions', []):
-      ext = self.module.require(request)
-      if hasattr(ext, 'init_extension'):
-        ext.init_extension(self)
-      self._extensions.append(ext)
-    return self._extensions
+  @property
+  def require(self):
+    return self.module.require
 
 
 class BaseModule(six.with_metaclass(abc.ABCMeta)):
@@ -196,7 +240,7 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
   """
 
   def __init__(self, context, filename, directory, name, package=None,
-               parent=None, request=None, real_filename=None):
+               parent=None, request=None, real_filename=None, extensions=None):
     self.context = context
     self.filename = filename
     self.real_filename = real_filename or filename
@@ -208,6 +252,7 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     self.parent = parent
     self.request = request
     self.package = package
+    self.extensions = [] if extensions is None else extensions
     self.init_namespace()
 
   def __repr__(self):
@@ -260,11 +305,11 @@ class PythonModule(BaseModule):
   """
 
   def __init__(self, context, filename, real_filename, name, code,
-               package, parent, request):
+               package, parent, request, extensions):
     super(PythonModule, self).__init__(
         context=context, filename=filename, package=package,
         directory=os.path.dirname(filename), name=name, parent=parent,
-        request=request)
+        request=request, extensions=extensions)
     self.code = code
     self.real_filename = real_filename
 
@@ -368,7 +413,9 @@ class PythonLoader(BaseLoader):
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tmp:
           try:
             with open(filename, 'r') as src:
-              tmp.write(self._preprocess(context, package, filename, src.read()))
+              source, extensions = self._preprocess(context, package, filename, src.read())
+              tmp.write(source)
+              # FIXME: Save extensions into the bytecompile-file.
             tmp.close()
             py_compile.compile(tmp.name, cfile=bytecache_file, dfile=filename, doraise=True)
           finally:
@@ -388,15 +435,15 @@ class PythonLoader(BaseLoader):
         can_load_bytecache = True
 
     if can_load_bytecache:
-      code = self.load_code(context, package, bytecache_file, is_compiled=True)
+      code, extensions = self.load_code(context, package, bytecache_file, is_compiled=True)
       real_filename = bytecache_file
     else:
-      code = self.load_code(context, package, filename, is_compiled=None)
+      code, extensions = self.load_code(context, package, filename, is_compiled=None)
       real_filename = None
 
     return PythonModule(context=context, filename=filename, name=name,
         code=code, parent=parent, request=request, real_filename=real_filename,
-        package=package)
+        package=package, extensions=extensions)
 
   @staticmethod
   def _iter_lines(string):
@@ -421,15 +468,19 @@ class PythonLoader(BaseLoader):
         extensions = line[18:].split(',')
         break
 
-    require = package.module.require if package else context.require
     extensions = [require(x.strip()) for x in extensions]
+    module_extensions = extensions[:]
     if package:
-      extensions.extend(package.get_extensions())
+      extensions += package.extensions
 
-    for ext in extensions:
-      if hasattr(ext, 'preprocess_python_source'):
-        source = ext.preprocess_python_source(package, filename, source)
-    return source
+    # Cumulatively invoke the preprocess handler.
+    @ExtensionHandlerRunner.wrap('preprocess_python_source',
+      package=package, context=context, result=source)
+    def runner(self, handler):
+      self.result = handler(package, filename, self.result)
+
+    runner.runall(extensions)
+    return runner.result, module_extensions
 
   def load_code(self, context, package, filename, is_compiled=None):
     """
@@ -448,11 +499,12 @@ class PythonLoader(BaseLoader):
         else:
           header_size = 12 if sys.version >= '3.3' else 8
           fp.read(header_size)
-        return marshal.load(fp)
+        # FIXME: Load extensions from the bytecompiled file.
+        return marshal.load(fp), []
     else:
       with open(filename, 'r') as fp:
-        source = self._preprocess(context, package, filename, fp.read())
-        return compile(source, filename, 'exec', dont_inherit=True)
+        source, extensions = self._preprocess(context, package, filename, fp.read())
+        return compile(source, filename, 'exec', dont_inherit=True), extensions
 
 
 class JsonLoader(object):
@@ -679,6 +731,9 @@ class Require(object):
   def current(self):
     return self.context.current_module
 
+  def __repr__(self):
+    return '<require() of module {!r}>'.format(self.module.name)
+
   def __call__(self, request, current_dir=None, is_main=False, cache=True,
                exports=True, exec_=True, into=None, symbols=None, loader=None):
     """
@@ -710,7 +765,9 @@ class Require(object):
     """
 
     if request.startswith('!'):
-      return self.context.binding(request[1:])
+      binding = self.context.binding(request[1:])
+      self.cache[request] = binding
+      return binding
 
     if cache and request in self.cache:
       module = self.cache[request]
@@ -1134,9 +1191,12 @@ class Context(object):
           "filename passed to the loader ({})".format(
               getattr(loader, "__name__", None) or type(loader).__name__))
 
-    for ext in (package.get_extensions() if package else []):
-      if hasattr(ext, 'module_loaded'):
-        ext.module_loaded(module)
+    @ExtensionHandlerRunner.wrap('module_loaded', module=module, package=package)
+    def runner(self, handler):
+      handler(module)
+    runner.runall(module.extensions)
+    if package:
+      runner.runall(package.extensions, package.require)
 
     if followed_from:
       nodepy_modules = find_nearest_modules_directory(followed_from[0].src)
