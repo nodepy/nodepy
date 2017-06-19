@@ -370,7 +370,7 @@ class PythonLoader(BaseLoader):
             with open(filename, 'r') as src:
               tmp.write(self._preprocess(context, package, filename, src.read()))
             tmp.close()
-            py_compile.compile(tmp.name, bytecache_file, doraise=True)
+            py_compile.compile(tmp.name, cfile=bytecache_file, dfile=filename, doraise=True)
           finally:
             # Make sure the temporary file is deleted.
             try:
