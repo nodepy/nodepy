@@ -10,6 +10,8 @@ __Node.py__
 - Support `# nodepy-extensions: ...` special comment in Python file headers
 - Fix #56: "as" in member name when using require-import-syntax extension
   causes SyntaxError
+- `Context.enter_module()` now catches potential `ValueError` when removing
+  a path from `sys.path`
 
 __nppm__
 

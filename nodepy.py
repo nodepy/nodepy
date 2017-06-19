@@ -922,7 +922,10 @@ class Context(object):
           raise RuntimeError('module stack corrupted')
       finally:
         if library_path:
-          sys.path.remove(library_path)
+          try:
+            sys.path.remove(library_path)
+          except ValueError:
+            pass
 
   def send_event(self, event_type, event_data):
     for callback in self.event_handlers:
