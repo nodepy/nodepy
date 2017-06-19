@@ -1481,6 +1481,8 @@ def _main(args):
           context.require(request)
         request = arguments.pop(0)
         loader = context.get_loader(args.loader) if args.loader else None
+        if args.loader and loader is None:
+          raise ValueError('no loader for {!r}'.format(args.loader))
         module = context.require(request, args.current_dir, is_main=True, exec_=False,
             exports=False, loader=loader)
         if args.pymain:

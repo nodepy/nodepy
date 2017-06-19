@@ -16,6 +16,7 @@ __Node.py__
 - Add `ExtensionHandlerRunner` class and the way extensions are invoked
 - Add `BaseModule.extensions` property
 - Replace `Package.get_extensions()` with `Package.extensions` member
+- Fix `-L,--loader` option since `Context.get_loader()` was changed
 
 __nppm__
 
