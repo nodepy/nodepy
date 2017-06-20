@@ -34,6 +34,9 @@ __Node.py__
   - Update `PythonLoader` class
   - Update `JsonLoader` class
   - Add `Request` class
+- Remove `BaseModule.parent` member and turn it into a property, since the 
+  parent module is now contained in the `BaseModule.request` object
+- `BaseModule.request` is now a `Request` object instead of a string
 
 __nppm__
 

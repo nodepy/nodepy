@@ -238,7 +238,7 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
   """
 
   def __init__(self, context, filename, directory, name, package=None,
-               parent=None, request=None, real_filename=None, extensions=None):
+               request=None, real_filename=None, extensions=None):
     self.context = context
     self.filename = filename
     self.real_filename = real_filename or filename
@@ -247,7 +247,6 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     self.namespace = types.ModuleType(str(name))  # in Python 2, does not accept Unicode
     self.require = Require(self)
     self.executed = False
-    self.parent = parent
     self.request = request
     self.package = package
     self.extensions = [] if extensions is None else extensions
@@ -270,6 +269,12 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     """
 
     del self.context._module_cache[self.filename]
+
+  @property
+  def parent(self):
+    if self.request:
+      return self.request.parent_module
+    return None
 
   @abc.abstractmethod
   def exec_(self):
@@ -594,8 +599,8 @@ class PythonLoader(BaseLoader):
       real_filename = None
 
     return PythonModule(context=context, filename=filename, name=name,
-        code=code, parent=request.parent_module, request=request,
-        real_filename=real_filename, package=package, extensions=extensions)
+        code=code, request=request, real_filename=real_filename, package=package,
+        extensions=extensions)
 
   @staticmethod
   def _iter_lines(string):
@@ -667,10 +672,10 @@ class PythonModule(BaseModule):
   """
 
   def __init__(self, context, filename, real_filename, name, code,
-               package, parent, request, extensions):
+               package, request, extensions):
     super(PythonModule, self).__init__(
         context=context, filename=filename, package=package,
-        directory=os.path.dirname(filename), name=name, parent=parent,
+        directory=os.path.dirname(filename), name=name,
         request=request, extensions=extensions)
     self.code = code
     self.real_filename = real_filename
@@ -723,17 +728,16 @@ class JsonLoader(BaseLoader):
       assert os.path.normpath(os.path.abspath(filename)) == \
         os.path.normpath(os.path.abspath(filename))
       return package.module
-    return JsonModule(request.context, filename, request=request,
-      parent=request.parent_module, package=package)
+    return JsonModule(request.context, filename, request=request, package=package)
 
 
 class JsonModule(BaseModule):
 
-  def __init__(self, context, filename, parent=None, request=None, package=None):
+  def __init__(self, context, filename, request=None, package=None):
     directory, name = os.path.split(filename)
     super(JsonModule, self).__init__(
       context=context, filename=filename, directory=directory, name=name,
-      parent=parent, request=request, package=package)
+      request=request, package=package)
 
   def exec_(self):
     if self.executed:
