@@ -17,6 +17,23 @@ __Node.py__
 - Add `BaseModule.extensions` property
 - Replace `Package.get_extensions()` with `Package.extensions` member
 - Fix `-L,--loader` option since `Context.get_loader()` was changed
+- Implement #53 -- Add pluggable interface for resolving require() requests
+  - Full restructure of the resolve and loading process, now similar to Python
+    Import Hook mechanism
+  - Rename `Context._get_package()` to `Context.get_package()` (now public)
+  - Rename `Context._get_package_main()` to `Context.get_package_main()` (now public)
+  - Add `Context.get_package_for()`
+  - Update `Context.resolve()`, `Context.load_module()` and `Context.resolve_and_load()`
+    drastically
+  - Add `BaseResolver` class
+  - Change `BaseLoader` class
+  - Add `FilesystemResolver` class
+  - Add `FilesystemLoaderSupport` class
+  - Add `PythonFilesystemLoaderSupport` class
+  - Add `JsonFilesystemLoaderSupport` class
+  - Update `PythonLoader` class
+  - Update `JsonLoader` class
+  - Add `Request` class
 
 __nppm__
 

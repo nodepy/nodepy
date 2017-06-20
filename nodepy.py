@@ -126,20 +126,18 @@ class NoSuchBindingError(Exception):
 
 class ResolveError(Exception):
 
-  def __init__(self, request, current_dir, is_main, path):
+  def __init__(self, request):
+    assert isinstance(request, Request)
     self.request = request
-    self.current_dir = current_dir
-    self.is_main = is_main
-    self.path = path
 
   def __str__(self):
-    msg = "'{0}'".format(self.request)
-    if self.is_main:
+    msg = "'{0}'".format(self.request.name)
+    if self.request.is_main:
       msg += ' [main]'
-    if self.current_dir:
-      msg += " (from directory '{0}')".format(self.current_dir)
-    if self.path:
-      msg += ' searched in:\n  - ' + '\n  - '.join(map(repr, self.path))
+    if self.request.current_dir:
+      msg += " (from directory '{0}')".format(self.request.current_dir)
+    if self.request.path:
+      msg += ' searched in:\n  - ' + '\n  - '.join(map(repr, self.request.path))
     return msg
 
 
@@ -297,107 +295,258 @@ class InitModule(BaseModule):
     raise RuntimeError('can not exec InitModule')
 
 
-class PythonModule(BaseModule):
-  """
-  Represents a Node.py Python module object that is executed from a code
-  object. The #PythonLoader is responsible for loading the code from files
-  respectively.
-  """
-
-  def __init__(self, context, filename, real_filename, name, code,
-               package, parent, request, extensions):
-    super(PythonModule, self).__init__(
-        context=context, filename=filename, package=package,
-        directory=os.path.dirname(filename), name=name, parent=parent,
-        request=request, extensions=extensions)
-    self.code = code
-    self.real_filename = real_filename
-
-  def exec_(self):
-    if self.executed:
-      raise RuntimeError('already executed')
-    try:
-      self.executed = True
-      with self.context.enter_module(self):
-        exec(self.code, vars(self.namespace))
-    except:
-      self.remove()
-      raise
-
-
-class JsonModule(BaseModule):
-
-  def __init__(self, context, filename, parent=None, request=None, package=None):
-    directory, name = os.path.split(filename)
-    super(JsonModule, self).__init__(
-      context=context, filename=filename, directory=directory, name=name,
-      parent=parent, request=request, package=package)
-
-  def exec_(self):
-    if self.executed:
-      raise RuntimeError('already loaded')
-    if os.path.basename(self.filename) == 'package.json' and self.package:
-      self.namespace.exports = self.package.json
-    else:
-      with open(self.filename, 'r') as fp:
-        self.namespace.exports = json.load(fp)
-
-
 # ====================
-# Loaders
+# Basic Resolve & Loading Mechanism
 # ====================
+
+class Request(object):
+  """
+  Represents a request-string that is to be resolved with all the context
+  information included.
+
+  # Arguments
+  name (str): The string that is used to resolve the request (that is,
+    the name of the module to load).
+  current_dir (str): The current directory in which relative requests are
+    being resolved in. Note that if #is_main is #True, absolute requests
+    will also be resolved in that directory.
+  is_main (bool): #True if the request is supposed to be loaded as the main
+    main module of the current execution.
+  path (list of str): A list of additional search paths. Usually these are
+    filesystem paths, but they may also be something entirely different and
+    only then taken into account by a specific loader if the format matches.
+  parent_module (BaseModule): A module object that requested to resolve this
+    request. Note that for the first module that is being resolved, this will
+    be an #InitModule instance.
+  context (Context): The context that manages the whole runtime.
+
+  # Members
+  data (any): A data member that can be filled by the #BaseResolver that
+    finally returns a #BaseLoader object from #BaseResolver.resolve() in
+    order to communicate the information that has been determined during
+    the resolve procedure to the loader. Alternatively, a new loader object
+    can be constructed and the information passed to its constructor.
+  followed_from (list of PackageLink): Can be used by resolvers on the
+    filesystem when they are following package links to ensure that consistent
+    behaviour with the modules intended location is ensured.
+  """
+
+  def __init__(self, name, current_dir, is_main, path, parent_module, context):
+    self.name = name
+    self.current_dir = current_dir
+    self.is_main = is_main
+    self.path = path
+    self.parent_module = parent_module
+    self.context = context
+    self.clear_state()
+
+  def clear_state(self):
+    self.data = None
+    self.followed_from = []
+
+
+class BaseResolver(six.with_metaclass(abc.ABCMeta)):
+  """
+  Base class for objects that implement resolving module requests and return
+  some other object that can load that module.
+  """
+
+  @abc.abstractmethod
+  def resolve(self, request):
+    """
+    Resolve the *request* which must be a #Request instance and return a
+    #BaseLoader instance. This #BaseLoader may be a completely new instance
+    or an existing object. The latter is usually preferred for loading
+    processes where #Request.data is simply adjusted.
+    """
+
 
 class BaseLoader(six.with_metaclass(abc.ABCMeta)):
   """
-  Interface for loader objects.
+  Base class for objects that can load #BaseModule objects.
+  """
+
+  @abc.abstractmethod
+  def get_filename(self, request):
+    """
+    Determine a string that uniquely identifies the module that is about to
+    be loaded with this loader. For example, for loaders that load from the
+    filesystem, this is the canonical and normalized filename.
+
+    Note that the very same filename MUST be passed to the #BaseModule.
+    """
+
+  @abc.abstractmethod
+  def load(self, request):
+    """
+    Load and return the #BaseModule object for the specified #Request.
+    Depending on the implementation of the #Loader, the *request* may
+    have been modified to contain the information that has been determined
+    in #BaseResolver.resolve() or that information might have been passed
+    to the loader on construction.
+    """
+
+
+class FilesystemResolver(BaseResolver):
+  """
+  Resolves requests on the filesystem. Requires #FilesystemLoaderSupport
+  objects to be registered to the resolver.
+  """
+
+  def __init__(self):
+    self.supports = []
+    self.index_files = ['index', '__init__']
+
+  def add_support(self, support):
+    if not isinstance(support, FilesystemLoaderSupport):
+      raise TypeError('expected FilesystemLoaderSupport')
+    self.supports.append(support)
+
+  def resolve(self, request):
+    filename, support = self._resolve(request, request.name)
+    if not support:
+      for support in self.supports:
+        if support.can_load(filename):
+          break
+      else:
+        raise ResolveError(request)
+    return support.get_loader(filename, request)
+
+  def _resolve(self, request_obj, request):
+    current_dir = request_obj.current_dir
+
+    # Resolve relative requests by creating an absolute path and try
+    # to resolve that instead.
+    if request in '..' or request.startswith('./') or request.startswith('../'):
+      assert isinstance(current_dir, str)
+      new_request = os.path.abspath(os.path.join(current_dir, request))
+      return self._resolve(request_obj, new_request)
+
+    # Absolute paths will be resolved only with the FilesystemLoaderSupport's
+    # can_load() and suggest_try_files() methods.
+    elif os.path.isabs(request):
+
+      # Determine if the request is pointing to a file in a directory that
+      # is actually just a link to another directory.
+      link = get_package_link(request)
+      if link:
+        request_obj.followed_from.append(link)
+        request = os.path.join(link.dst, os.path.relpath(request, link.src))
+
+      # If the file exists as it is, we will use it as it is.
+      filename = try_file(request)
+      if filename:
+        return filename, None
+
+      # Alternatively, try all the files suggested by the loader support.
+      for support in self.supports:
+        for filename in support.suggest_try_files(request):
+          filename = try_file(filename)
+          if filename:
+            return filename, support
+
+      if os.path.isdir(request):
+        # If there is a package.json file in this directory, we can parse
+        # it for its "main" field to find the file we should be requiring
+        # for this directory.
+        main = request_obj.context.get_package_main(request)
+        if main:
+          new_request = os.path.join(request, main)
+          return self._resolve(request_obj, new_request)
+        else:
+          # Otherwise, try the standard index files.
+          for choice in self.index_files:
+            new_request = os.path.join(request, choice)
+            try:
+              return self._resolve(request_obj, new_request)
+            except ResolveError:
+              continue
+
+      # Dunno what to do with this absolute request.
+      raise ResolveError(request_obj)
+
+    if current_dir is None and request_obj.is_main:
+      current_dir = '.'
+
+    path = list(request_obj.path)
+    nodepy_modules = find_nearest_modules_directory(current_dir)
+    if nodepy_modules:
+      path.insert(0, nodepy_modules)
+    if request_obj.is_main:
+      path.insert(0, current_dir)
+
+    for directory in path:
+      new_request = os.path.join(os.path.abspath(directory), request)
+      try:
+        return self._resolve(request_obj, new_request)
+      except ResolveError:
+        pass
+
+    raise ResolveError(request_obj)
+
+
+class FilesystemLoaderSupport(six.with_metaclass(abc.ABCMeta)):
+  """
+  This interface is used in the #FilesystemResolver to determine whether a
+  specific file can be loaded, and then create a #BaseLoader object for that
+  file.
   """
 
   @abc.abstractmethod
   def suggest_try_files(self, filename):
-    return; yield
+    pass
 
   @abc.abstractmethod
   def can_load(self, filename):
-    return False
+    pass
 
   @abc.abstractmethod
-  def load(self, context, filename, request, parent, package):
-    return BaseModule()
+  def get_loader(self, filename, request):
+    pass
 
 
-class PythonLoader(BaseLoader):
-  """
-  A loader for nodepy Python modules.
+# ====================
+# Python Support
+# ====================
 
-  # Parameters
-  write_bytecache (bool, None): Write bytecache files. If not specified,
-      checks the `PYTHONDONTWRITEBYTECODE` environment variable.
-  """
-
-  # Choose an implementation and version dependent suffix for Python
-  # bytecache files.
-  pyc_suffix = '.{}-{}{}.pyc'.format(python_impl.lower(), *sys.version_info)
+class PythonFilesystemLoaderSupport(FilesystemLoaderSupport):
 
   def __init__(self, write_bytecache=None):
-    if write_bytecache is None:
-      write_bytecache = not bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
     self.write_bytecache = write_bytecache
 
   def suggest_try_files(self, filename):
     yield filename + '.py'
-    yield filename + self.pyc_suffix
+    yield filename + PythonLoader.pyc_suffix
 
   def can_load(self, filename):
-    return filename.endswith('.py') or filename.endswith(self.pyc_suffix)
+    return filename.endswith('.py') or filename.endswith(PythonLoader.pyc_suffix)
 
-  def load(self, context, filename, request, parent, package):
+  def get_loader(self, filename, request):
+    return PythonLoader(filename, write_bytecache=self.write_bytecache)
+
+
+class PythonLoader(BaseLoader):
+
+  #: Implementation and version dependent suffix.
+  pyc_suffix = '.{}-{}{}.pyc'.format(python_impl.lower(), *sys.version_info)
+
+  def __init__(self, filename, write_bytecache=None):
+    if write_bytecache is None:
+      write_bytecache = not bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
+    self.filename = filename
+    self.write_bytecache = write_bytecache
+
+  def get_filename(self, request):
+    return self.filename
+
+  def load(self, request):
     """
-    Called when a #Context requires to load a module for a filename. The
-    #PythonLoader will always check if a byte-compiled version of the source
-    file already exists and if the respective source file has not been modified
-    since it was created.
+    Loads the Python module from the filename passed to #__init__().
+    If #write_bytecache is #True and the filename is already a cache
+    file, a bytecache will be generated if possible.
     """
 
+    filename = self.filename
     filename_noext = os.path.splitext(filename)[0]
     name = os.path.basename(filename_noext)
     bytecache_file = filename_noext + self.pyc_suffix
@@ -434,6 +583,9 @@ class PythonLoader(BaseLoader):
       else:
         can_load_bytecache = True
 
+    context = request.context
+    package = context.get_package_for(filename)
+
     if can_load_bytecache:
       code, extensions = self.load_code(context, package, bytecache_file, is_compiled=True)
       real_filename = bytecache_file
@@ -442,8 +594,8 @@ class PythonLoader(BaseLoader):
       real_filename = None
 
     return PythonModule(context=context, filename=filename, name=name,
-        code=code, parent=parent, request=request, real_filename=real_filename,
-        package=package, extensions=extensions)
+        code=code, parent=request.parent_module, request=request,
+        real_filename=real_filename, package=package, extensions=extensions)
 
   @staticmethod
   def _iter_lines(string):
@@ -507,10 +659,39 @@ class PythonLoader(BaseLoader):
         return compile(source, filename, 'exec', dont_inherit=True), extensions
 
 
-class JsonLoader(object):
+class PythonModule(BaseModule):
   """
-  Loader for `.json` files.
+  Represents a Node.py Python module object that is executed from a code
+  object. The #PythonLoader is responsible for loading the code from files
+  respectively.
   """
+
+  def __init__(self, context, filename, real_filename, name, code,
+               package, parent, request, extensions):
+    super(PythonModule, self).__init__(
+        context=context, filename=filename, package=package,
+        directory=os.path.dirname(filename), name=name, parent=parent,
+        request=request, extensions=extensions)
+    self.code = code
+    self.real_filename = real_filename
+
+  def exec_(self):
+    if self.executed:
+      raise RuntimeError('already executed')
+    try:
+      self.executed = True
+      with self.context.enter_module(self):
+        exec(self.code, vars(self.namespace))
+    except:
+      self.remove()
+      raise
+
+
+# ====================
+# JSON Support
+# ====================
+
+class JsonFilesystemLoaderSupport(FilesystemLoaderSupport):
 
   def __init__(self, suggest_json_suffix=False):
     self.suggest_json_suffix = suggest_json_suffix
@@ -522,14 +703,46 @@ class JsonLoader(object):
   def can_load(self, filename):
     return filename.endswith('.json')
 
-  def load(self, context, filename, request, parent, package):
+  def get_loader(self, filename, request):
+    return JsonLoader(filename)
+
+
+class JsonLoader(BaseLoader):
+
+  def __init__(self, filename):
+    self.filename = filename
+
+  def get_filename(self, request):
+    return self.filename
+
+  def load(self, request):
+    filename = self.filename
+    package = request.context.get_package_for(filename)
     if os.path.basename(filename) == 'package.json':
       assert isinstance(package, Package), package
       assert os.path.normpath(os.path.abspath(filename)) == \
         os.path.normpath(os.path.abspath(filename))
       return package.module
-    return JsonModule(context, filename, request=request, parent=parent,
+    return JsonModule(context, filename, request=request, parent=parent_module,
       package=package)
+
+
+class JsonModule(BaseModule):
+
+  def __init__(self, context, filename, parent=None, request=None, package=None):
+    directory, name = os.path.split(filename)
+    super(JsonModule, self).__init__(
+      context=context, filename=filename, directory=directory, name=name,
+      parent=parent, request=request, package=package)
+
+  def exec_(self):
+    if self.executed:
+      raise RuntimeError('already loaded')
+    if os.path.basename(self.filename) == 'package.json' and self.package:
+      self.namespace.exports = self.package.json
+    else:
+      with open(self.filename, 'r') as fp:
+        self.namespace.exports = json.load(fp)
 
 
 # ====================
@@ -771,19 +984,23 @@ class Require(object):
 
     if cache and request in self.cache:
       module = self.cache[request]
+
     else:
       current_dir = current_dir or self.module.directory
       self.context.send_event('require', {
           'request': request, 'current_dir': current_dir,
           'is_main': is_main, 'cache': cache, 'parent': self.module}
       )
-      module = self.context.resolve_and_load(request, current_dir,
-          is_main=is_main, additional_path=self.path, cache=cache,
-          parent=self.module, exec_=exec_, loader=loader)
+
+      # Resolve and load the module.
+      module = self.context.resolve_and_load(request, current_dir=current_dir,
+        additional_path=self.path, is_main=is_main, exec_=exec_, cache=cache)
       if cache:
         self.cache[request] = module
+
     if exports:
       module = get_exports(module)
+
     if into is not None:
       if symbols is None:
         symbols = getattr(module, '__all__', None)
@@ -794,6 +1011,7 @@ class Require(object):
         for key in dir(module):
           if not key.startswith('_') and key not in ('module', 'require'):
             into[key] = getattr(module, key)
+
     return module
 
   def symbols(self, request, symbols=None):
@@ -876,14 +1094,17 @@ class Context(object):
     # A stack of modules that are currently being executed. Every module
     # should add itself on the stack when it is executed with #enter_module().
     self._module_stack = []
-    # Loaders for files that can be required.
-    self.loaders = []
+    # require() request resolvers.
+    self.resolvers = []
     # A list of functions that are called for various events. The first
     # arugment is always the event type, followed by the event data.
     self.event_handlers = []
     # A list of additional search directories. Defaults to the paths specified
     # in the `NODEPY_PATH` environment variable.
     self.path = list(filter(bool, os.getenv('NODEPY_PATH', '').split(os.pathsep)))
+    # TODO: Since we're using the nearest nodepy_modules/ directory
+    #       automatically, we should not need to add this directory
+    #       to the path.
     self.path.insert(0, 'nodepy_modules')
     # The main module. Will be set by #load_module().
     self.main_module = None
@@ -900,8 +1121,10 @@ class Context(object):
     self.importer = localimport.localimport(parent_dir=current_dir, path=[pip_lib])
 
     if not bare:
-      self.loaders.append(PythonLoader())
-      self.loaders.append(JsonLoader())
+      fs = FilesystemResolver()
+      fs.add_support(PythonFilesystemLoaderSupport())
+      fs.add_support(JsonFilesystemLoaderSupport())
+      self.resolvers.append(fs)
       self.register_binding('require-unpack-syntax', RequireUnpackSyntaxExtension())
       self.register_binding('require-import-syntax', RequireImportSyntaxExtension())
 
@@ -1029,7 +1252,7 @@ class Context(object):
         return loader
     return None
 
-  def _get_package_main(self, dirname):
+  def get_package_main(self, dirname):
     """
     Checks if there exists a `package.json` in the specified *dirname*, loads
     it and then returns the value of its `"main"` field. If the field or the
@@ -1037,7 +1260,7 @@ class Context(object):
     """
 
     fn = os.path.abspath(os.path.join(dirname, 'package.json'))
-    package = self._get_package(fn, doraise=False)
+    package = self.get_package(fn, doraise=False)
     if package:
       main = package.json.get('main')
       if main: main = str(main)
@@ -1045,7 +1268,7 @@ class Context(object):
     else:
       return None
 
-  def _get_package(self, filename, doraise=True):
+  def get_package(self, filename, doraise=True):
     """
     Loads a `package.json` file, caches it and returns a #Package instance.
     If the *filename* does not exist and *doraise* is #False, #None will
@@ -1070,169 +1293,98 @@ class Context(object):
 
     return package
 
-  def resolve(self, request, current_dir=None, is_main=False, path=None,
-              followed_from=None):
+  def get_package_for(self, filename, doraise=True):
     """
-    Resolves the *request* to a filename of a module that can be loaded by one
-    of the extension loaders. For relative requests (ones starting with `./` or
-    `../`), the *current_dir* will be used to generate an absolute request.
-    Absolute requests will then be resolved by using #try_file() and the
-    suggested files returned by #BaseLoader.suggest_try_files().
-
-    Dependency requests are those that are neither relative nor absolute and
-    are of the format `[@<scope>]<name>[/<module>]`. Such requests are looked
-    up in the nearest `nodepy_modules/` directory of the *current_dir* and
-    then alternatively in the specified list of directories specified with
-    *path*. If *path* is #None, it defaults to the #Context.path.
-
-    If *is_main* is specified, dependency requests are also looked up like
-    relative requests before the normal lookup procedure kicks in.
-
-    Raises a #ResolveError if the *request* could not be resolved into a
-    filename.
+    Locates the nearest `package.json` for the specified *filename*.
     """
 
-    if request in '..' or request.startswith('./') or request.startswith('../'):
+    fn = find_nearest_package_json(filename)
+    if not fn:
+      return None
+    return self.get_package(fn, doraise)
+
+  def resolve(self, request):
+    """
+    Resolves a #Request using the registered #resolvers.
+    """
+
+    for resolver in self.resolvers:
+      request.clear_state()
       try:
-        return self.resolve(os.path.abspath(os.path.join(current_dir, request)))
+        return resolver.resolve(request)
       except ResolveError as exc:
-        raise ResolveError(request, current_dir, is_main, path)
-    elif os.path.isabs(request):
-      link = get_package_link(request)
-      if link:
-        request = os.path.join(link.dst, os.path.relpath(request, link.src))
-        if followed_from is not None:
-          followed_from.append(link)
-      filename = try_file(request)
-      if filename:
-        return filename
-      for loader in self.loaders:
-        for filename in loader.suggest_try_files(request):
-          filename = try_file(filename)
-          if filename: return filename
-      if os.path.isdir(request):
-        # If there is a package.json file in this directory, we can parse
-        # it for its "main" field to find the file we should be requiring
-        # for this directory.
-        main = self._get_package_main(request)
-        if main:
-          return self.resolve(os.path.join(request, main), current_dir, is_main, path)
-        else:
-          # Otherwise, try the standard index files.
-          for choice in self._index_files:
-            new_request = os.path.join(request, choice)
-            try:
-              return self.resolve(new_request, current_dir, is_main, path)
-            except ResolveError:
-              continue
-      raise ResolveError(request, current_dir, is_main, path)
+        continue
+    raise ResolveError(request)
 
-    if current_dir is None and is_main:
-      current_dir = '.'
-
-    path = list(self.path if path is None else path)
-    nodepy_modules = find_nearest_modules_directory(current_dir)
-    if nodepy_modules:
-      path.insert(0, nodepy_modules)
-    if is_main:
-      path.insert(0, current_dir)
-
-    for directory in path:
-      new_request = os.path.join(os.path.abspath(directory), request)
-      try:
-        return self.resolve(new_request, None)
-      except ResolveError:
-        pass
-
-    raise ResolveError(request, current_dir, is_main, path)
-
-  def load_module(self, filename, is_main=False, exec_=True, cache=True,
-                  loader=None, followed_from=None, request=None, parent=None):
-    """
-    Loads a module by *filename*. The filename will be converted to an
-    absolute path and normalized. If the module is already loaded, the
-    cached module will be returned.
-
-    Note that the returned #BaseModule will be ensured to be executed
-    unless *exec_* is set to False.
-
-    In order to keep the correct reference directory when loading files via
-    package links (directories that contain a `.nodepy-link` file), the
-    *follow_from* argument should be specified which must be a list which
-    was obtained via #resolve()'s same parameter. It must be a list of
-    #PackageLink objects.
-    """
-
-    if is_main and self.main_module:
+  def load_module(self, loader, request, exec_=True, cache=True):
+    if request.is_main and self.main_module:
       raise RuntimeError('context already has a main module')
 
-    filename = os.path.normpath(os.path.abspath(filename))
-    if cache and filename in self._module_cache:
-      return self._module_cache[filename]
+    filename = loader.get_filename(request)
+    if cache:
+      module = self._module_cache.get(filename)
+      if module is not None:
+        return module
 
-    if loader is None:
-      for loader in self.loaders:
-        if loader.can_load(filename):
-          break
-      else:
-        raise ValueError('no loader for {!r}'.format(filename))
+    # Load the module and assert data consistency.
+    module = loader.load(request)
 
-    # Find the nearest package for the module.
-    pfn = find_nearest_package_json(filename)
-    package = self._get_package(pfn) if pfn else None
-
-    module = loader.load(self, filename, request, parent, package)
     if not isinstance(module, BaseModule):
       raise TypeError('loader {!r} did not return a BaseModule instance, '
           'but instead a {!r} object'.format(
             type(loader).__name__, type(module).__name__))
-    if module.filename != filename:
-      raise RuntimeError("loaded module's filename does not match the "
-          "filename passed to the loader ({})".format(
-              getattr(loader, "__name__", None) or type(loader).__name__))
 
-    @ExtensionHandlerRunner.wrap('module_loaded', module=module, package=package)
+    if module.filename != filename:
+      raise RuntimeError("loaded module's filename ({}) does not match the "
+          "pre-determined filename ({})".format(module.filename, filename))
+
+    if request.followed_from:
+      # There has been at least one redirection in the filesystem when the
+      # package was resolved. We will add the nearest modules directory of
+      # the original resolve directory to the search path.
+      nodepy_modules = find_nearest_modules_directory(request.followed_from[0].src)
+      if nodepy_modules:
+        module.require.path.append(nodepy_modules)
+
+    if cache:
+      self._module_cache[filename] = module
+    if request.is_main:
+      self.main_module = module
+    self.send_event('load', module)
+
+    # Invoke all extensions for the module and its owning package.
+    @ExtensionHandlerRunner.wrap('module_loaded', module=module, package=module.package)
     def runner(self, handler):
       handler(module)
     runner.runall(module.extensions)
-    if package:
-      runner.runall(package.extensions, package.require)
+    if module.package:
+      runner.runall(module.package.extensions, module.package.require)
 
-    if followed_from:
-      nodepy_modules = find_nearest_modules_directory(followed_from[0].src)
-      if nodepy_modules:
-        module.require.path.append(nodepy_modules)
-    if cache:
-      self._module_cache[filename] = module
-    if is_main:
-      self.main_module = module
-
-    self.send_event('load', module)
+    # Execute the module if that is requested with the load request.
     if exec_ and not module.executed:
       module.exec_()
+
     return module
 
   def resolve_and_load(self, request, current_dir=None, is_main=False,
-                       path=None, additional_path=None, frollowed_from=None,
-                       exec_=True, cache=True, loader=None, parent=NotImplemented):
+                       path=None, additional_path=None, exec_=True, cache=True,
+                       parent_module=NotImplemented):
     """
     A combination of #resolve() and #load_module() that should be used when
     actually wanting to require another module instead of just resolving a
     request or loading from a filename.
     """
 
-    if parent is NotImplemented:
-      parent = self._module_stack[-1] if self._module_stack else None
+    if parent_module is NotImplemented:
+      parent_module = self._module_stack[-1] if self._module_stack else None
 
     path = list(self.path if path is None else path)
     if additional_path is not None:
       path = list(additional_path) + path
-    followed_from = []
-    filename = self.resolve(request, current_dir, is_main=is_main,
-        path=path, followed_from=followed_from)
-    return self.load_module(filename, is_main=is_main, cache=cache,
-        exec_=exec_, loader=loader, followed_from=followed_from,
-        request=request, parent=parent)
+
+    request = Request(name=request, current_dir=current_dir,
+      is_main=is_main, path=path, context=self, parent_module=parent_module)
+    return self.load_module(self.resolve(request), request, exec_=exec_)
 
 
 # ====================
