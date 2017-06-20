@@ -97,6 +97,10 @@ def main():
 
 @main.command()
 def version():
+  """
+  Print the nppm and Node.py version.
+  """
+
   print('nppm-{} (on {})'.format(require('./package.json')['version'], nodepy.VERSION))
 
 
