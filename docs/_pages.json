@@ -2,7 +2,8 @@
   {
     "name": "Node.py",
     "path": null,
-    "file": "index.md"
+    "file": "../README.md",
+    "showTitle": false
   },
   {
     "name": "Extensions",
