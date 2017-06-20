@@ -723,8 +723,8 @@ class JsonLoader(BaseLoader):
       assert os.path.normpath(os.path.abspath(filename)) == \
         os.path.normpath(os.path.abspath(filename))
       return package.module
-    return JsonModule(context, filename, request=request, parent=parent_module,
-      package=package)
+    return JsonModule(request.context, filename, request=request,
+      parent=request.parent_module, package=package)
 
 
 class JsonModule(BaseModule):
