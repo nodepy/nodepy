@@ -21,7 +21,6 @@
 from __future__ import print_function
 from operator import itemgetter
 from six.moves import input
-from sys import exit
 
 import click
 import collections
@@ -44,7 +43,6 @@ import {RegistryClient} from './lib/registry'
 import PackageLifecycle from './lib/package-lifecycle'
 import {is_virtualenv, get_module_dist_info} from './lib/env'
 
-
 class Less(object):
   # http://stackoverflow.com/a/3306399/791713
   def __init__(self, num_lines):
@@ -58,8 +56,7 @@ class Less(object):
 
 def get_install_location(global_, root):
   if global_ and root:
-    print('Error: -g,--global and --root can not be used together')
-    exit(1)
+    error('-g,--global and --root can not be used together')
   elif global_:
     if is_virtualenv():
       print('Note: detected virtual environment, upgrading -g,--global to --root')
@@ -95,7 +92,7 @@ def exit_with_return(func):
   @functools.wraps(func)
   def wrapper(*args, **kwargs):
     res = func(*args, **kwargs)
-    exit(res)
+    sys.exit(res)
   return wrapper
 
 @click.group(help="""
@@ -514,9 +511,9 @@ def run(script, args):
   """
   Run a script that is specified in the package.json.
   """
+
   if not PackageLifecycle().run(script, args):
-    print("Error: no script '{}'".format(script))
-    exit(1)
+    error("no script '{}'".format(script))
 
 
 if require.main == module:
