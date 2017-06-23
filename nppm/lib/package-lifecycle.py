@@ -38,7 +38,7 @@ except ImportError:
 import config from './config'
 import _install from './install'
 import _manifest from './manifest'
-import registry from './registry'
+import {RegistryClient, get_package_archive_name} from './registry'
 
 
 class PackageLifecycle(object):
@@ -69,7 +69,7 @@ class PackageLifecycle(object):
 
   def dist(self):
     self.run('pre-dist', [])
-    filename = registry.get_package_archive_name(self.manifest.name,
+    filename = get_package_archive_name(self.manifest.name,
         self.manifest.version)
     filename = os.path.join(self.dist_dir, filename)
     if not os.path.isdir(self.dist_dir):
@@ -85,10 +85,17 @@ class PackageLifecycle(object):
     print('Done!')
     return filename
 
-  def upload(self, filename, user, password, force, dry):
+  def upload(self, filename, user, password, force, dry, registry):
+    registry = RegistryClient.get(registry or 'default')
     if not os.path.isfile(filename):
       print('error: "{}" does not exist'.format(filename))
       exit(1)
+
+    if user:
+      registry.username = user
+    if password:
+      registry.password = password
+    del user, password
 
     # If the file looks like a package distribution archive of a different
     # version, let the user confirm that he/she really wants to upload the file.
@@ -102,33 +109,28 @@ class PackageLifecycle(object):
       if reply not in ('y', 'yes'):
         exit(1)
 
-    url = config['registry']
-    user = user or config.get('username')
-    if not user or not password:
-      print('Credentials for', url)
-    if not user:
-      user = input('Username? ')
+    print('Registry "{}" ({})'.format(registry.name, registry.base_url))
+    if not registry.username:
+      registry.username = input('Username? ')
     else:
-      print('Username?', user)
-    if not password:
-      password = getpass.getpass('Password? ')
+      print('Username?', registry.username)
+    if not registry.password:
+      registry.password = getpass.getpass('Password? ')
 
     if dry:
       print('Not actually uploading things... (dry mode)')
     else:
-      #FIXME
-      reg = registry.RegistryClient(url, user, password)
-      msg = reg.upload(self.manifest.name, self.manifest.version, filename, force)
+      msg = registry.upload(self.manifest.name, self.manifest.version, filename, force)
       print(msg)
 
-  def publish(self, user, password, force, dry):
+  def publish(self, user, password, force, dry, registry):
     if self.manifest.private:
       print('Error: the package is marked as private and can not be published.')
       exit(1)
     self.run('pre-publish', [])
     filename = self.dist()
     print('Uploading "{}" ...'.format(filename))
-    self.upload(filename, user, password, force, dry)
+    self.upload(filename, user, password, force, dry, registry)
     self.run('post-publish', [])
 
   def run(self, script, args):

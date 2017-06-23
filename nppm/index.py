@@ -336,9 +336,10 @@ def dist():
 @click.option('-f', '--force', is_flag=True)
 @click.option('-u', '--user')
 @click.option('-p', '--password')
+@click.option('--to', help='Registry to publish to.')
 @click.option('--dry', is_flag=True)
 @exit_with_return
-def upload(filename, force, user, password, dry):
+def upload(filename, force, user, password, dry, to):
   """
   Upload a file to the current version to the registry. If the package does
   not already exist on the registry, it will be added to your account
@@ -346,22 +347,23 @@ def upload(filename, force, user, password, dry):
   source distribution that can be created with 'nppm dist'.
   """
 
-  PackageLifecycle().upload(filename, user, password, force, dry)
+  PackageLifecycle().upload(filename, user, password, force, dry, to)
 
 
 @main.command()
 @click.option('-f', '--force', is_flag=True)
 @click.option('-u', '--user')
 @click.option('-p', '--password')
+@click.option('--to', help='Registry to publish to.')
 @click.option('--dry', is_flag=True)
 @exit_with_return
-def publish(force, user, password, dry):
+def publish(force, user, password, dry, to):
   """
   Combination of `nppm dist` and `nppm upload`. Also invokes the `pre-publish`
   and `post-publish` scripts.
   """
 
-  PackageLifecycle().publish(user, password, force, dry)
+  PackageLifecycle().publish(user, password, force, dry, to)
 
 
 @main.command()
