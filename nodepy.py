@@ -347,7 +347,7 @@ class Request(object):
 
   def clear_state(self):
     self.data = None
-    self.original_resolve_location = []
+    self.original_resolve_location = None
 
 
 class BaseResolver(six.with_metaclass(abc.ABCMeta)):
@@ -398,6 +398,8 @@ class FilesystemResolver(BaseResolver):
   objects to be registered to the resolver.
   """
 
+  CacheEntry = collections.namedtuple('CacheEntry', 'filename, support, orl')
+
   def __init__(self):
     self.supports = []
     self.index_files = ['index', '__init__']
@@ -431,7 +433,20 @@ class FilesystemResolver(BaseResolver):
     # Absolute paths will be resolved only with the FilesystemLoaderSupport's
     # can_load() and suggest_try_files() methods.
     elif os.path.isabs(request):
-      request = os.path.normpath(request)
+      request = original_request = os.path.normpath(request)
+
+      # Check if we have cached what this request leads us to.
+      cache = self.cache.get(request)
+      if cache is not None:
+        request_obj.original_resolve_location = cache.orl
+        return cache.filename, cache.support
+
+      def cache_and_return(filename, support):
+        entry = self.CacheEntry(filename, support, request_obj.original_resolve_location)
+        self.cache[request] = entry
+        if original_request != request:
+          self.cache[original_request] = entry
+        return filename, support
 
       # Determine if the request is pointing to a file in a directory that
       # is actually just a link to another directory.
@@ -444,14 +459,14 @@ class FilesystemResolver(BaseResolver):
       # If the file exists as it is, we will use it as it is.
       filename = try_file(request)
       if filename:
-        return filename, None
+        return cache_and_return(filename, None)
 
       # Alternatively, try all the files suggested by the loader support.
       for support in self.supports:
         for filename in support.suggest_try_files(request):
           filename = try_file(filename)
           if filename:
-            return filename, support
+            return cache_and_return(filename, support)
 
       if os.path.isdir(request):
         # If there is a package.json file in this directory, we can parse
@@ -460,13 +475,15 @@ class FilesystemResolver(BaseResolver):
         main = request_obj.context.get_package_main(request)
         if main:
           new_request = os.path.join(request, main)
-          return self._resolve(request_obj, new_request)
+          filename, support = self._resolve(request_obj, new_request)
+          return cache_and_return(filename, support)
         else:
           # Otherwise, try the standard index files.
           for choice in self.index_files:
             new_request = os.path.join(request, choice)
             try:
-              return self._resolve(request_obj, new_request)
+              filename, support = self._resolve(request_obj, new_request)
+              return cache_and_return(filename, support)
             except ResolveError:
               continue
 
@@ -1517,7 +1534,6 @@ def get_site_packages(prefix):
   return os.path.join(prefix, lib, 'site-packages')
 
 
-
 def reload_pkg_resources(insert_paths_index=None):
   """
   Reload the `pkg_resources` module.
@@ -1526,13 +1542,14 @@ def reload_pkg_resources(insert_paths_index=None):
   if 'pkg_resources' not in sys.modules:
     return
 
+  path = sys.path[:]
+  reload(sys.modules['pkg_resources'])
+
   # Reloading pkg_resources will prepend new (or sometimes already
   # existing items) in sys.path. This will give precedence to system
   # installed packages rather than local packages that we added
-  # through self.importer. See nodepy/nodepy#49
-  path = sys.path[:]
-  reload(sys.modules['pkg_resources'])
-  # Transfer missing paths added by pkg_resources.
+  # through self.importer. Thus, we shall transfer all paths that are
+  # newly introduced to sys.path and skip the rest. See nodepy/nodepy#49
   for p in sys.path:
     if p not in path:
       if insert_paths_index is None:

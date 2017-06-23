@@ -38,6 +38,8 @@ __Node.py__
   parent module is now contained in the `BaseModule.request` object
 - `BaseModule.request` is now a `Request` object instead of a string
 - Replace `Request.followed_from` with `Request.original_resolve_location`
+- Add `FilesystemResolver.cache` which helps enhance performance by about 5%
+  (was hoping for more..)
 
 __nppm__
 
