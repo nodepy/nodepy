@@ -148,7 +148,7 @@ def version():
     help='Save the installed dependencies into the "extensions" field. '
       'Installed Python modules are ignored for this one. Implies --save')
 @click.option('-v', '--verbose', is_flag=True)
-@click.option('-r', '--registry',
+@click.option('-F', '--from', 'registry',
     help='Specify explicitly which registry to look for Node.py packages '
       'with. If not specified, all registries will be checked unless they '
       'specify the `default=false` option.')
@@ -375,20 +375,9 @@ def register(registry, agree_tos, save):
   register to using the REGISTRY argument. Defaults to 'default'.
   """
 
-  try:
-    regconf = config.registry(registry)
-    regurl = regconf['url']
-  except config.NoSuchSection:
-    print('Registry {!r} is not configured.'.format(registry))
-    return 1
-  except KeyError:
-    print('Registry {!r} has no URL configured.'.format(registry))
-    return 1
-
-  print('Registry:', registry)
-  print('URL:     ', regurl)
-
-  reg = RegistryClient(regurl)
+  reg = RegistryClient.get(registry)
+  print('Registry:', reg.name)
+  print('URL:     ', reg.base_url)
   if not agree_tos:
     print()
     print('You have to agree to the Terms of Use before you can')

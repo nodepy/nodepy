@@ -60,6 +60,8 @@ __nppm__
 - Implement #26 -- Support multiple package registries
 - Fix error that was NOT raised when package was found but the archive was
   missing on the server
+- Add `-F,--from` option to `nppm install`
+- Add `REGISTRY` argument to `nppm register`
 
 ### v0.0.20
 
