@@ -56,7 +56,10 @@ __nppm__
 - Fix `NameError: FileNotFoundError` in `nppm` on Python 2
 - Fix #40 -- Ignore .py scripts when wrapping Pip installed scripts, or handle
   them properly
-
+- Configuration file is now parsed with `configparser.SafeConfigParser`
+- Implement #26 -- Support multiple package registries
+- Fix error that was NOT raised when package was found but the archive was
+  missing on the server
 
 ### v0.0.20
 

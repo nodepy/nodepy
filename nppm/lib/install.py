@@ -103,7 +103,7 @@ class Installer:
       pip_separate_process=False, pip_use_target_option=False, recursive=False,
       verbose=False):
     assert install_location in ('local', 'global', 'root')
-    self.reg = registry or _registry.RegistryClient(_config['registry'])
+    self.reg = [registry] if registry else _registry.RegistryClient.get_all()
     self.upgrade = upgrade
     self.install_location = install_location
     self.pip_separate_process = pip_separate_process
@@ -546,15 +546,23 @@ class Installer:
         return True, (package.name, package.version)
 
     print('Finding package matching "{}@{}"...'.format(package_name, selector))
-    try:
-      info = self.reg.find_package(package_name, selector)
-    except _registry.PackageNotFound as exc:
+    for registry in self.reg:
+      print('  Checking registry "{}" ({})...'.format(registry.name, registry.base_url), end=' ')
+      try:
+        info = registry.find_package(package_name, selector)
+      except _registry.PackageNotFound as exc:
+        print('NOT FOUND')
+        continue
+      else:
+        print('FOUND ({}@{})'.format(info.name, info.version))
+        break
+    else:
       print('Error: package "{}" could not be located'.format(exc))
       return False, None
     assert info.name == package_name, info
 
     print('Downloading "{}@{}"...'.format(info.name, info.version))
-    response = self.reg.download(info.name, info.version)
+    response = registry.download(info.name, info.version)
     filename = _download.get_response_filename(response)
 
     tmp = None

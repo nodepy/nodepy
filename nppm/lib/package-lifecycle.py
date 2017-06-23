@@ -116,6 +116,7 @@ class PackageLifecycle(object):
     if dry:
       print('Not actually uploading things... (dry mode)')
     else:
+      #FIXME
       reg = registry.RegistryClient(url, user, password)
       msg = reg.upload(self.manifest.name, self.manifest.version, filename, force)
       print(msg)

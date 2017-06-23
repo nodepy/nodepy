@@ -26,6 +26,11 @@
     "file": "cli.md"
   },
   {
+    "name": "NPPM Configuration",
+    "path": "nppm-configuration",
+    "file": "nppm-configuration.md"
+  },
+  {
     "name": "Changelog",
     "path": "changelog",
     "file": "changelog.md"

@@ -37,6 +37,7 @@ import semver from './semver'
 import refstring from './refstring'
 import text from './util/text'
 import json from './util/json'
+import config from './config'
 
 
 def get_package_archive_name(package_name, version):
@@ -104,7 +105,28 @@ class RegistryClient(object):
   password (str): Password for authorized actions.
   """
 
-  def __init__(self, base_url, username=None, password=None):
+  @staticmethod
+  def get(name):
+    try:
+      regconf = config.registry(name)
+      regurl = regconf['url']
+    except config.NoSuchSection:
+      raise ValueError('Registry {!r} is not configured.'.format(name))
+    except KeyError:
+      raise ValueError('Registry {!r} has no URL configured.'.format(name))
+    return RegistryClient(
+      name,
+      regurl,
+      username=regconf.get('username'),
+      password=regconf.get('password')
+    )
+
+  @staticmethod
+  def get_all():
+    return [RegistryClient.get(x.name) for x in config.registries()]
+
+  def __init__(self, name, base_url, username=None, password=None):
+    self.name = name
     self.base_url = base_url
     self.username = username
     self.password = password
@@ -155,6 +177,7 @@ class RegistryClient(object):
 
     url = self.api.download(package_name, version, filename)
     response = url.GET()
+    response.raise_for_status()
     return response
 
   def find_package(self, package_name, version_selector):

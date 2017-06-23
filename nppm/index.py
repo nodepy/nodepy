@@ -32,6 +32,7 @@ import nodepy
 import os
 import pip.req
 import six
+import sys
 
 import manifest from './lib/manifest'
 import semver from './lib/semver'
@@ -39,9 +40,9 @@ import refstring from './lib/refstring'
 import config from './lib/config'
 import logger from './lib/logger'
 import _install from './lib/install'
-import registry from './lib/registry'
+import {RegistryClient} from './lib/registry'
 import PackageLifecycle from './lib/package-lifecycle'
-import { is_virtualenv, get_module_dist_info } from './lib/env'
+import {is_virtualenv, get_module_dist_info} from './lib/env'
 
 
 class Less(object):
@@ -71,12 +72,23 @@ def get_install_location(global_, root):
 
 
 def get_installer(global_, root, upgrade, pip_separate_process,
-                  pip_use_target_option, recursive, verbose=False):
+                  pip_use_target_option, recursive, verbose=False,
+                  registry=None):
   location = get_install_location(global_, root)
-  return _install.Installer(upgrade=upgrade, install_location=location,
-      pip_separate_process=pip_separate_process,
-      pip_use_target_option=pip_use_target_option, recursive=recursive,
-      verbose=verbose)
+  return _install.Installer(
+    registry=registry,
+    upgrade=upgrade,
+    install_location=location,
+    pip_separate_process=pip_separate_process,
+    pip_use_target_option=pip_use_target_option,
+    recursive=recursive,
+    verbose=verbose
+  )
+
+
+def error(message, code=1):
+  print('Error:', message)
+  sys.exit(code)
 
 
 def exit_with_return(func):
@@ -90,9 +102,7 @@ def exit_with_return(func):
   Node.py Package Manager (on {})
   """.format(nodepy.VERSION))
 def main():
-  if not config['registry'].startswith('https://'):
-    logger.warning('config value `registry` is not an HTTPS url ({})'
-        .format(config['registry']))
+  pass
 
 
 @main.command()
@@ -138,15 +148,20 @@ def version():
     help='Save the installed dependencies into the "extensions" field. '
       'Installed Python modules are ignored for this one. Implies --save')
 @click.option('-v', '--verbose', is_flag=True)
-@click.pass_context
+@click.option('-r', '--registry',
+    help='Specify explicitly which registry to look for Node.py packages '
+      'with. If not specified, all registries will be checked unless they '
+      'specify the `default=false` option.')
 @exit_with_return
-def install(ctx, packages, develop, python, develop_python, upgrade, global_,
+def install(packages, develop, python, develop_python, upgrade, global_,
             ignore_installed, packagedir, root, recursive, info, dev,
             pip_separate_process, pip_use_target_option, save, save_dev,
-            save_ext, verbose):
+            save_ext, verbose, registry):
   """
   Installs one or more Node.Py or Pip packages.
   """
+
+  # FIXME: Validate registry URL as HTTPS.
 
   packagefile = os.path.join(packagedir, 'package.json')
 
@@ -171,8 +186,9 @@ def install(ctx, packages, develop, python, develop_python, upgrade, global_,
   if dev is None:
     dev = not packages
 
+  registry = RegistryClient.get(registry) if registry else None
   installer = get_installer(global_, root, upgrade, pip_separate_process,
-      pip_use_target_option, recursive, verbose)
+      pip_use_target_option, recursive, verbose, registry)
   installer.ignore_installed = ignore_installed
   if info:
     for key in sorted(installer.dirs):
@@ -203,7 +219,7 @@ def install(ctx, packages, develop, python, develop_python, upgrade, global_,
       if success:
         save_deps.append((package_info[0], '~' + str(package_info[1])))
     if not success:
-      ctx.fail('Installation failed')
+      error('Installation failed')
 
   python_deps = {}
   python_additional_install = []
@@ -217,9 +233,9 @@ def install(ctx, packages, develop, python, develop_python, upgrade, global_,
       try:
         spec = pip.req.InstallRequirement.from_line(package)
       except (pip.exceptions.InstallationError, pip._vendor.packaging.requirements.InvalidRequirement) as exc:
-        return ctx.fail(exc)
+        return error(exc)
       if (save or save_dev) and not spec.req:
-        return ctx.fail("'{}' is not something we can install via NPPM with --save/--save-dev".format(package[3:]))
+        return error("'{}' is not something we can install via NPPM with --save/--save-dev".format(package[3:]))
       if spec.req:
         python_deps[spec.req.name] = str(spec.req.specifier)
       else:
@@ -349,23 +365,41 @@ def publish(force, user, password, dry):
 
 
 @main.command()
+@click.argument('registry', required=False, default='default')
 @click.option('--agree-tos', is_flag=True)
 @click.option('--save', is_flag=True, help='Save username in configuration.')
 @exit_with_return
-def register(agree_tos, save):
+def register(registry, agree_tos, save):
   """
-  Register a new user on the package registry.
+  Register a new user on the package registry. Specify the registry to
+  register to using the REGISTRY argument. Defaults to 'default'.
   """
 
-  reg = registry.RegistryClient(config['registry'])
+  try:
+    regconf = config.registry(registry)
+    regurl = regconf['url']
+  except config.NoSuchSection:
+    print('Registry {!r} is not configured.'.format(registry))
+    return 1
+  except KeyError:
+    print('Registry {!r} has no URL configured.'.format(registry))
+    return 1
+
+  print('Registry:', registry)
+  print('URL:     ', regurl)
+
+  reg = RegistryClient(regurl)
   if not agree_tos:
+    print()
     print('You have to agree to the Terms of Use before you can')
     print('register an account. Download and display terms now? [Y/n] ')
     reply = input().strip().lower() or 'yes'
     if reply not in ('yes', 'y'):
       print('Aborted.')
       return 0
+    print()
     reg.terms() | Less(30)
+    print()
     print('Do you agree to the above terms? [Y/n]')
     reply = input().strip().lower() or 'yes'
     if reply not in ('yes', 'y'):
@@ -393,7 +427,7 @@ def register(agree_tos, save):
   print(msg)
 
   if save:
-    config['username'] = username
+    regconf['username'] = username
     config.save()
     print('Username saved in', config.filename)
 
