@@ -37,6 +37,7 @@ __Node.py__
 - Remove `BaseModule.parent` member and turn it into a property, since the 
   parent module is now contained in the `BaseModule.request` object
 - `BaseModule.request` is now a `Request` object instead of a string
+- Replace `Request.followed_from` with `Request.original_resolve_location`
 
 __nppm__
 

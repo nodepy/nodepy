@@ -331,9 +331,9 @@ class Request(object):
     order to communicate the information that has been determined during
     the resolve procedure to the loader. Alternatively, a new loader object
     can be constructed and the information passed to its constructor.
-  followed_from (list of PackageLink): Can be used by resolvers on the
-    filesystem when they are following package links to ensure that consistent
-    behaviour with the modules intended location is ensured.
+  original_resolve_location (str): Set by resolvers when a package link is
+    encountered to enable the module loader to use the correct nodepy_modules/
+    directory inside the module.
   """
 
   def __init__(self, name, current_dir, is_main, path, parent_module, context):
@@ -347,7 +347,7 @@ class Request(object):
 
   def clear_state(self):
     self.data = None
-    self.followed_from = []
+    self.original_resolve_location = []
 
 
 class BaseResolver(six.with_metaclass(abc.ABCMeta)):
@@ -401,6 +401,7 @@ class FilesystemResolver(BaseResolver):
   def __init__(self):
     self.supports = []
     self.index_files = ['index', '__init__']
+    self.cache = {}
 
   def add_support(self, support):
     if not isinstance(support, FilesystemLoaderSupport):
@@ -430,12 +431,14 @@ class FilesystemResolver(BaseResolver):
     # Absolute paths will be resolved only with the FilesystemLoaderSupport's
     # can_load() and suggest_try_files() methods.
     elif os.path.isabs(request):
+      request = os.path.normpath(request)
 
       # Determine if the request is pointing to a file in a directory that
       # is actually just a link to another directory.
       link = get_package_link(request)
       if link:
-        request_obj.followed_from.append(link)
+        if not request_obj.original_resolve_location:
+          request_obj.original_resolve_location = link.src
         request = os.path.join(link.dst, os.path.relpath(request, link.src))
 
       # If the file exists as it is, we will use it as it is.
@@ -1342,11 +1345,14 @@ class Context(object):
       raise RuntimeError("loaded module's filename ({}) does not match the "
           "pre-determined filename ({})".format(module.filename, filename))
 
-    if request.followed_from:
+    if request.original_resolve_location:
       # There has been at least one redirection in the filesystem when the
       # package was resolved. We will add the nearest modules directory of
       # the original resolve directory to the search path.
-      nodepy_modules = find_nearest_modules_directory(request.followed_from[0].src)
+      # FIXME: If there are multiple package links pointing to the same
+      #        package, we would actually need to load the module multiple
+      #        times to ensure correct behaviour.
+      nodepy_modules = find_nearest_modules_directory(request.original_resolve_location)
       if nodepy_modules:
         module.require.path.append(nodepy_modules)
 
