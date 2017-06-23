@@ -62,6 +62,7 @@ __nppm__
   missing on the server
 - Add `-F,--from` option to `nppm install`
 - Add `REGISTRY` argument to `nppm register`
+- Implement #27 -- Add `--to` option to `nppm upload` and `nppm publish`
 
 ### v0.0.20
 

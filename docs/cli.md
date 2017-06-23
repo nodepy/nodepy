@@ -60,7 +60,7 @@ Initialize a `package.json` file in the current working directory.
 nppm install [-g,--global] [--root] [-e,--develop] [-P,--packagedir]
              [-I,--ignore-installed]
              [--pip-separate-process] [--dev/--production] [--save]
-             [--save-dev] [--recursive] [PACKAGES]
+             [--save-dev] [--recursive] [-F,--from] [PACKAGES]
 ```
 
 Installs one or more Node.py packages from the package registry, package
@@ -123,7 +123,7 @@ without remembering them all.
 ## publish
 
 ```
-nppm publish [-f,--force] [-u,--user] [-p,--password]
+nppm publish [-f,--force] [-u,--user] [-p,--password] [--to]
 ```
 
 A combination of [`nppm dist`](dist) and [`nppm upload`](upload) that also
@@ -152,7 +152,7 @@ before you publish packages and upload content to the registry.
 ## register
 
 ```
-nppm register [--agree-tos] [--save]
+nppm register [REGISTRY] [--agree-tos] [--save]
 ```
 
 Register a new account on the package registry. Note that you can change the
@@ -160,7 +160,8 @@ URL to the registry being used in the `~/.nppmrc` file. By default, it will
 point to https://registry.nodepy.org.
 
     $ cat ~/.nppmrc
-    registry=http://localhost:8000
+    [registry:default]
+    url = http://localhost:8000
 
 ---
 
@@ -202,7 +203,7 @@ Uninstalls one or more previously installed PACKAGES.
 ## upload
 
 ```
-nppm upload [-f, --force] [-u, --user] [-p, --password] FILENAME
+nppm upload [-f, --force] [-u, --user] [-p, --password] [--to] FILENAME
 ```
 
 For the current version that is specified in the `package.json` of your
