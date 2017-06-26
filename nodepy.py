@@ -576,6 +576,9 @@ class PythonLoader(BaseLoader):
     name = os.path.basename(filename_noext)
     bytecache_file = filename_noext + self.pyc_suffix
 
+    context = request.context
+    package = context.get_package_for(filename)
+
     if os.path.isfile(bytecache_file) and os.path.isfile(filename) and \
         os.path.getmtime(bytecache_file) >= os.path.getmtime(filename):
       can_load_bytecache = True
@@ -607,9 +610,6 @@ class PythonLoader(BaseLoader):
         print_exc()
       else:
         can_load_bytecache = True
-
-    context = request.context
-    package = context.get_package_for(filename)
 
     if can_load_bytecache:
       code, extensions = self.load_code(context, package, bytecache_file, is_compiled=True)
