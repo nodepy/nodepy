@@ -426,7 +426,7 @@ class FilesystemResolver(BaseResolver):
     # Resolve relative requests by creating an absolute path and try
     # to resolve that instead.
     if request in '..' or request.startswith('./') or request.startswith('../'):
-      assert isinstance(current_dir, str)
+      assert current_dir
       new_request = os.path.abspath(os.path.join(current_dir, request))
       return self._resolve(request_obj, new_request)
 
