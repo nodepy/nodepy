@@ -426,7 +426,7 @@ class FilesystemResolver(BaseResolver):
     # Resolve relative requests by creating an absolute path and try
     # to resolve that instead.
     if request in '..' or request.startswith('./') or request.startswith('../'):
-      assert isinstance(current_dir, str)
+      assert current_dir
       new_request = os.path.abspath(os.path.join(current_dir, request))
       return self._resolve(request_obj, new_request)
 
@@ -576,6 +576,9 @@ class PythonLoader(BaseLoader):
     name = os.path.basename(filename_noext)
     bytecache_file = filename_noext + self.pyc_suffix
 
+    context = request.context
+    package = context.get_package_for(filename)
+
     if os.path.isfile(bytecache_file) and os.path.isfile(filename) and \
         os.path.getmtime(bytecache_file) >= os.path.getmtime(filename):
       can_load_bytecache = True
@@ -607,9 +610,6 @@ class PythonLoader(BaseLoader):
         print_exc()
       else:
         can_load_bytecache = True
-
-    context = request.context
-    package = context.get_package_for(filename)
 
     if can_load_bytecache:
       code, extensions = self.load_code(context, package, bytecache_file, is_compiled=True)
@@ -1421,19 +1421,14 @@ class Context(object):
 PackageLink = collections.namedtuple('PackageLink', 'src dst')
 
 @contextlib.contextmanager
-def jit_debug(debug=True):
+def post_mortem_debugger():
   """
   A context-manager that debugs the exception being raised inside the context.
   Can be disabled by setting *debug* to #False. The exception will be re-raised
   either way.
   """
 
-  try:
-    yield
-  except BaseException as exc:
-    if debug:
-      pdb.post_mortem(sys.exc_info()[2])
-    raise
+  pdb.post_mortem(sys.exc_info()[2])
 
 
 def get_exports(module):
@@ -1579,7 +1574,7 @@ def main(argv=None):
   parser = argparse.ArgumentParser(description=__doc__,
       formatter_class=argparse.RawTextHelpFormatter)
   parser.add_argument('arguments', nargs='...')
-  parser.add_argument('-d', '--debug', action='store_true',
+  parser.add_argument('-d', '--debug', action='store_true', default=None,
       help='Enter the interactive debugger when an exception would cause '
            'the application to exit.')
   parser.add_argument('-c', '--exec', dest='exec_', metavar='EXPR',
@@ -1601,6 +1596,11 @@ def main(argv=None):
   parser.add_argument('--isolated', action='store_true',
       help='Create the runtime context in isolated mode.')
   args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+
+  if args.debug is None and os.getenv('NODEPY_DEBUG', '') == 'true':
+    args.debug = True
+  elif args.debug is None:
+    args.debug = False
 
   if args.profile:
     prf = profile.Profile()
@@ -1636,7 +1636,7 @@ def _main(args):
 
   arguments = args.arguments[:]
   context = Context(args.current_dir, isolated=args.isolated)
-  with context, jit_debug(args.debug):
+  with context:
     if args.exec_ or not arguments:
       sys.argv = [sys.argv[0]] + arguments
       if args.exec_:
@@ -1672,6 +1672,8 @@ def _main(args):
         raise
       except BaseException as exc:
         print_exc()
+        if args.debug:
+          post_mortem_debugger()
 
   sys.exit(0)
 

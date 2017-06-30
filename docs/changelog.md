@@ -40,6 +40,9 @@ __Node.py__
 - Replace `Request.followed_from` with `Request.original_resolve_location`
 - Add `FilesystemResolver.cache` which helps enhance performance by about 5%
   (was hoping for more..)
+- `-d,--debug` option can now be set to True with the environment variable
+  `NODEPY_DEBUG=true`
+- Fix post-mortem debugging
 
 __nppm__
 
