@@ -21,10 +21,17 @@
 from six.moves import configparser
 import errno
 import getpass
-import io
 import os
 import re
 import sys
+
+try:
+  from cStringIO import StringIO
+except ImportError:
+  try:
+    from StringIO import StringIO
+  except ImportError:
+    from io import StringIO
 
 NPPM_CONFIG = '~/.nppmrc'
 
@@ -55,11 +62,11 @@ class Config(object):
       return self.readfp(fp)
 
   def readfp(self, fp):
-    fp = io.StringIO('[__global__]\n' + fp.read())
+    fp = StringIO('[__global__]\n' + fp.read())
     self._parser.readfp(fp)
 
   def save(self):
-    buf = io.StringIO()
+    buf = StringIO()
     self._parser.write(buf)
     buf.seek(0)
     assert buf.readline() == '[__global__]\n'
