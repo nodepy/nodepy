@@ -874,6 +874,11 @@ class RequireImportSyntaxExtension(object):
   starred import.
 
       import * from "module-name"
+
+  You can import the actual module object additionally to the starred
+  import with the following syntax:
+
+      import module, * from "module-name"
   """
 
   _re_import_as = re.compile(
@@ -881,8 +886,23 @@ class RequireImportSyntaxExtension(object):
     re.M
   )
   _re_import_from = re.compile(
-    r'''^(?P<indent>[^\S\n]*)import\s+(?P<members>(?:\w+|\*|(?:\w+\s*,\s*)?\{[^}]+\}))\s+from\s+(?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$''',
-    re.M
+    r'''
+    ^(?P<indent>[^\S\n]*)   # Keep track of the indentation level
+    import\s+
+    (?P<members>
+      (?:
+        \w+|                # Default member
+        (?:\w+\s*,\s*)?     # Default member + specific members
+      )?
+      (?:
+        \{[^}]+\}|          # Specific members
+        \*                  # Starred-import
+      )?
+    )\s+
+    from\s+
+    (?P<q>["'])(?P<mod>.*)(?P=q)[^\S\n]*$
+    ''',
+    re.M | re.X
   )
   _regexes = [(_re_import_as, 'as'), (_re_import_from, 'from')]
 
@@ -897,7 +917,7 @@ class RequireImportSyntaxExtension(object):
       if kind == 'as':
         as_name = match.group('n')
         if as_name:
-          repl = '{} = require({!r})'.format(as_name, match.group('mod'))
+          repl = '{}=require({!r})'.format(as_name, match.group('mod'))
         else:
           repl = 'require({!r})'.format(match.group('mod'))
       elif kind == 'from':
@@ -918,8 +938,11 @@ class RequireImportSyntaxExtension(object):
           )
           if default_name:
             repl = '{}=require({!r});'.format(default_name, module) + repl
+        elif members.endswith('*') and members.count(',') == 1:
+          default_member = members.split(',')[0].strip()
+          repl = 'require.symbols({0!r}); {1}=require({0!r})'.format(module, default_member)
         else:
-          repl = '{} = require({!r})'.format(members, module)
+          repl = '{}=require({!r})'.format(members, module)
       else:
         raise RuntimeError
 

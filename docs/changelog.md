@@ -46,6 +46,7 @@ __Node.py__
 - Support `vendor-directories` in package manifest
 - Add `nodepy.normpath()`
 - Add `Context._package_stack`
+- Add support for `import default_member, * from 'module-name'` syntax
 
 __nppm__
 
