@@ -212,13 +212,17 @@ class Package(object):
     self.module = JsonModule(context, filename, package=self)
     self.extensions = list(json.get('extensions', []))
 
+    directory = self.directory
+    self.vendor_directories = json.get('vendor-directories', [])
+    self.vendor_directories = [normpath(x, directory) for x in self.vendor_directories]
+
   def __repr__(self):
     return "<Package '{}@{}' at '{}'>".format(
       self.json.get('name'), self.json.get('version'), self.filename)
 
   @property
   def directory(self):
-    return os.path.dirname(filename)
+    return os.path.dirname(self.filename)
 
   @property
   def require(self):
@@ -238,7 +242,8 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
   """
 
   def __init__(self, context, filename, directory, name, package=None,
-               request=None, real_filename=None, extensions=None):
+               request=None, real_filename=None, extensions=None,
+               vendor_directories=None):
     self.context = context
     self.filename = filename
     self.real_filename = real_filename or filename
@@ -250,6 +255,8 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     self.request = request
     self.package = package
     self.extensions = [] if extensions is None else extensions
+    self.vendor_directories = [] if vendor_directories is None else vendor_directories
+    self.vendor_directories = [normpath(x, directory) for x in self.vendor_directories]
     self.init_namespace()
 
   def __repr__(self):
@@ -433,7 +440,7 @@ class FilesystemResolver(BaseResolver):
     # Absolute paths will be resolved only with the FilesystemLoaderSupport's
     # can_load() and suggest_try_files() methods.
     elif os.path.isabs(request):
-      request = original_request = os.path.normpath(request)
+      request = original_request = normpath(request)
 
       # Check if we have cached what this request leads us to.
       cache = self.cache.get(request)
@@ -745,8 +752,8 @@ class JsonLoader(BaseLoader):
     package = request.context.get_package_for(filename)
     if os.path.basename(filename) == 'package.json':
       assert isinstance(package, Package), package
-      assert os.path.normpath(os.path.abspath(filename)) == \
-        os.path.normpath(os.path.abspath(filename))
+      assert normpath(os.path.abspath(filename)) == \
+        normpath(os.path.abspath(filename))
       return package.module
     return JsonModule(request.context, filename, request=request, package=package)
 
@@ -1118,6 +1125,7 @@ class Context(object):
     # A stack of modules that are currently being executed. Every module
     # should add itself on the stack when it is executed with #enter_module().
     self._module_stack = []
+    self._package_stack = []
     # require() request resolvers.
     self.resolvers = []
     # A list of functions that are called for various events. The first
@@ -1204,7 +1212,7 @@ class Context(object):
       if nearest_modules:
         library_path = get_site_packages(os.path.join(nearest_modules, '.pip'))
         if os.path.isdir(library_path):
-          library_path = os.path.normpath(library_path)
+          library_path = normpath(library_path)
         else:
           library_path = None
 
@@ -1215,6 +1223,23 @@ class Context(object):
       sys.path.append(library_path)
     else:
       library_path = None
+
+    package = module.package
+    if package and getattr(package, '_context_entered', 0) == 0:
+      # Avoid adding the paths of the package twice.
+      self._package_stack.append(package)
+      package._context_entered = 1
+      for path in package.vendor_directories:
+        sys.path.insert(0, path)
+        self.path.insert(0, path)
+    elif package:
+      package._context_entered += 1
+
+    assert getattr(module, '_context_entered', 0) == 0
+    module._context_entered = 1
+    for path in module.vendor_directories:
+      sys.path.insert(0, path)
+      self.path.insert(0, path)
 
     self._module_stack.append(module)
     try:
@@ -1230,6 +1255,32 @@ class Context(object):
             sys.path.remove(library_path)
           except ValueError:
             pass
+        if package:
+          package._context_entered -= 1
+        if package and package._context_entered == 0:
+          if self._package_stack.pop() is not package:
+            raise RuntimeError('package stack corrupted')
+          for path in package.vendor_directories:
+            try:
+              sys.path.remove(path)
+            except ValueError:
+              pass
+            try:
+              self.path.remove(path)
+            except ValueError:
+              pass
+        module._context_entered -= 1
+        assert module._context_entered == 0
+        for path in module.vendor_directories:
+          try:
+            sys.path.remove(path)
+          except ValueError:
+            pass
+          try:
+            self.path.remove(path)
+          except ValueError:
+            pass
+
 
   def send_event(self, event_type, event_data):
     for callback in self.event_handlers:
@@ -1299,7 +1350,7 @@ class Context(object):
     be returned instead of an #IOError being raised.
     """
 
-    filename = os.path.normpath(filename)
+    filename = normpath(filename)
     try:
       return self._package_cache[filename]
     except KeyError:
@@ -1513,6 +1564,16 @@ def try_file(filename, preserve_symlinks=True):
       return os.path.realpath(filename)
     return filename
   return None
+
+
+def normpath(path, parent=None):
+  if not os.path.isabs(path):
+    if parent is None:
+      parent = os.getcwd()
+    else:
+      parent = os.path.abspath(parent)
+    path = os.path.join(parent, path)
+  return os.path.normpath(path)
 
 
 def get_site_packages(prefix):

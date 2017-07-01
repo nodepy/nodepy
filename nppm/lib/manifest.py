@@ -103,6 +103,10 @@ class PackageManifest:
       "license": {"type": "string"},
       "private": {"type": "boolean"},
       "main": {"type": "string"},
+      "vendor-directories": {
+        "type": "array",
+        "items": {"type": "string"}
+      },
       "dependencies": {
         "type": "object",
         "additionalProperties": {"type": "string"}
@@ -154,7 +158,7 @@ class PackageManifest:
       author=None, license=None, dependencies=None, dev_dependencies=None,
       python_dependencies=None, dev_python_dependencies=None, scripts=None,
       bin=None, engines=None, engine_props=None, dist=None, repository=None,
-      private=False, main=None, extensions=None):
+      private=False, main=None, extensions=None, vendor_directories=None):
     if len(name) < 2 or len(name) > 127:
       raise ValueError('packag name must be at least 2 and maximum 127 characters')
     if name.startswith('_') or name.startswith('.'):
@@ -183,6 +187,7 @@ class PackageManifest:
     self.private = private
     self.main = main
     self.extensions = extensions
+    self.vendor_directories = [] if vendor_directories is None else list(vendor_directories)
 
   def __eq__(self, other):
     if isinstance(other, PackageManifest):
@@ -288,6 +293,7 @@ def parse_dict(data, filename=None, directory=None, copy=True):
         raise InvalidPackageManifest(filename, msg.format(key))
       engine_props[key] = data.pop(key)
 
+  data['vendor_directories'] = data.pop('vendor-directories', None)
   data['dev_dependencies'] = data.pop('dev-dependencies')
   data['python_dependencies'] = data.pop('python-dependencies', None)
   data['dev_python_dependencies'] = data.pop('dev-python-dependencies', None)

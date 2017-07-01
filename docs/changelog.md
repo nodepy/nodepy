@@ -43,6 +43,9 @@ __Node.py__
 - `-d,--debug` option can now be set to True with the environment variable
   `NODEPY_DEBUG=true`
 - Fix post-mortem debugging
+- Support `vendor-directories` in package manifest
+- Add `nodepy.normpath()`
+- Add `Context._package_stack`
 
 __nppm__
 
@@ -69,6 +72,7 @@ __nppm__
 - Add `-F,--from` option to `nppm install`
 - Add `REGISTRY` argument to `nppm register`
 - Implement #27 -- Add `--to` option to `nppm upload` and `nppm publish`
+- Implement #51 -- Support `vendor-directories` in package manifest
 
 ### v0.0.20
 
