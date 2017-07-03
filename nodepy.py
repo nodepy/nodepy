@@ -1621,8 +1621,14 @@ def reload_pkg_resources(insert_paths_index=None):
   if 'pkg_resources' not in sys.modules:
     return
 
+
   path = sys.path[:]
-  reload(sys.modules['pkg_resources'])
+
+  # Do NOT actually reload the pkg_resources module, but make sure that
+  # it is freshly imported. Reloading the pkg_resources module can fail.
+  # See nodepy/nodepy#59.
+  del sys.modules['pkg_resources']
+  import pkg_resources
 
   # Reloading pkg_resources will prepend new (or sometimes already
   # existing items) in sys.path. This will give precedence to system

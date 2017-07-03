@@ -74,6 +74,7 @@ __nppm__
 - Add `REGISTRY` argument to `nppm register`
 - Implement #27 -- Add `--to` option to `nppm upload` and `nppm publish`
 - Implement #51 -- Support `vendor-directories` in package manifest
+- Fix #59 -- Reloading pkg_resources can lead it to wrongly assume Python 2 instead of 3
 
 ### v0.0.20
 
