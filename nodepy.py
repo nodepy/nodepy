@@ -1119,7 +1119,7 @@ class Require(object):
     execute it as a subprocess.
     """
 
-    filename = self.context.resolve(request, self.module.directory)
+    filename = self(request, exec_=False, exports=False).filename
     return proc_args + list(nodepy_args) + [filename] + list(args)
 
 
