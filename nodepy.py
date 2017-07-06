@@ -1627,7 +1627,8 @@ def reload_pkg_resources(insert_paths_index=None):
   # Do NOT actually reload the pkg_resources module, but make sure that
   # it is freshly imported. Reloading the pkg_resources module can fail.
   # See nodepy/nodepy#59.
-  del sys.modules['pkg_resources']
+  for key in tuple(k for k in sys.modules if k == 'pkg_resources' or k.startswith('pkg_resources.')):
+    del sys.modules[key]
   import pkg_resources
 
   # Reloading pkg_resources will prepend new (or sometimes already
