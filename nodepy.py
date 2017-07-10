@@ -1101,26 +1101,32 @@ class Require(object):
       return binding
 
     if cache and request in self.cache:
+      AUTORELOAD = 'require.autoreload'
+      CASCADEBLOCK = 'require.autoreload.cascadeblock'
       module = self.cache[request]
-      autoreload = self.context.options.get('require.autoreload')
+      autoreload = self.context.options.get(AUTORELOAD)
       if exec_ and autoreload in ('on', True) and module.source_changed:
         module.reload()
         assert not module.source_changed, "source still changed after module reload"
-      elif exec_ and autoreload == 'cascade':
+      elif exec_ and autoreload == 'cascade' and not self.context.options.get(CASCADEBLOCK):
         # Reload the module recursively.
         Require.reload_pass += 1
         def recursive_reload(module):
-          changed = False
-          for module in module.require.cache.values():
-            if recursive_reload(module):
+          changed = module.source_changed
+          for dependency in module.require.cache.values():
+            if recursive_reload(dependency):
               changed = True
-          if (changed and Require.reload_pass != module.reload_pass) or module.source_changed:
+          if changed and Require.reload_pass != module.reload_pass:
             module.reload()
             module.reload_pass = Require.reload_pass
             assert not module.source_changed, "source still changed after module reload"
             changed = True
           return changed
-        recursive_reload(module)
+        try:
+          self.context.options[CASCADEBLOCK] = True
+          recursive_reload(module)
+        finally:
+          self.context.options.pop(CASCADEBLOCK, None)
 
     else:
       current_dir = current_dir or self.module.directory
