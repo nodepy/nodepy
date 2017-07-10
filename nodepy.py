@@ -252,6 +252,7 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     self.namespace = types.ModuleType(str(name))  # in Python 2, does not accept Unicode
     self.require = Require(self)
     self.executed = False
+    self.exec_mtime = None
     self.request = request
     self.package = package
     self.extensions = [] if extensions is None else extensions
@@ -289,9 +290,56 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     Execute the module. If #BaseModule.executed is #True, a #RuntimeError
     should be raised. If an error occurs during the module's execution,
     #BaseModule.remove() must be called!
+
+    It is also very important to call the parent implementation of #exec_()
+    as it will set the #exec_mtime member and #executed to #True.
     """
 
-    raise NotImplementedError
+    if self.executed:
+      raise RuntimeError('already executed')
+    self.executed = True
+
+    mtime = 0.0
+    if self.real_filename and os.path.exists(self.real_filename):
+      mtime = os.path.getmtime(self.real_filename)
+    if self.filename and os.path.exists(self.filename):
+      mtime = max(mtime, os.path.getmtime(self.filename))
+    self.exec_mtime = mtime
+
+
+  def reload(self):
+    """
+    Called to reload the code of the module. The default implementation
+    is just a sequence of the following:
+
+    1. #init_namespace()
+    2. set #executed to #False
+    4.  #exec_().
+    """
+
+    self.init_namespace()
+    self.executed = False
+    self.exec_()
+
+  @property
+  def source_changed(self):
+    """
+    Returns true if the source that the module was loaded from has changed. The
+    default implementation compares the higher modification times of
+    #real_filename and #filename against the modification time saved when the
+    module was executed with #exec_() (which also takes the higher modification
+    time of the two).
+    """
+
+    if self.exec_mtime is None:
+      return True
+
+    mtime = 0.0
+    if self.real_filename and os.path.exists(self.real_filename):
+      mtime = os.path.getmtime(self.real_filename)
+    if self.filename and os.path.exists(self.filename):
+      mtime = max(mtime, os.path.getmtime(self.filename))
+    return mtime > self.exec_mtime
 
 
 class InitModule(BaseModule):
@@ -578,12 +626,23 @@ class PythonLoader(BaseLoader):
     file, a bytecache will be generated if possible.
     """
 
+    return PythonModule(
+      context=request.context,
+      filename=self.filename,
+      name=request.name,
+      request=request,
+      package=request.context.get_package_for(self.filename),
+      extensions=None,
+      loader=self
+    )
+
+  def exec_(self, module):
     filename = self.filename
     filename_noext = os.path.splitext(filename)[0]
     name = os.path.basename(filename_noext)
     bytecache_file = filename_noext + self.pyc_suffix
 
-    context = request.context
+    context = module.context
     package = context.get_package_for(filename)
 
     if os.path.isfile(bytecache_file) and os.path.isfile(filename) and \
@@ -625,9 +684,12 @@ class PythonLoader(BaseLoader):
       code, extensions = self.load_code(context, package, filename, is_compiled=None)
       real_filename = None
 
-    return PythonModule(context=context, filename=filename, name=name,
-        code=code, request=request, real_filename=real_filename, package=package,
-        extensions=extensions)
+    module.extensions = extensions
+    module.filename = filename
+    module.real_filename = real_filename
+    module.code = code
+
+    exec(code, vars(module.namespace))
 
   @staticmethod
   def _iter_lines(string):
@@ -698,22 +760,20 @@ class PythonModule(BaseModule):
   respectively.
   """
 
-  def __init__(self, context, filename, real_filename, name, code,
-               package, request, extensions):
+  def __init__(self, context, filename, name, package, request,
+               extensions, loader):
     super(PythonModule, self).__init__(
         context=context, filename=filename, package=package,
         directory=os.path.dirname(filename), name=name,
         request=request, extensions=extensions)
-    self.code = code
-    self.real_filename = real_filename
+    self.code = None
+    self.loader = loader
 
   def exec_(self):
-    if self.executed:
-      raise RuntimeError('already executed')
+    super(PythonModule, self).exec_()
     try:
-      self.executed = True
       with self.context.enter_module(self):
-        exec(self.code, vars(self.namespace))
+        self.loader.exec_(self)
     except:
       self.remove()
       raise
@@ -767,8 +827,7 @@ class JsonModule(BaseModule):
       request=request, package=package)
 
   def exec_(self):
-    if self.executed:
-      raise RuntimeError('already loaded')
+    super(JsonModule, self).exec_()
     if os.path.basename(self.filename) == 'package.json' and self.package:
       self.namespace.exports = self.package.json
     else:
@@ -1038,6 +1097,10 @@ class Require(object):
 
     if cache and request in self.cache:
       module = self.cache[request]
+      autoreload = self.context.options.get('require.autoreload')
+      if exec_ and autoreload and module.source_changed:
+        module.reload()
+        assert not module.source_changed, "source still changed after module reload"
 
     else:
       current_dir = current_dir or self.module.directory
@@ -1051,6 +1114,8 @@ class Require(object):
         additional_path=self.path, is_main=is_main, exec_=exec_, cache=cache)
       if cache:
         self.cache[request] = module
+      if exec_:
+        assert not module.source_changed, "module source changed directly after load"
 
     if exports:
       module = get_exports(module)
@@ -1130,6 +1195,7 @@ class Context(object):
   """
 
   def __init__(self, current_dir='.', bare=False, isolated=True):
+    self.options = {}
     self.current_dir = current_dir
     self.isolated = isolated
     # Container for internal modules that can be bound to the context

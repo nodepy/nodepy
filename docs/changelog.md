@@ -48,6 +48,14 @@ __Node.py__
 - Add `Context._package_stack`
 - Add support for `import default_member, * from 'module-name'` syntax
 - Add `nodepy.notebook_context()` function
+- Add `Context.options`, and first option being supported is `require.autoreload`
+- Update `BaseModule` interface
+  - Add `exec_mtime` member
+  - Add `reload()` method
+  - Abstract method `exec_()` must now be called by subclasses
+  - Add `source_changed` property
+- Update `PythonLoader` so that `PythonModule.reload()` actually works and does
+  not execute the old code
 
 __nppm__
 
