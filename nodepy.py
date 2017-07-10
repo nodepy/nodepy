@@ -258,6 +258,7 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     self.extensions = [] if extensions is None else extensions
     self.vendor_directories = [] if vendor_directories is None else vendor_directories
     self.vendor_directories = [normpath(x, directory) for x in self.vendor_directories]
+    self.reload_pass = 0
     self.init_namespace()
 
   def __repr__(self):
@@ -1029,6 +1030,10 @@ class Require(object):
   PY2 = six.PY2
   PY3 = six.PY3
 
+  # An ever increasing index that is used to avoid infinite recursion
+  # during cascade reloading.
+  reload_pass = 0
+
   def __init__(self, module):
     self.module = module
     self.path = []
@@ -1098,9 +1103,24 @@ class Require(object):
     if cache and request in self.cache:
       module = self.cache[request]
       autoreload = self.context.options.get('require.autoreload')
-      if exec_ and autoreload and module.source_changed:
+      if exec_ and autoreload in ('on', True) and module.source_changed:
         module.reload()
         assert not module.source_changed, "source still changed after module reload"
+      elif exec_ and autoreload == 'cascade':
+        # Reload the module recursively.
+        Require.reload_pass += 1
+        def recursive_reload(module):
+          changed = False
+          for module in module.require.cache.values():
+            if recursive_reload(module):
+              changed = True
+          if (changed and Require.reload_pass != module.reload_pass) or module.source_changed:
+            module.reload()
+            module.reload_pass = Require.reload_pass
+            assert not module.source_changed, "source still changed after module reload"
+            changed = True
+          return changed
+        recursive_reload(module)
 
     else:
       current_dir = current_dir or self.module.directory
