@@ -1657,6 +1657,16 @@ def print_exc():
     traceback.print_exc()
 
 
+def notebook_context(*args, **kwargs):
+  import notebook
+  context = getattr(notebook, '_nodepy_context', None)
+  if context is None:
+    context = Context(*args, **kwargs)
+    context.__enter__()
+    notebook._nodepy_context = context
+  return context
+
+
 # ====================
 # Main
 # ====================

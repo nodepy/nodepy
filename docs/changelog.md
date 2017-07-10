@@ -47,6 +47,7 @@ __Node.py__
 - Add `nodepy.normpath()`
 - Add `Context._package_stack`
 - Add support for `import default_member, * from 'module-name'` syntax
+- Add `nodepy.notebook_context()` function
 
 __nppm__
 
