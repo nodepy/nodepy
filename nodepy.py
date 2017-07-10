@@ -1658,12 +1658,24 @@ def print_exc():
 
 
 def notebook_context(*args, **kwargs):
+  """
+  A convenience function for use inside IPython Notebooks. Creates
+  a new #Context or returns an existing instance. If the function is
+  called again with different arguments, the previous context will
+  be destroyed and a new one will created.
+  """
+
   import notebook
   context = getattr(notebook, '_nodepy_context', None)
+  old_akw = getattr(notebook, '_nodepy_context_akw', None)
+  if context is not None and old_akw != (args, kwargs):
+    context.__exit__(None, None, None)
+    context = None
   if context is None:
     context = Context(*args, **kwargs)
     context.__enter__()
     notebook._nodepy_context = context
+    notebook._nodepy_context_akw = (args, kwargs)
   return context
 
 
