@@ -37,26 +37,28 @@ class ScriptMaker:
   Our own script maker class. It is unlike #distutils.script.ScriptMaker.
   """
 
-  def __init__(self, directory):
+  def __init__(self, directory, location):
+    assert location in ('root', 'global', 'local')
     self.directory = directory
+    self.location = location
     self.path = []
     self.pythonpath = []
 
   def _init_code(self):
     if not self.path and not self.pythonpath:
       return ''
-    code = '# Initialize environment variables (from ScriptMaker).\nimport os,sys\n'
+    code = '# Initialize environment variables (from ScriptMaker).\n'\
+           'import os,sys,nodepy\n'
     if self.path:
       path = [os.path.abspath(x) for x in self.path]
       code += 'os.environ["PATH"] = os.pathsep.join({path!r}) + '\
               'os.pathsep + os.environ.get("PATH", "")\n'.format(path=path)
     if self.pythonpath:
       path = [os.path.abspath(x) for x in self.pythonpath]
-      code += '_add_pythonpath = {pythonpath!r}\n'\
-              'sys.path.extend(_add_pythonpath); del _add_pythonpath\n'.format(pythonpath=path)
-              # Disable for now due to issue nodepy/nodepy#62.
-              #'os.environ["PYTHONPATH"] = os.pathsep.join(_add_pythonpath) '\
-              #    '+ os.pathsep + os.environ.get("PYTHONPATH", "")\n'\
+      # Remember: We don't set PYTHONPATH due to nodepy/nodepy#62
+      code += 'nodepy.script = {{"location": {location!r}, "original_path": sys.path[:]}}\n'\
+              'sys.path.extend({pythonpath!r})\n'\
+              .format(pythonpath=path, location=self.location)
     return code + '\n'
 
   def make_python(self, script_name, code):

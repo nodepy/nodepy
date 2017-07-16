@@ -112,7 +112,7 @@ class Installer:
     self.verbose = verbose
     self.dirs = get_directories(install_location)
     self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
-    self.script = _script.ScriptMaker(self.dirs['bin'])
+    self.script = _script.ScriptMaker(self.dirs['bin'], self.install_location)
     self.ignore_installed = False
     if install_location in ('local', 'global'):
       self.script.path.append(self.dirs['pip_bin'])

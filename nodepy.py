@@ -115,6 +115,12 @@ VERSION = 'Node.py-{0} [{3} {1[0]}.{1[1]}.{1[2]} {2}-bit]'.format(
     __version__, sys.version_info, int(round(math.log(sys.maxsize, 2))) + 1,
     python_impl)
 
+#: When a script is installed by NPPM, this will be a dictionary containing
+#: information about the script, such as its install location ("root", "global"
+#: or "local") and the original #sys.path before it was altered to include the
+#: nodepy_modules/ directory.
+script = None
+
 
 # ====================
 # Exceptions

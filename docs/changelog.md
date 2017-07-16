@@ -56,6 +56,8 @@ __Node.py__
   - Add `source_changed` property
 - Update `PythonLoader` so that `PythonModule.reload()` actually works and does
   not execute the old code
+- Add `nodepy.script` member which will initialized by scripts that are
+  installed via NPPM
 
 __nppm__
 
@@ -85,6 +87,7 @@ __nppm__
 - Implement #51 -- Support `vendor-directories` in package manifest
 - Fix #59 -- Reloading pkg_resources can lead it to wrongly assume Python 2 instead of 3
 - Fix #62 -- Installed scripts no longer export `PYTHONPATH`
+- `ScriptMaker` now requires a `location` parameter
 
 ### v0.0.20
 
