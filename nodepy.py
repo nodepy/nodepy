@@ -789,9 +789,6 @@ class PythonModule(BaseModule):
       with self.context.enter_module(self):
         self.loader.exec_(self)
     except:
-      # Call this after the module has been executed, because the modification
-      # time of the file will also depend on the bytecache file which might
-      # only be created inside PythonLoader.exec_().
       self.remove()
       raise
 
@@ -1157,14 +1154,7 @@ class Require(object):
       if cache:
         self.cache[request] = module
       if exec_:
-        assert not module.source_changed, (
-          "module source changed directly after load",
-          module.executed,
-          module,
-          module.exec_mtime,
-          os.path.getmtime(module.filename),
-          os.path.getmtime(module.real_filename)
-        )
+        assert not module.source_changed, "module source changed directly after load"
 
     if exports:
       module = get_exports(module)
