@@ -633,10 +633,13 @@ class PythonLoader(BaseLoader):
     file, a bytecache will be generated if possible.
     """
 
+    filename_noext = os.path.splitext(self.filename)[0]
+    name = os.path.basename(filename_noext)
+
     return PythonModule(
       context=request.context,
       filename=self.filename,
-      name=request.name,
+      name=name,
       request=request,
       package=request.context.get_package_for(self.filename),
       extensions=None,
@@ -646,7 +649,6 @@ class PythonLoader(BaseLoader):
   def exec_(self, module):
     filename = self.filename
     filename_noext = os.path.splitext(filename)[0]
-    name = os.path.basename(filename_noext)
     bytecache_file = filename_noext + self.pyc_suffix
 
     context = module.context
