@@ -242,7 +242,7 @@ class Installer:
         print('  Removed "{}"...'.format(fn))
       except OSError as exc:
         print('  "{}":'.format(fn), exc)
-    shutil.rmtree(directory)
+    _rmtree(directory)
     return True
 
   def install_dependencies_for(self, manifest, dev=False):
@@ -402,7 +402,8 @@ class Installer:
         print('  Creating', script_name, 'from', target_prog, '...')
         self.script.make_wrapper(script_name, prefix + [target_prog])
 
-  def install_from_directory(self, directory, develop=False, dev=False, expect=None):
+  def install_from_directory(self, directory, develop=False, dev=False,
+      expect=None, movedir=False):
     """
     Installs a package from a directory. The directory must have a
     `package.json` file. If *expect* is specified, it must be a tuple of
@@ -418,6 +419,9 @@ class Installer:
     expect (None, (str, semver.Version)): If specified, a tuple of the
       name and version of the package that we expect to install from this
       directory.
+    movedir (bool): This is set by #install_from_git() to move the source
+      directory to the target install directory isntead of a normal
+      install.
 
     # Returns
     (success, manifest)
@@ -467,22 +471,29 @@ class Installer:
 
     installed_files = []
 
-    print('Installing "{}" to "{}" ...'.format(manifest.identifier, target_dir))
-    _makedirs(target_dir)
-    if develop:
-      # Create a link file that contains the path to the actual package directory.
-      print('  Creating {} to "{}"...'.format(PACKAGE_LINK, directory))
-      linkfn = os.path.join(target_dir, PACKAGE_LINK)
-      with open(linkfn, 'w') as fp:
-        fp.write(os.path.abspath(directory))
-      installed_files.append(linkfn)
+    if movedir:
+      print('Moving "{}" to "{}" ...'.format(manifest.identifier, target_dir))
+      print(os.path.exists(directory))
+      _makedirs(os.path.dirname(target_dir))
+      os.rename(directory, target_dir)
+      installed_files.append(target_dir)
     else:
-      for src, rel in walk_package_files(manifest):
-        dst = os.path.join(target_dir, rel)
-        _makedirs(os.path.dirname(dst))
-        print('  Copying', rel, '...')
-        shutil.copyfile(src, dst)
-        installed_files.append(dst)
+      print('Installing "{}" to "{}" ...'.format(manifest.identifier, target_dir))
+      _makedirs(target_dir)
+      if develop:
+        # Create a link file that contains the path to the actual package directory.
+        print('  Creating {} to "{}"...'.format(PACKAGE_LINK, directory))
+        linkfn = os.path.join(target_dir, PACKAGE_LINK)
+        with open(linkfn, 'w') as fp:
+          fp.write(os.path.abspath(directory))
+        installed_files.append(linkfn)
+      else:
+        for src, rel in walk_package_files(manifest):
+          dst = os.path.join(target_dir, rel)
+          _makedirs(os.path.dirname(dst))
+          print('  Copying', rel, '...')
+          shutil.copyfile(src, dst)
+          installed_files.append(dst)
 
     # Create scripts for the 'bin' field in the package manifest.
     for script_name, filename in manifest.bin.items():
@@ -528,7 +539,7 @@ class Installer:
         tar.extractall(directory)
       return self.install_from_directory(directory, dev=dev, expect=expect)
     finally:
-      shutil.rmtree(directory)
+      _rmtree(directory)
 
   def install_from_registry(self, package_name, selector, dev=False):
     """
@@ -587,8 +598,8 @@ class Installer:
   def install_from_git(self, url):
     """
     Install a package from a Git repository. The package will first be cloned
-    into the package directorie's `.tmp/` directory, then it will be installed
-    from that directory.
+    into a temporary directory, that be copied into the correct location and
+    binaries will be installed.
 
     # Returns
     (success, (package_name, package_version))
@@ -600,10 +611,8 @@ class Installer:
       print('Error: Git clone failed')
       return False, None
 
-    try:
-      success, manifest = self.install_from_directory(dest)
-    finally:
-      shutil.rmtree(dest, onerror=pathutils.onerror)
+    with later(_rmtree, dest):
+      success, manifest = self.install_from_directory(dest, movedir=True)
 
     if manifest:
       return success, (manifest.name, manifest.version)
@@ -612,3 +621,24 @@ class Installer:
 
 class InstallError(Exception):
   pass
+
+
+@contextlib.contextmanager
+def later(__func, *args, **kwargs):
+  try:
+    yield
+  finally:
+    __func(*args, **kwargs)
+
+
+def _rmtree(directory, ignore_errors=False):
+  """
+  This version of #shutil.rmtree() will set the appropriate permissions when
+  an access error occurred.
+  """
+
+  def onerror(func, path, excinfo):
+    if isinstance(excinfo[1], OSError) and excinfo[1].errno == errno.EACCES:
+      os.chmod(path, int('777', 8))
+      return func(path)
+  shutil.rmtree(directory, ignore_errors=ignore_errors, onerror=onerror)

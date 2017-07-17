@@ -135,6 +135,8 @@ __nodepy__
 - `nppm run` can now invoke programs in the nearest `nodepy_modules/`
   directory if the command is not already captured by a script defined
   in the package manifest
+- Fix #65 -- Installing from Git now actually copies the whole Git directory
+  to the install location instead of installing *from* a temporary directory
 
 __nodepy internal__
 
