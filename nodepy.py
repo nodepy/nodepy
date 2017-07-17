@@ -1711,23 +1711,23 @@ def get_site_packages(prefix):
   return os.path.join(prefix, lib, 'site-packages')
 
 
-def reload_pkg_resources(insert_paths_index=None):
+def reload_pkg_resources(name='pkg_resources', insert_paths_index=None):
   """
   Reload the `pkg_resources` module.
   """
 
-  if 'pkg_resources' not in sys.modules:
+  if name not in sys.modules:
     return
-
 
   path = sys.path[:]
 
-  # Do NOT actually reload the pkg_resources module, but make sure that
-  # it is freshly imported. Reloading the pkg_resources module can fail.
-  # See nodepy/nodepy#59.
-  for key in tuple(k for k in sys.modules if k == 'pkg_resources' or k.startswith('pkg_resources.')):
-    del sys.modules[key]
-  import pkg_resources
+  # Reload the module. However, reloading it will fail in Python 2 if we
+  # don't clear its namespace beforehand due to the way it distinguishes
+  # between Python 2 and 3.
+  mod = sys.modules[name]
+  vars(mod).clear()
+  mod.__name__ = name
+  reload(mod)
 
   # Reloading pkg_resources will prepend new (or sometimes already
   # existing items) in sys.path. This will give precedence to system

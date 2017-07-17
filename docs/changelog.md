@@ -58,6 +58,7 @@ __Node.py__
   not execute the old code
 - Add `nodepy.script` member which will initialized by scripts that are
   installed via NPPM
+- Add `nodepy.reload_pkg_resources(name='pkg_resources')`
 
 __nppm__
 
@@ -88,6 +89,8 @@ __nppm__
 - Fix #59 -- Reloading pkg_resources can lead it to wrongly assume Python 2 instead of 3
 - Fix #62 -- Installed scripts no longer export `PYTHONPATH`
 - `ScriptMaker` now requires a `location` parameter
+- Fix #60 -- Nppm must not consider Python dependencies installed for global
+  packages when installing local dependencies
 
 ### v0.0.20
 

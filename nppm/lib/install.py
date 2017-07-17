@@ -123,6 +123,9 @@ class Installer:
   def pythonpath_update_context(self):
     self._old_sys_path = sys.path[:]
     self._old_pythonpath = os.getenv('PYTHONPATH', '')
+    # Restore the previous path.
+    if nodepy.script:
+      sys.path[:] = nodepy.script['original_path']
     # Add the path to the local Pip library path to sys.path and the PYTHONPATH
     # environment variable to ensure that the current installation process can
     # also find the already installed packages (some setup scripts might import
@@ -131,11 +134,15 @@ class Installer:
       sys.path[:] = [self.dirs['pip_lib']] + sys.path
       os.environ['PYTHONPATH'] = os.path.abspath(self.dirs['pip_lib']) \
           + os.pathsep + self._old_pythonpath
+    nodepy.reload_pkg_resources('pkg_resources')
+    nodepy.reload_pkg_resources('pip._vendor.pkg_resources')
     try:
       yield
     finally:
       sys.path[:] = self._old_sys_path
       os.environ['PYTHONPATH'] = self._old_pythonpath
+      nodepy.reload_pkg_resources('pkg_resources')
+      nodepy.reload_pkg_resources('pip._vendor.pkg_resources')
 
   def find_package(self, package):
     """
