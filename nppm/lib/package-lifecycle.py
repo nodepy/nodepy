@@ -134,7 +134,7 @@ class PackageLifecycle(object):
     self.upload(filename, user, password, force, dry, registry)
     self.run('post-publish', [])
 
-  def run(self, script, args):
+  def run(self, script, args, script_only=False):
     modules_dir = nodepy.find_nearest_modules_directory('.')
     if modules_dir:
       bindir = os.path.join(modules_dir, '.bin')
@@ -143,7 +143,7 @@ class PackageLifecycle(object):
     oldpath = os.environ.get('PATH', '')
     os.environ['PATH'] = bindir + os.pathsep + oldpath
     try:
-      if not self.manifest or script not in self.manifest.scripts:
+      if (not self.manifest or script not in self.manifest.scripts) and not script_only:
         self._run_command(shlex_quote(script) + ' ' + ' '.join(map(shlex_quote, args)))
       else:
         self._run_script(script, args=args)

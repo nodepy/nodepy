@@ -221,7 +221,7 @@ class Installer:
 
     plc = PackageLifecycle(manifest=manifest)
     try:
-      plc.run('pre-uninstall', [])
+      plc.run('pre-uninstall', [], script_only=True)
     except:
       traceback.print_exc()
       print('Error: pre-uninstall script failed.')
@@ -455,7 +455,7 @@ class Installer:
 
     plc = PackageLifecycle(manifest=manifest)
     try:
-      plc.run('pre-install', [])
+      plc.run('pre-install', [], script_only=True)
     except:
       traceback.print_exc()
       print('Error: pre-install script failed.')
@@ -508,7 +508,7 @@ class Installer:
         fp.write('\n')
 
     try:
-      plc.run('post-install', [])
+      plc.run('post-install', [], script_only=True)
     except:
       traceback.print_exc()
       print('Error: post-install script failed.')
