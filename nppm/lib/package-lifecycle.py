@@ -55,15 +55,16 @@ class PackageLifecycle(object):
       if os.path.isfile(fn):
         return fn
 
-  def __init__(self, directory='.', dist_dir=None, manifest=None):
+  def __init__(self, directory='.', dist_dir=None, manifest=None, allow_no_manifest=False):
     if manifest is None:
       if not dist_dir:
         dist_dir = os.path.join(directory, 'dist')
       fn = self.find_package_json(directory)
-      if not fn:
+      if not fn and not allow_no_manifest:
         print('Error: package.json not found')
         exit(1)
-      manifest = _manifest.parse(fn)
+      if fn:
+        manifest = _manifest.parse(fn)
     self.manifest = manifest
     self.dist_dir = dist_dir
 
@@ -134,13 +135,18 @@ class PackageLifecycle(object):
     self.run('post-publish', [])
 
   def run(self, script, args):
-    bindir = _install.get_directories('local')['bin']
+    modules_dir = nodepy.find_nearest_modules_directory('.')
+    if modules_dir:
+      bindir = os.path.join(modules_dir, '.bin')
+    else:
+      bindir = _install.get_directories('local')['bin']
     oldpath = os.environ.get('PATH', '')
     os.environ['PATH'] = bindir + os.pathsep + oldpath
     try:
-      if script not in self.manifest.scripts:
-        return False
-      self._run_script(script, args=args)
+      if not self.manifest or script not in self.manifest.scripts:
+        self._run_command(shlex_quote(script) + ' ' + ' '.join(map(shlex_quote, args)))
+      else:
+        self._run_script(script, args=args)
     finally:
       os.environ['PATH'] = oldpath
     return True
@@ -159,17 +165,19 @@ class PackageLifecycle(object):
 
     request = self.manifest.scripts[script].strip()
     if request.startswith('!'):
-      # Execute as a shell command instead.
-      # TODO: On Windows, fall back to CMD.exe if SHELL is not defined.
-      command = [os.environ['SHELL'], '-c', request[1:]]
-      try:
-        return subprocess.call(command)
-      except (OSError, IOError):
-        print('Error: can not run "{}"'.format(cmd))
-        return 1
+      return self._run_command(request[1:])
     else:
       args = shlex.split(request) + list(args)
-      nodepy.main(['--current-dir', self.manifest.directory] + args)
+      return nodepy.main(['--current-dir', self.manifest.directory] + args)
+
+  def _run_command(self, command):
+    # TODO: On Windows, fall back to CMD.exe if SHELL is not defined.
+    command = [os.environ['SHELL'], '-c', command]
+    try:
+      return subprocess.call(command)
+    except (OSError, IOError) as exc:
+      print('Error: can not run "{}" ({})'.format(cmd, exc))
+      return getattr(exc, 'errno', 127)
 
 
 exports = PackageLifecycle

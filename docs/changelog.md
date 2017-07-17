@@ -132,6 +132,9 @@ __nodepy__
 - Add `wheel` as a dependency for Node.py
 - Add `--isolated` command-line option (not usually necessary)
 - Default has switched to non-isolated mode
+- `nppm run` can now invoke programs in the nearest `nodepy_modules/`
+  directory if the command is not already captured by a script defined
+  in the package manifest
 
 __nodepy internal__
 

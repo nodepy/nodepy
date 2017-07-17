@@ -513,7 +513,7 @@ def run(script, args):
   Run a script that is specified in the package.json.
   """
 
-  if not PackageLifecycle().run(script, args):
+  if not PackageLifecycle(allow_no_manifest=True).run(script, args):
     error("no script '{}'".format(script))
 
 
