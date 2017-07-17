@@ -300,6 +300,10 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
 
     It is also very important to call the parent implementation of #exec_()
     as it will set the #exec_mtime member and #executed to #True.
+
+    This method must be called before the module's code is ACTUALLY
+    executed to ensure that #executed is set to #True and the #exec_mtime
+    is valid so that #source_changed is #False after the module is executed.
     """
 
     if self.executed:
@@ -312,7 +316,6 @@ class BaseModule(six.with_metaclass(abc.ABCMeta)):
     if self.filename and os.path.exists(self.filename):
       mtime = max(mtime, os.path.getmtime(self.filename))
     self.exec_mtime = mtime
-
 
   def reload(self):
     """
@@ -698,6 +701,7 @@ class PythonLoader(BaseLoader):
     module.real_filename = real_filename
     module.code = code
 
+    BaseModule.exec_(module)
     exec(code, vars(module.namespace))
 
   @staticmethod
@@ -779,11 +783,15 @@ class PythonModule(BaseModule):
     self.loader = loader
 
   def exec_(self):
-    super(PythonModule, self).exec_()
+    # BaseModule.exec_() is called by the PythonLoader.exec_() after
+    # the bytecache was created.
     try:
       with self.context.enter_module(self):
         self.loader.exec_(self)
     except:
+      # Call this after the module has been executed, because the modification
+      # time of the file will also depend on the bytecache file which might
+      # only be created inside PythonLoader.exec_().
       self.remove()
       raise
 
@@ -1149,7 +1157,14 @@ class Require(object):
       if cache:
         self.cache[request] = module
       if exec_:
-        assert not module.source_changed, "module source changed directly after load"
+        assert not module.source_changed, (
+          "module source changed directly after load",
+          module.executed,
+          module,
+          module.exec_mtime,
+          os.path.getmtime(module.filename),
+          os.path.getmtime(module.real_filename)
+        )
 
     if exports:
       module = get_exports(module)
@@ -1518,48 +1533,55 @@ class Context(object):
     if request.is_main and self.main_module:
       raise RuntimeError('context already has a main module')
 
+    module = None
+    from_cache = False
     filename = loader.get_filename(request)
     if cache:
       module = self._module_cache.get(filename)
-      if module is not None:
-        return module
+      if module:
+        from_cache = True
 
-    # Load the module and assert data consistency.
-    module = loader.load(request)
+    if module is None:
+      # Load the module and assert data consistency.
+      module = loader.load(request)
+      if not isinstance(module, BaseModule):
+        raise TypeError('loader {!r} did not return a BaseModule instance, '
+            'but instead a {!r} object'.format(
+              type(loader).__name__, type(module).__name__))
 
-    if not isinstance(module, BaseModule):
-      raise TypeError('loader {!r} did not return a BaseModule instance, '
-          'but instead a {!r} object'.format(
-            type(loader).__name__, type(module).__name__))
+      if request.original_resolve_location:
+        # There has been at least one redirection in the filesystem when the
+        # package was resolved. We will add the nearest modules directory of
+        # the original resolve directory to the search path.
+        # FIXME: If there are multiple package links pointing to the same
+        #        package, we would actually need to load the module multiple
+        #        times to ensure correct behaviour.
+        nodepy_modules = find_nearest_modules_directory(request.original_resolve_location)
+        if nodepy_modules:
+          module.require.path.append(nodepy_modules)
+
+    if not from_cache:
+      if cache:
+        self._module_cache[filename] = module
+      self.send_event('load', module)
+
+    if request.is_main:
+      if module.executed:
+        raise RuntimeError('module already loaded, can not execute as main')
+      self.main_module = module
 
     if module.filename != filename:
       raise RuntimeError("loaded module's filename ({}) does not match the "
           "pre-determined filename ({})".format(module.filename, filename))
 
-    if request.original_resolve_location:
-      # There has been at least one redirection in the filesystem when the
-      # package was resolved. We will add the nearest modules directory of
-      # the original resolve directory to the search path.
-      # FIXME: If there are multiple package links pointing to the same
-      #        package, we would actually need to load the module multiple
-      #        times to ensure correct behaviour.
-      nodepy_modules = find_nearest_modules_directory(request.original_resolve_location)
-      if nodepy_modules:
-        module.require.path.append(nodepy_modules)
-
-    if cache:
-      self._module_cache[filename] = module
-    if request.is_main:
-      self.main_module = module
-    self.send_event('load', module)
-
-    # Invoke all extensions for the module and its owning package.
-    @ExtensionHandlerRunner.wrap('module_loaded', module=module, package=module.package)
-    def runner(self, handler):
-      handler(module)
-    runner.runall(module.extensions)
-    if module.package:
-      runner.runall(module.package.extensions, module.package.require)
+    if not from_cache:
+      # Invoke all extensions for the module and its owning package.
+      @ExtensionHandlerRunner.wrap('module_loaded', module=module, package=module.package)
+      def runner(self, handler):
+        handler(module)
+      runner.runall(module.extensions)
+      if module.package:
+        runner.runall(module.package.extensions, module.package.require)
 
     # Execute the module if that is requested with the load request.
     if exec_ and not module.executed:
@@ -1725,11 +1747,26 @@ def reload_pkg_resources(name='pkg_resources', insert_paths_index=None):
 
   # Reload the module. However, reloading it will fail in Python 2 if we
   # don't clear its namespace beforehand due to the way it distinguishes
-  # between Python 2 and 3.
-  mod = sys.modules[name]
-  vars(mod).clear()
-  mod.__name__ = name
-  reload(mod)
+  # between Python 2 and 3. We still need to keep certain members, though.
+  pkg_resources = sys.modules[name]
+
+  # Clear all members, except for special ones.
+  keep = {}
+  for member in ['__name__', '__loader__', '__path__']:
+    if hasattr(pkg_resources, member):
+      keep[member] = getattr(pkg_resources, member)
+  keep.setdefault('__name__', name)
+  vars(pkg_resources).clear()
+  vars(pkg_resources).update(keep)
+
+  # Keep submodules.
+  for mod_name, module in six.iteritems(sys.modules):
+    if mod_name.startswith(name + '.') and mod_name.count('.') == 1:
+      mod_name = mod_name.split('.')[1]
+      setattr(pkg_resources, mod_name, module)
+
+  # Reload pkg_resources.
+  reload(pkg_resources)
 
   # Reloading pkg_resources will prepend new (or sometimes already
   # existing items) in sys.path. This will give precedence to system

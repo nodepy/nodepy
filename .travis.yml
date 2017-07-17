@@ -9,6 +9,7 @@ python:
 - "nightly"
 install:
 - pip install --upgrade pip>=8.0.0
+- pip --version
 - pip install . -v
 script:
 - nodepy --version
