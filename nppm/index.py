@@ -193,7 +193,8 @@ def install(packages, develop, python, develop_python, upgrade, global_,
     return 0
 
   if not any((packages, develop, python, develop_python)):
-    success = installer.install_dependencies_for(manifest.parse(packagefile), dev=dev)
+    installer.upgrade = True
+    success, _manifest = installer.install_from_directory('.', develop=True, dev=dev)
     if not success:
       return 1
     installer.relink_pip_scripts()

@@ -91,6 +91,9 @@ __nppm__
 - `ScriptMaker` now requires a `location` parameter
 - Fix #60 -- Nppm must not consider Python dependencies installed for global
   packages when installing local dependencies
+- `nppm install` with no arguments will now install the current directory in
+  develop mode (thus, as a package links), including programs specified in
+  the manifest's `"bin"` field
 
 ### v0.0.20
 
