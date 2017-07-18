@@ -952,10 +952,13 @@ class RequireImportSyntaxExtension(object):
   import with the following syntax:
 
       import module, * from "module-name"
+
+  It is also possible to assign the imported name as a member to an existing
+  object in the scope.
   """
 
   _re_import_as = re.compile(
-    r'''^(?P<indent>[^\S\n]*)import\s+(?P<q>"|')(?P<mod>.*?)(?P=q)(?:\s+as\s+(?P<n>\w+))?[^\S\n]*$''',
+    r'''^(?P<indent>[^\S\n]*)import\s+(?P<q>"|')(?P<mod>.*?)(?P=q)(?:\s+as\s+(?P<n>[\.\w]+))?[^\S\n]*$''',
     re.M
   )
   _re_import_from = re.compile(
@@ -964,8 +967,8 @@ class RequireImportSyntaxExtension(object):
     import\s+
     (?P<members>
       (?:
-        \w+|                # Default member
-        (?:\w+\s*,\s*)?     # Default member + specific members
+        [\.\w]+|            # Default member
+        (?:[\.\w]+\s*,\s*)?     # Default member + specific members
       )?
       (?:
         \{[^}]+\}|          # Specific members

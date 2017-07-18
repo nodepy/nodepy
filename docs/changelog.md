@@ -59,6 +59,8 @@ __Node.py__
 - Add `nodepy.script` member which will initialized by scripts that are
   installed via NPPM
 - Add `nodepy.reload_pkg_resources(name='pkg_resources')`
+- `require-import-syntax` extension now supports assigning imported names as
+  members to existing objects in the scope
 
 __nppm__
 
