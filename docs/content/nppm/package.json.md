@@ -1,3 +1,7 @@
++++
+title = "package.json"
++++
+
 Parse package manifests.
 
 ```python

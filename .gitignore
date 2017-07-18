@@ -4,3 +4,4 @@
 *.rst
 dist/
 nodepy_modules/
+docs/build/

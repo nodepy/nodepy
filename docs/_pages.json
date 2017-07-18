@@ -8,36 +8,36 @@
   {
     "name": "Extensions",
     "path": "extensions",
-    "file": "extensions.md"
+    "file": "content/extensions.md"
   },
   {
     "name": "Require API",
     "path": "require",
-    "file": "require.md"
+    "file": "content/require.md"
   },
   {
     "name": "Package Manifest",
     "path": "package.json",
-    "file": "package.json.md"
+    "file": "content/package.json.md"
   },
   {
     "name": "Command-line Interface",
     "path": "cli",
-    "file": "cli.md"
+    "file": "content/cli.md"
   },
   {
     "name": "NPPM Configuration",
     "path": "nppm-configuration",
-    "file": "nppm-configuration.md"
+    "file": "content/nppm-configuration.md"
   },
   {
     "name": "Changelog",
     "path": "changelog",
-    "file": "changelog.md"
+    "file": "content/changelog.md"
   },
   {
     "name": "FAQ & Troubleshooting",
     "path": "faq",
-    "file": "faq.md"
+    "file": "content/faq.md"
   }
 ]

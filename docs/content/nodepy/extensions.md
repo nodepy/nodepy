@@ -1,3 +1,7 @@
++++
+title = "Extensions"
++++
+
 Every package can make use of extensions that receive events when modules
 for that package are loaded. This is especially useful for hooking up
 transpilers during the runtime of the application.

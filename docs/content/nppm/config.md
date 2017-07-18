@@ -1,3 +1,7 @@
++++
+title = "Config"
++++
+
 NPPM can be configured to use default values for `nppm init` and to remember
 your login credentials for one or more package registries. You can also
 configure additional registries beyond the default registry, or completely

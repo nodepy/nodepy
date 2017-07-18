@@ -1,3 +1,8 @@
++++
+title = "FAQ"
+ordering-priority = 4
++++
+
 ### must supply either home or prefix/exec-prefix -- not both
 
 ```

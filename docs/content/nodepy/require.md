@@ -1,3 +1,7 @@
++++
+title = "require()"
++++
+
 Python code that is invoked via **nodepy** has a few additional built-ins
 available.
 
