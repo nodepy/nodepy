@@ -58,3 +58,13 @@ the nearest `nodepy_modules/` directory.
 ## Installation
 
     pip install node.py
+
+## Building the Documentation
+
+Install [yassg], the build the documentation.
+
+    $ nppm install -g git+https://github.com/NiklasRosenstein/yassg.git
+    $ cd docs
+    $ yassg
+
+[yassg]: https://github.com/NiklasRosenstein/yassg
