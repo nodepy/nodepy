@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Node.py v0.0.21 Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.js"></script>
+    <link rel="stylesheet" href="../../static/style.css">
+    <style>
+    body {
+      margin-top: 30px;
+    }
+    img[align=left] {
+      padding-right: 1em;
+    }
+    img[align=right] {
+      padding-left: 1em;
+    }
+    .ui.text::after {
+      clear: both;
+      content: "";
+    }
+    .ui.footer.segment {
+      margin: 5em 0em 0em;
+      padding: 5em 0em;
+    }
+    pre {
+      padding: 0.5em 1em;
+      background-color: #eee;
+      overflow: auto;
+    }
+    #disqus_thread {
+      margin-top: 7em;
+    }
+    blockquote {
+      font-style: italic;
+      color: gray;
+    }
+    </style>
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body>
+
+    
+
+    <!-- header -->
+    <div class="ui fixed inverted menu">
+      <div class="ui container">
+        <span class="header item">
+          <!--<img class="logo" src="assets/images/logo.png">-->
+          Node.py v0.0.21 Documentation
+        </span>
+        
+          
+      
+      
+      
+        <a href="../../" class="item ">Home</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../../changelog/" class="item ">Changelog</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../../faq/" class="item ">FAQ</a>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            Node.py
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="./" class="item active">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../extensions/" class="item ">Extensions</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../require/" class="item ">require()</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            NPPM
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../../nppm/cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../../nppm/config/" class="item ">Config</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../../nppm/package.json/" class="item ">package.json</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+
+      <!-- GitHub -->
+      
+        <a class="item right floated" href="https://github.com/nodepy/nodepy"><i class="github icon"></i>nodepy/nodepy</a>
+      
+      </div>
+    </div>
+
+    <div class="ui grid container main">
+      <div class="twelve wide column">
+        <!-- content -->
+        <div class="ui text container">
+          
+            <h1>Commandline</h1>
+          
+          <pre class="codehilite"><code>$ nodepy --help
+usage: nodepy [-h] [-d] [-c EXPR] [--current-dir DIR] [--version]
+              [--keep-arg0] [-P PRELOAD] [-L LOADER] [--pymain]
+              [--profile PROFILE] [--isolated]
+              ...
+
+Node.py is a layer on top of the Python runtime which allows to load other
+modules the Node.js way, using a require() function.
+
+synopsis:
+  nodepy                (interactive console)
+  nodepy -c EXPR [...]  (evaluate EXPR)
+  nodepy REQUEST [...]  (resolve REQUEST and execute it)
+
+positional arguments:
+  arguments
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d, --debug           Enter the interactive debugger when an exception
+                        would cause the application to exit.
+  -c EXPR, --exec EXPR  Evaluate a Python expression.
+  --current-dir DIR     Change where the initial request will be resolved in.
+  --version             Print the Node.py version and exit.
+  --keep-arg0           Do not overwrite sys.argv[0] when executing a file.
+  -P PRELOAD, --preload PRELOAD
+  -L LOADER, --loader LOADER
+                        The loader that will be used to load and execute
+                        the module. This must be a filename that matches a
+                        loader in the Context. Usually the file suffix is
+                        sufficient (depending on the loader).
+  --pymain
+  --profile PROFILE     Profile the execution and save the stats to the specified file.
+  --isolated            Create the runtime context in isolated mode.</code></pre>
+        </div>
+
+        <!-- disqus support -->
+        
+      </div>
+      <!-- Table of contents -->
+      <div class="four wide column">
+        
+          <h1>Table of Contents</h1>
+          <div class="toc">
+<ul></ul>
+</div>
+
+        
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="ui inverted vertical footer segment">
+      <div class="ui center aligned container">
+          
+            <p>Copyright &copy; 2017  Niklas Rosenstein</p>
+          
+          <p>
+             &mdash; 
+            Generated with <a href="https://github.com/NiklasRosenstein/yassg">Yassg</a>
+          </p>
+      </div>
+    </div>
+  </body>
+</html>

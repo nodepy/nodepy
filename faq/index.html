@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Node.py v0.0.21 Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.js"></script>
+    <link rel="stylesheet" href="../static/style.css">
+    <style>
+    body {
+      margin-top: 30px;
+    }
+    img[align=left] {
+      padding-right: 1em;
+    }
+    img[align=right] {
+      padding-left: 1em;
+    }
+    .ui.text::after {
+      clear: both;
+      content: "";
+    }
+    .ui.footer.segment {
+      margin: 5em 0em 0em;
+      padding: 5em 0em;
+    }
+    pre {
+      padding: 0.5em 1em;
+      background-color: #eee;
+      overflow: auto;
+    }
+    #disqus_thread {
+      margin-top: 7em;
+    }
+    blockquote {
+      font-style: italic;
+      color: gray;
+    }
+    </style>
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body>
+
+    
+
+    <!-- header -->
+    <div class="ui fixed inverted menu">
+      <div class="ui container">
+        <span class="header item">
+          <!--<img class="logo" src="assets/images/logo.png">-->
+          Node.py v0.0.21 Documentation
+        </span>
+        
+          
+      
+      
+      
+        <a href="../" class="item ">Home</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../changelog/" class="item ">Changelog</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="./" class="item active">FAQ</a>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            Node.py
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../nodepy/cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../nodepy/extensions/" class="item ">Extensions</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../nodepy/require/" class="item ">require()</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            NPPM
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../nppm/cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../nppm/config/" class="item ">Config</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../nppm/package.json/" class="item ">package.json</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+
+      <!-- GitHub -->
+      
+        <a class="item right floated" href="https://github.com/nodepy/nodepy"><i class="github icon"></i>nodepy/nodepy</a>
+      
+      </div>
+    </div>
+
+    <div class="ui grid container main">
+      <div class="twelve wide column">
+        <!-- content -->
+        <div class="ui text container">
+          
+            <h1>FAQ</h1>
+          
+          <h3 id="must-supply-either-home-or-prefixexec-prefix-not-both">must supply either home or prefix/exec-prefix -- not both</h3>
+<pre class="codehilite"><code>distutils.errors.DistutilsOptionError: must supply either home or prefix/exec-prefix -- not both</code></pre>
+
+
+<p>Before <strong>nppm</strong> v0.0.20, this error could appear on macOS and Python
+versions installed via <a href="https://brew.sh">Homebrew</a> (see <a href="http://stackoverflow.com/q/24257803/791713">this StackOverflow question</a>).
+Since this version, the package manager creates or temporarily overwrites
+the file <code>~/.pydistutils.cfg</code> to set an empty <code>prefix</code>.</p>
+<p>If you still encounter this error, please <a href="https://github.com/nodepy/nodepy/issues/new">create an issue</a>.</p>
+<h3 id="no-such-file-or-directory-installed-filestxt">No such file or directory: '.../installed-files.txt'</h3>
+<pre class="codehilite"><code>FileNotFoundError: [Errno 2] No such file or directory: 'nodepy_modules.pip\\Lib\\site-packages\\aniso8601-1.2.1-py3.5.egg-info\\installed-files.txt'</code></pre>
+
+
+<p><em>This appears to be an issue with Pip that appears when installing some modules
+when using the <code>pip install --prefix</code> option. Using <code>pip install --target</code> can
+fix the problem when you experience it. You can use <code>--pip-use-target-option</code>
+for <code>nppm install</code> take make it use the <code>--target</code> option instead.</em></p>
+<p>This bug will be/is fixed in Pip 9.0.2, so upgrade if you can.</p>
+        </div>
+
+        <!-- disqus support -->
+        
+      </div>
+      <!-- Table of contents -->
+      <div class="four wide column">
+        
+          <h1>Table of Contents</h1>
+          <div class="toc">
+<ul>
+<li><a href="#must-supply-either-home-or-prefixexec-prefix-not-both">must supply either home or prefix/exec-prefix -- not both</a></li>
+<li><a href="#no-such-file-or-directory-installed-filestxt">No such file or directory: '.../installed-files.txt'</a></li>
+</ul>
+</div>
+
+        
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="ui inverted vertical footer segment">
+      <div class="ui center aligned container">
+          
+            <p>Copyright &copy; 2017  Niklas Rosenstein</p>
+          
+          <p>
+             &mdash; 
+            Generated with <a href="https://github.com/NiklasRosenstein/yassg">Yassg</a>
+          </p>
+      </div>
+    </div>
+  </body>
+</html>

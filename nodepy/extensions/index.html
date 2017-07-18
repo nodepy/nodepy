@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Node.py v0.0.21 Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.js"></script>
+    <link rel="stylesheet" href="../../static/style.css">
+    <style>
+    body {
+      margin-top: 30px;
+    }
+    img[align=left] {
+      padding-right: 1em;
+    }
+    img[align=right] {
+      padding-left: 1em;
+    }
+    .ui.text::after {
+      clear: both;
+      content: "";
+    }
+    .ui.footer.segment {
+      margin: 5em 0em 0em;
+      padding: 5em 0em;
+    }
+    pre {
+      padding: 0.5em 1em;
+      background-color: #eee;
+      overflow: auto;
+    }
+    #disqus_thread {
+      margin-top: 7em;
+    }
+    blockquote {
+      font-style: italic;
+      color: gray;
+    }
+    </style>
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body>
+
+    
+
+    <!-- header -->
+    <div class="ui fixed inverted menu">
+      <div class="ui container">
+        <span class="header item">
+          <!--<img class="logo" src="assets/images/logo.png">-->
+          Node.py v0.0.21 Documentation
+        </span>
+        
+          
+      
+      
+      
+        <a href="../../" class="item ">Home</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../../changelog/" class="item ">Changelog</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../../faq/" class="item ">FAQ</a>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            Node.py
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="./" class="item active">Extensions</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../require/" class="item ">require()</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            NPPM
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../../nppm/cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../../nppm/config/" class="item ">Config</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../../nppm/package.json/" class="item ">package.json</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+
+      <!-- GitHub -->
+      
+        <a class="item right floated" href="https://github.com/nodepy/nodepy"><i class="github icon"></i>nodepy/nodepy</a>
+      
+      </div>
+    </div>
+
+    <div class="ui grid container main">
+      <div class="twelve wide column">
+        <!-- content -->
+        <div class="ui text container">
+          
+            <h1>Extensions</h1>
+          
+          <p>Every package can make use of extensions that receive events when modules
+for that package are loaded. This is especially useful for hooking up
+transpilers during the runtime of the application.</p>
+<p>Extensions are specified in the <code>package.json</code> manifest under the
+<code>"extensions"</code> field. Every extension must be requireable from the
+location of the <code>package.json</code> manifest.</p>
+<p><strong>Example</strong></p>
+<pre class="codehilite"><code class="language-json">{
+  &quot;name&quot;: &quot;myapp&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;extensions&quot;: [
+    &quot;./myextension&quot;,
+    &quot;!require-import-syntax&quot;
+  ]
+}</code></pre>
+
+
+<h2 id="per-file-extensions">Per-file extensions</h2>
+<p>A file not associated with a <code>package.json</code> may also specify extensions using
+a special comment in the file header. The comment must be in the first comment
+block in the file, with not a single non-comment line preceeding it.</p>
+<pre class="codehilite"><code class="language-python">#!/usr/bin/env nodepy
+# Some info ...
+# nodepy-extensions: !require-import-syntax, another-extension
+
+import * from './utils'</code></pre>
+
+
+<blockquote>
+<p><strong>Note</strong>: These extensions are currently only used for source code
+preprocessing and only <code>preprocess_python_source()</code> will be called
+for them.</p>
+</blockquote>
+<h2 id="extension-callbacks">Extension callbacks</h2>
+<p>Every extension can provide one of the following member functions that will
+be invoked on certain events.</p>
+<h3 id="init_extension">init_extension</h3>
+<pre class="codehilite"><code>init_extension(package, module)</code></pre>
+
+
+<p>Called when the extension is loaded for a package or a module.</p>
+<h3 id="module_loaded">module_loaded</h3>
+<pre class="codehilite"><code>module_loaded(module)</code></pre>
+
+
+<p>Called after a module was loaded.</p>
+<h3 id="preprocess_python_source">preprocess_python_source</h3>
+<pre class="codehilite"><code>preprocess_python_source(package, filename, source)</code></pre>
+
+
+<p>Called when a Python source file is loaded. Return a modified version of
+<em>source</em>. This is used by the existing transpilers (see below).</p>
+<h2 id="built-in-extensions">Built-in extensions</h2>
+<h3 id="require-import-syntax">require-import-syntax</h3>
+<p>This extension is available as a Context binding which can be required
+with <code>!require-import-syntax</code>, which is also the string to enter in the
+<code>"extensions"</code> field. This extension allows you to use a special import
+syntax in your Python source files in place of the <code>require()</code> function.</p>
+<pre class="codehilite"><code class="language-python"># No symbol made available in the current namespace, only for side-effects
+# of the module import.
+import &quot;module-name&quot;   
+
+# Import the actual module namespace, NOT the default exported member.
+import &quot;module-name&quot; as module
+
+# Import the default member from the module namespace.
+import default_member from &quot;module-name&quot;
+
+# Import one or more members from the module namespace. Note that line
+# breaks are allowed.
+import {member1, member2}
+  from &quot;module-name&quot;
+
+# Alias a member from a module.
+import {
+  really_long_member1 as member1,
+  member2
+} from &quot;module-name&quot;
+
+# Import the default member and also other members from the module.
+import default_member, {
+  really_long_member1 as member1,
+  member2
+} from &quot;module-name&quot;</code></pre>
+
+
+<h3 id="require-unpack-syntax">require-unpack-syntax</h3>
+<p>This extension allows you to use a special syntax to import members
+from a required module. The extension is also available as a Context binding.</p>
+<pre class="codehilite"><code class="language-python">{ really_long_member1 as member1, member2 } = require('module-name')</code></pre>
+        </div>
+
+        <!-- disqus support -->
+        
+      </div>
+      <!-- Table of contents -->
+      <div class="four wide column">
+        
+          <h1>Table of Contents</h1>
+          <div class="toc">
+<ul>
+<li><a href="#per-file-extensions">Per-file extensions</a></li>
+<li><a href="#extension-callbacks">Extension callbacks</a><ul>
+<li><a href="#init_extension">init_extension</a></li>
+<li><a href="#module_loaded">module_loaded</a></li>
+<li><a href="#preprocess_python_source">preprocess_python_source</a></li>
+</ul>
+</li>
+<li><a href="#built-in-extensions">Built-in extensions</a><ul>
+<li><a href="#require-import-syntax">require-import-syntax</a></li>
+<li><a href="#require-unpack-syntax">require-unpack-syntax</a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+        
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="ui inverted vertical footer segment">
+      <div class="ui center aligned container">
+          
+            <p>Copyright &copy; 2017  Niklas Rosenstein</p>
+          
+          <p>
+             &mdash; 
+            Generated with <a href="https://github.com/NiklasRosenstein/yassg">Yassg</a>
+          </p>
+      </div>
+    </div>
+  </body>
+</html>

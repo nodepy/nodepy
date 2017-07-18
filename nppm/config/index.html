@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Node.py v0.0.21 Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.js"></script>
+    <link rel="stylesheet" href="../../static/style.css">
+    <style>
+    body {
+      margin-top: 30px;
+    }
+    img[align=left] {
+      padding-right: 1em;
+    }
+    img[align=right] {
+      padding-left: 1em;
+    }
+    .ui.text::after {
+      clear: both;
+      content: "";
+    }
+    .ui.footer.segment {
+      margin: 5em 0em 0em;
+      padding: 5em 0em;
+    }
+    pre {
+      padding: 0.5em 1em;
+      background-color: #eee;
+      overflow: auto;
+    }
+    #disqus_thread {
+      margin-top: 7em;
+    }
+    blockquote {
+      font-style: italic;
+      color: gray;
+    }
+    </style>
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body>
+
+    
+
+    <!-- header -->
+    <div class="ui fixed inverted menu">
+      <div class="ui container">
+        <span class="header item">
+          <!--<img class="logo" src="assets/images/logo.png">-->
+          Node.py v0.0.21 Documentation
+        </span>
+        
+          
+      
+      
+      
+        <a href="../../" class="item ">Home</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../../changelog/" class="item ">Changelog</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../../faq/" class="item ">FAQ</a>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            Node.py
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../../nodepy/cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../../nodepy/extensions/" class="item ">Extensions</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../../nodepy/require/" class="item ">require()</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            NPPM
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="./" class="item active">Config</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../package.json/" class="item ">package.json</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+
+      <!-- GitHub -->
+      
+        <a class="item right floated" href="https://github.com/nodepy/nodepy"><i class="github icon"></i>nodepy/nodepy</a>
+      
+      </div>
+    </div>
+
+    <div class="ui grid container main">
+      <div class="twelve wide column">
+        <!-- content -->
+        <div class="ui text container">
+          
+            <h1>Config</h1>
+          
+          <p>NPPM can be configured to use default values for <code>nppm init</code> and to remember
+your login credentials for one or more package registries. You can also
+configure additional registries beyond the default registry, or completely
+agument the default registry.</p>
+<p>The configuration file is read from <code>~/.nppmrc</code> if not otherwise specified
+by the <code>NPPM_CONFIG</code> environment variable.</p>
+<p>By default, this is the configuration that will be used as a fallback when
+nothing is configured or the configuration value is not overwritten:</p>
+<pre class="codehilite"><code>author = &lt;current username&gt;
+license = MIT
+
+[registry:default]
+url = https://registry.nodepy.org</code></pre>
+
+
+<p>You can add additional registries by adding an additional section. The order
+in which the sections appear determines the order in which they are resolved.
+If the <code>default</code> registry is not explicitly specified in the configuration
+file, it will always be checked first.</p>
+<pre class="codehilite"><code>[registry:local]
+url = http://localhsot:8000
+username = CrazyJohn
+password = CrazyJohn'sPassword</code></pre>
+        </div>
+
+        <!-- disqus support -->
+        
+      </div>
+      <!-- Table of contents -->
+      <div class="four wide column">
+        
+          <h1>Table of Contents</h1>
+          <div class="toc">
+<ul></ul>
+</div>
+
+        
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="ui inverted vertical footer segment">
+      <div class="ui center aligned container">
+          
+            <p>Copyright &copy; 2017  Niklas Rosenstein</p>
+          
+          <p>
+             &mdash; 
+            Generated with <a href="https://github.com/NiklasRosenstein/yassg">Yassg</a>
+          </p>
+      </div>
+    </div>
+  </body>
+</html>

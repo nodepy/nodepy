@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Node.py v0.0.21 Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.js"></script>
+    <link rel="stylesheet" href="../../static/style.css">
+    <style>
+    body {
+      margin-top: 30px;
+    }
+    img[align=left] {
+      padding-right: 1em;
+    }
+    img[align=right] {
+      padding-left: 1em;
+    }
+    .ui.text::after {
+      clear: both;
+      content: "";
+    }
+    .ui.footer.segment {
+      margin: 5em 0em 0em;
+      padding: 5em 0em;
+    }
+    pre {
+      padding: 0.5em 1em;
+      background-color: #eee;
+      overflow: auto;
+    }
+    #disqus_thread {
+      margin-top: 7em;
+    }
+    blockquote {
+      font-style: italic;
+      color: gray;
+    }
+    </style>
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body>
+
+    
+
+    <!-- header -->
+    <div class="ui fixed inverted menu">
+      <div class="ui container">
+        <span class="header item">
+          <!--<img class="logo" src="assets/images/logo.png">-->
+          Node.py v0.0.21 Documentation
+        </span>
+        
+          
+      
+      
+      
+        <a href="../../" class="item ">Home</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../../changelog/" class="item ">Changelog</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="../../faq/" class="item ">FAQ</a>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            Node.py
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../extensions/" class="item ">Extensions</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="./" class="item active">require()</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            NPPM
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="../../nppm/cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../../nppm/config/" class="item ">Config</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="../../nppm/package.json/" class="item ">package.json</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+
+      <!-- GitHub -->
+      
+        <a class="item right floated" href="https://github.com/nodepy/nodepy"><i class="github icon"></i>nodepy/nodepy</a>
+      
+      </div>
+    </div>
+
+    <div class="ui grid container main">
+      <div class="twelve wide column">
+        <!-- content -->
+        <div class="ui text container">
+          
+            <h1>require()</h1>
+          
+          <p>Python code that is invoked via <strong>nodepy</strong> has a few additional built-ins
+available.</p>
+<ul>
+<li><code>require()</code></li>
+<li><code>module</code></li>
+<li><code>__directory__</code></li>
+</ul>
+<h2 id="require"><code>require()</code></h2>
+<pre class="codehilite"><code>require(request, current_dir=None, is_main=False, cache=True,
+        exports=True, exec_=True, into=None, symbols=None)</code></pre>
+
+
+<p>The <code>require()</code> function in <strong>nodepy</strong> is available to every module that is
+executed through the nodepy command-line or which is in turn loaded with the
+<code>require()</code> function. It is an instance of the <code>nodepy.Require</code> class,
+created uniquely for every loaded module.</p>
+<p>A special syntax loading only some components of a module is supported, which
+is called the "require unpack" syntax. It is turned into valid Python code
+before a module is loaded. Instead of having to assign the required module to
+a temporary variable or using the require function multiple times</p>
+<pre class="codehilite"><code class="language-python">member_1 = require('some-module').member_1
+member_2 = require('some-module').this_is_called_differently</code></pre>
+
+
+<p>you can use the "require unpack" syntax.</p>
+<pre class="codehilite"><code class="language-python">{ member_1, this_is_called_differently as member_2 } = require('some-module')</code></pre>
+
+
+<h2 id="requirecontext"><code>require.context</code></h2>
+<p>The <code>nodepy.Context</code> object that is currently in charge of the execution.</p>
+<h2 id="requiremain"><code>require.main</code></h2>
+<p>Alias for <code>require.context.main_module</code>. Returns the main <code>nodepy.BaseModule</code>
+object that is being executed. Note that the main module can change during
+execution of a program by using <code>require.exec_main()</code>.</p>
+<h2 id="requirecurrent"><code>require.current</code></h2>
+<p>The currently executed <code>nodepy.BaseModule</code>. A module is on the stack of
+currently executed modules until the execution has reached the end of the
+script and the <code>require()</code> function that was used to load it returns.</p>
+<h2 id="requireexec_main"><code>require.exec_main()</code></h2>
+<p>Execute another module as the new main module. As soon as <code>exec_main()</code>
+returns, the original main module will be in place again.</p>
+<h2 id="requirepath"><code>require.path</code></h2>
+<p>Nodepy module search path for this <code>nodepy.Require</code> instance.</p>
+<h2 id="module"><code>module</code></h2>
+<p>This built-in is the <code>nodepy.BaseModule</code> object that represents the module
+that is being executed. This is commonly used to check if the module is
+executed as the main module.</p>
+<pre class="codehilite"><code class="language-python">if require.main == module:
+  # ...</code></pre>
+
+
+<h2 id="__directory__"><code>__directory__</code></h2>
+<p>Contains the parent directory of the currently executed module. This is the
+same as <code>os.path.dirname(__file__)</code> and is provided for convenience.</p>
+        </div>
+
+        <!-- disqus support -->
+        
+      </div>
+      <!-- Table of contents -->
+      <div class="four wide column">
+        
+          <h1>Table of Contents</h1>
+          <div class="toc">
+<ul>
+<li><a href="#require">require()</a></li>
+<li><a href="#requirecontext">require.context</a></li>
+<li><a href="#requiremain">require.main</a></li>
+<li><a href="#requirecurrent">require.current</a></li>
+<li><a href="#requireexec_main">require.exec_main()</a></li>
+<li><a href="#requirepath">require.path</a></li>
+<li><a href="#module">module</a></li>
+<li><a href="#__directory__">__directory__</a></li>
+</ul>
+</div>
+
+        
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="ui inverted vertical footer segment">
+      <div class="ui center aligned container">
+          
+            <p>Copyright &copy; 2017  Niklas Rosenstein</p>
+          
+          <p>
+             &mdash; 
+            Generated with <a href="https://github.com/NiklasRosenstein/yassg">Yassg</a>
+          </p>
+      </div>
+    </div>
+  </body>
+</html>

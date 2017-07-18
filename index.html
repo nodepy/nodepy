@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Node.py v0.0.21 Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.11/semantic.min.js"></script>
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+    body {
+      margin-top: 30px;
+    }
+    img[align=left] {
+      padding-right: 1em;
+    }
+    img[align=right] {
+      padding-left: 1em;
+    }
+    .ui.text::after {
+      clear: both;
+      content: "";
+    }
+    .ui.footer.segment {
+      margin: 5em 0em 0em;
+      padding: 5em 0em;
+    }
+    pre {
+      padding: 0.5em 1em;
+      background-color: #eee;
+      overflow: auto;
+    }
+    #disqus_thread {
+      margin-top: 7em;
+    }
+    blockquote {
+      font-style: italic;
+      color: gray;
+    }
+    </style>
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body>
+
+    
+
+    <!-- header -->
+    <div class="ui fixed inverted menu">
+      <div class="ui container">
+        <span class="header item">
+          <!--<img class="logo" src="assets/images/logo.png">-->
+          Node.py v0.0.21 Documentation
+        </span>
+        
+          
+      
+      
+      
+        <a href="" class="item active">Home</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="changelog/" class="item ">Changelog</a>
+      
+    
+        
+          
+      
+      
+      
+        <a href="faq/" class="item ">FAQ</a>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            Node.py
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="nodepy/cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="nodepy/extensions/" class="item ">Extensions</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="nodepy/require/" class="item ">require()</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+          
+      
+      
+      
+        
+        <div class="ui simple dropdown item">
+          
+            NPPM
+          
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            
+              
+      
+      
+      
+        <a href="nppm/cli/" class="item ">Commandline</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="nppm/config/" class="item ">Config</a>
+      
+    
+            
+              
+      
+      
+      
+        <a href="nppm/package.json/" class="item ">package.json</a>
+      
+    
+            
+          </div>
+        </div>
+      
+    
+        
+
+      <!-- GitHub -->
+      
+        <a class="item right floated" href="https://github.com/nodepy/nodepy"><i class="github icon"></i>nodepy/nodepy</a>
+      
+      </div>
+    </div>
+
+    <div class="ui grid container main">
+      <div class="twelve wide column">
+        <!-- content -->
+        <div class="ui text container">
+          
+          <p><img src="https://i.imgur.com/IfmOKFI.png" align="right" width="150px"></img></p>
+<h1 id="nodepy">Node.py</h1>
+<p><a href="https://travis-ci.org/nodepy/nodepy"><img alt="Build Status" src="https://travis-ci.org/nodepy/nodepy.svg?branch=master" /></a>
+<a href="https://badge.fury.io/gh/nodepy%2Fnodepy"><img alt="GitHub version" src="https://badge.fury.io/gh/nodepy%2Fnodepy.svg" /></a>
+<a href="https://badge.fury.io/py/node.py"><img alt="PyPI version" src="https://badge.fury.io/py/node.py.svg" /></a></p>
+<p><strong>nodepy</strong> is a CPython platform heavily inspired by <a href="https://nodejs.org/">Node.js</a> for building
+reproducible and easily distributable applications. While it provides its own
+package manager <strong>nppm</strong> (similar to  <a href="https://www.npmjs.com/">npm</a>), re-using existing standard
+Python modules from <a href="https://pypi.python.org/pypi">PyPI</a> is highly encouraged.</p>
+<p><strong>Additional Links</strong></p>
+<ul>
+<li><a href="https://nodepy.github.io/nodepy">Documentation</a></li>
+<li><a href="docs/source/changelog.md">Changelog</a></li>
+</ul>
+<h2 id="motivation">Motivation</h2>
+<p>Python's Import-mechanism is very limited and hardly customizable, which can
+lead to problems in pluggable environments such as plugin infrastructures. When
+multiple components provide their own version of a Python module, it can lead
+to clashes in <code>sys.modules</code> and have one component potentially import the
+wrong module. Node.js" <code>require()</code> solves this very elegantly, as it is always
+first resolved based on the location of the file that uses it. Just like
+Node.js' has its <code>node_modules/</code> directory, Node.py resolved requirements in
+the nearest <code>nodepy_modules/</code> directory.</p>
+<p><strong>nppm</strong> is an <a href="https://www.npmjs.com/">npm</a>-inspired package manager for Node.py packages.</p>
+<h2 id="features">Features</h2>
+<ul>
+<li>Manage project dependencies in a <code>package.json</code> file</li>
+<li>Package manager with capabilities to install Node.py and Python modules</li>
+<li><code>require()</code> makes tracking the origin of a dependency more clear and
+  enables an arbitrary project structure</li>
+<li>Run-time extensions (eg. source code preprocessors)</li>
+</ul>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Python 2.7.x, 3.3+</li>
+<li>Pip 8.0.0+</li>
+<li>Wheel 0.29.0+ (for correct Pip installations with <code>--prefix</code>)</li>
+<li>Pygments (optional, for colorised exception tracebacks)</li>
+<li>Colorama (optional, for colorised output on Windows)</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<pre class="codehilite"><code>pip install node.py</code></pre>
+        </div>
+
+        <!-- disqus support -->
+        
+      </div>
+      <!-- Table of contents -->
+      <div class="four wide column">
+        
+      </div>
+    </div>
+
+    <!-- footer -->
+    <div class="ui inverted vertical footer segment">
+      <div class="ui center aligned container">
+          
+            <p>Copyright &copy; 2017  Niklas Rosenstein</p>
+          
+          <p>
+             &mdash; 
+            Generated with <a href="https://github.com/NiklasRosenstein/yassg">Yassg</a>
+          </p>
+      </div>
+    </div>
+  </body>
+</html>
