@@ -31,7 +31,7 @@ the nearest `nodepy_modules/` directory.
 
   [c4ddev]: https://github.com/NiklasRosenstein/c4ddev
   [Changelog]: docs/source/changelog.md
-  [Documentation]: https://nodepy.github.io/nodepy
+  [Documentation]: https://nodepy.github.io/nodepy/
   [localimport]: https://github.com/NiklasRosenstein/localimport
   [Node.js]: https://nodejs.org/
   [npm]: https://www.npmjs.com/
