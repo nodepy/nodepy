@@ -97,8 +97,9 @@ class ScriptMaker:
     module to run the command specified with *args*.
     """
 
-    code = 'import sys, subprocess\n'\
-           'sys.exit(subprocess.call({!r}))\n'.format(args)
+    code = 'import sys, subprocess, os\n'\
+           'os.environ["PYTHONPATH"] = os.pathsep.join({pythonpath!r}) + os.pathsep + os.environ.get("PYTHONPATH", "")\n'\
+           'sys.exit(subprocess.call({!r} + sys.argv[1:]))\n'.format(args, pythonpath=self.pythonpath)
     return self.make_python(script_name, code)
 
   def make_nodepy(self, script_name, filename, reference_dir=None):
@@ -134,7 +135,4 @@ class ScriptMaker:
         raise ValueError('target_program must be an absolute path')
       target_program = [target_program]
 
-    code = 'import subprocess, sys\n'\
-           'sys.exit(subprocess.call({program!r} + sys.argv[1:]))\n'\
-             .format(program=list(target_program))
-    return self.make_python(script_name, code)
+    return self.make_command(script_name, [target_program])

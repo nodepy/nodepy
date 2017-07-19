@@ -9,6 +9,11 @@ __Node.py__
 
 - Added `Require.exec_main(inherit_path)` parameter
 
+__NPPM__
+
+- Added `PYTHONPATH` back in commands and wrapper scripts, NOT in programs
+  created from other Node.py applications
+
 ### v0.0.21
 
 __Node.py__
