@@ -1201,15 +1201,25 @@ class Require(object):
       self.main = main
 
   def exec_main(self, request, current_dir=None, argv=None, cache=True,
-                exec_=True, exports=True):
+                exec_=True, exports=True, inherit_path=False):
     """
     Uses #hide_main() to temporarily swap out the current main module and
     loading another module as main. Returns the loaded module.
     """
 
-    with self.hide_main(argv=argv):
-      return self(request, current_dir, is_main=True, cache=cache,
-                  exec_=exec_, exports=exports)
+    try:
+      if inherit_path:
+        self.context.path.extend(self.path)
+      with self.hide_main(argv=argv):
+        return self(request, current_dir, is_main=True, cache=cache,
+                    exec_=exec_, exports=exports)
+    finally:
+      if inherit_path:
+        for path in self.path:
+          try:
+            self.context.path.remove(path)
+          except ValueError:
+            pass
 
   def subprocess(self, request, args=(), nodepy_args=(), **kwargs):
     """

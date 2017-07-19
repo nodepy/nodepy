@@ -3,6 +3,12 @@ title = "Changelog"
 ordering-priority = 5
 +++
 
+### v0.0.22
+
+__Node.py__
+
+- Added `Require.exec_main(inherit_path)` parameter
+
 ### v0.0.21
 
 __Node.py__
