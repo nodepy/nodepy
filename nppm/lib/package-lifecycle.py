@@ -69,7 +69,7 @@ class PackageLifecycle(object):
     self.dist_dir = dist_dir
 
   def dist(self):
-    self.run('pre-dist', [])
+    self.run('pre-dist', [], script_only=True)
     filename = get_package_archive_name(self.manifest.name,
         self.manifest.version)
     filename = os.path.join(self.dist_dir, filename)
@@ -82,7 +82,7 @@ class PackageLifecycle(object):
       print('  Adding "{}"...'.format(rel))
       archive.add(name, rel)
     archive.close()
-    self.run('post-dist', [])
+    self.run('post-dist', [], script_only=True)
     print('Done!')
     return filename
 
@@ -128,11 +128,11 @@ class PackageLifecycle(object):
     if self.manifest.private:
       print('Error: the package is marked as private and can not be published.')
       exit(1)
-    self.run('pre-publish', [])
+    self.run('pre-publish', [], script_only=True)
     filename = self.dist()
     print('Uploading "{}" ...'.format(filename))
     self.upload(filename, user, password, force, dry, registry)
-    self.run('post-publish', [])
+    self.run('post-publish', [], script_only=True)
 
   def run(self, script, args, script_only=False):
     modules_dir = nodepy.find_nearest_modules_directory('.')
@@ -161,7 +161,7 @@ class PackageLifecycle(object):
       return
 
     if script != 'pre-script':
-      self._run_script('pre-script', [script])
+      self._run_script('pre-script', [script] + args)
 
     request = self.manifest.scripts[script].strip()
     if request.startswith('!'):
