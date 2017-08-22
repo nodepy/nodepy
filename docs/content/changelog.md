@@ -8,6 +8,9 @@ ordering-priority = 5
 __Node.py__
 
 - Added `Require.exec_main(inherit_path)` parameter
+- Add new Context-event "leave" (`Context.Event_Leave`)
+- Add `Context.Event_Require`, `.Event_Load`, `.Event_Enter` and `.Event_Leave`
+  which are the event IDs that can be received by `Context.event_handlers`
 
 __NPPM__
 

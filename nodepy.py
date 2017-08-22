@@ -1146,7 +1146,7 @@ class Require(object):
 
     else:
       current_dir = current_dir or self.module.directory
-      self.context.send_event('require', {
+      self.context.send_event(Context.Event_Require, {
           'request': request, 'current_dir': current_dir,
           'is_main': is_main, 'cache': cache, 'parent': self.module}
       )
@@ -1245,6 +1245,15 @@ class Context(object):
   The context encapsulates the execution of Python modules. It serves as the
   central unit to control the finding, caching and loading of Python modules.
   """
+
+  #: Dispatched on a require() request.
+  Event_Require = 'require'
+  #: Dispatched when an module is loaded.
+  Event_Load = 'load'
+  #: Dispatched when a module is executed.
+  Event_Enter = 'enter'
+  #: Dispatched when a module is done being executed.
+  Event_Leave = 'leave'
 
   def __init__(self, current_dir='.', bare=False, isolated=True):
     self.options = {}
@@ -1384,8 +1393,11 @@ class Context(object):
 
     self._module_stack.append(module)
     try:
-      self.send_event('enter', module)
-      yield
+      self.send_event(Context.Event_Enter, module)
+      try:
+        yield
+      finally:
+        self.send_event(Context.Event_Leave, module)
     finally:
       try:
         if self._module_stack.pop() is not module:
@@ -1566,7 +1578,7 @@ class Context(object):
     if not from_cache:
       if cache:
         self._module_cache[filename] = module
-      self.send_event('load', module)
+      self.send_event(Context.Event_Load, module)
 
     if request.is_main:
       if module.executed:
