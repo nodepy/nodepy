@@ -11,6 +11,7 @@ __Node.py__
 - Add new Context-event "leave" (`Context.Event_Leave`)
 - Add `Context.Event_Require`, `.Event_Load`, `.Event_Enter` and `.Event_Leave`
   which are the event IDs that can be received by `Context.event_handlers`
+- Fix #67 -- Skip bytecache file if not readable
 
 __NPPM__
 

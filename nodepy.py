@@ -690,9 +690,13 @@ class PythonLoader(BaseLoader):
         can_load_bytecache = True
 
     if can_load_bytecache:
-      code, extensions = self.load_code(context, package, bytecache_file, is_compiled=True)
-      real_filename = bytecache_file
-    else:
+      try:
+        code, extensions = self.load_code(context, package, bytecache_file, is_compiled=True)
+        real_filename = bytecache_file
+      except PermissionError:
+        can_load_bytecache = False
+
+    if not can_load_bytecache:
       code, extensions = self.load_code(context, package, filename, is_compiled=None)
       real_filename = None
 
