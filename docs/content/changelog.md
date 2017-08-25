@@ -14,6 +14,9 @@ __Node.py__
 - Fix #67 -- Skip bytecache file if not readable
 - Remove `Require.subprocess()` and `Require.subprocess_args()`
 - Add `Require.resolve()`
+- No longer augments `nodepy.executable` and `nodepy.proc_args` when
+  `nodepy.script` is set. This resolves an issue when trying to create a
+  subprocess from `nodepy.proc_args` from inside an installed script.
 
 __NPPM__
 

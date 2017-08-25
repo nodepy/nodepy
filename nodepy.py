@@ -1877,19 +1877,20 @@ def _main(args):
     print(VERSION)
     sys.exit(0)
 
-  global proc_args, executable
-  executable = sys.argv[0]
-  if os.name == 'nt' and not os.path.isfile(executable) \
-      and not executable.endswith('.exe'):
-    # For some reason on Windows in VS Code integrated terminal using
-    # Git-for-Windows bash, the .exe suffix is missing..
-    executable += '.exe'
-  proc_args = [executable]
-  if os.name == 'nt' and not executable.endswith('.exe'):
-    # For example when using 'python -m nodepy', executable will point
-    # to the Python source file, thus we need to execute it through the
-    # Python interpreter.
-    proc_args.insert(0, sys.executable)
+  global script, proc_args, executable
+  if script is None:
+    executable = sys.argv[0]
+    if os.name == 'nt' and not os.path.isfile(executable) \
+        and not executable.endswith('.exe'):
+      # For some reason on Windows in VS Code integrated terminal using
+      # Git-for-Windows bash, the .exe suffix is missing..
+      executable += '.exe'
+    proc_args = [executable]
+    if os.name == 'nt' and not executable.endswith('.exe'):
+      # For example when using 'python -m nodepy', executable will point
+      # to the Python source file, thus we need to execute it through the
+      # Python interpreter.
+      proc_args.insert(0, sys.executable)
 
   arguments = args.arguments[:]
   context = Context(args.current_dir, isolated=args.isolated)
