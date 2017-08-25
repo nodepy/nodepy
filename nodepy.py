@@ -48,7 +48,6 @@ import pdb
 import pstats
 import py_compile
 import re
-import subprocess
 import sys
 import tempfile
 import traceback
@@ -1225,23 +1224,12 @@ class Require(object):
           except ValueError:
             pass
 
-  def subprocess(self, request, args=(), nodepy_args=(), **kwargs):
+  def resolve(self, request):
     """
-    Resolves *request* and executes it as a subprocess. Returns the created
-    subprocess.
-    """
-
-    cmd = self.subprocess_args(request, args, nodepy_args)
-    return subprocess.Popen(cmd, **kwargs)
-
-  def subprocess_args(self, request, args=(), nodepy_args=()):
-    """
-    Resolves *request* and returns the argument list that would be used to
-    execute it as a subprocess.
+    Resolves a request to a filename.
     """
 
-    filename = self(request, exec_=False, exports=False).filename
-    return proc_args + list(nodepy_args) + [filename] + list(args)
+    return self(request, exec_=False, exports=False).filename
 
 
 class Context(object):

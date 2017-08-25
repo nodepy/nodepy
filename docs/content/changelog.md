@@ -12,6 +12,8 @@ __Node.py__
 - Add `Context.Event_Require`, `.Event_Load`, `.Event_Enter` and `.Event_Leave`
   which are the event IDs that can be received by `Context.event_handlers`
 - Fix #67 -- Skip bytecache file if not readable
+- Remove `Require.subprocess()` and `Require.subprocess_args()`
+- Add `Require.resolve()`
 
 __NPPM__
 
