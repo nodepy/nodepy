@@ -36,6 +36,7 @@ except ImportError:
   from pipes import quote as shlex_quote
 
 import config from './config'
+import logger from './logger'
 import _install from './install'
 import _manifest from './manifest'
 import {RegistryClient, get_package_archive_name} from './registry'
@@ -64,7 +65,13 @@ class PackageLifecycle(object):
         print('Error: package.json not found')
         exit(1)
       if fn:
-        manifest = _manifest.parse(fn)
+        try:
+          manifest = _manifest.parse(fn)
+        except _manifest.InvalidPackageManifest as e:
+          if allow_no_manifest:
+            logger.warn('Invalid package manifest (%s): %s', e.filename, str(e.cause).split('\n')[0])
+          else:
+            raise
     self.manifest = manifest
     self.dist_dir = dist_dir
 
