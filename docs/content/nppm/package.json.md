@@ -70,6 +70,18 @@ package source code.
 { "license": "MIT" }
 ```
 
+### `resolve_root`
+
+*Optional.* A directory relative to the `package.json` that is considered the
+root directory when importing modules from this package. Should be used if you
+want to keep all source files under a sub-directory of your package.
+
+```json
+{
+  "resolve_root": "lib/"
+}
+```
+
 ### `bin`
 
 *Optional.* An object that associates script names with a request string
