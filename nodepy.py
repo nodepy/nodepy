@@ -368,6 +368,37 @@ class InitModule(BaseModule):
 # Basic Resolve & Loading Mechanism
 # ====================
 
+ParsedRequestString = collections.namedtuple('ParsedRequestString', 'package path')
+
+
+def split_request_string(request):
+  """
+  Splits a string that represents a request for a module into two parts: The
+  package name and the name of the module that is requested inside that
+  package.
+
+  Returns #None if *request* is a path or a relative request.
+  """
+
+  if os.path.isabs(request):
+    return None
+  if request in '..' or request.startswith('./') or request.startswith('../'):
+    return None
+
+  parts = request.split('/')
+  if parts and parts[0].startswith('@'):
+    scope = parts.pop(0)
+  else:
+    scope = None
+  if not parts:
+    return None
+
+  package = parts.pop(0)
+  if scope:
+    package = '@' + scope + '/' + package
+  return ParsedRequestString(package, '/'.join(parts))
+
+
 class Request(object):
   """
   Represents a request-string that is to be resolved with all the context
@@ -484,20 +515,21 @@ class FilesystemResolver(BaseResolver):
         raise ResolveError(request)
     return support.get_loader(filename, request)
 
-  def _resolve(self, request_obj, request, abs_base_dir=None):
+  def _resolve(self, request_obj, request):
     current_dir = request_obj.current_dir
+    info = split_request_string(request)
 
     # Resolve relative requests by creating an absolute path and try
     # to resolve that instead.
-    if request in '..' or request.startswith('./') or request.startswith('../'):
+    if not info and not os.path.isabs(request):
       assert current_dir
       new_request = os.path.abspath(os.path.join(current_dir, request))
       return self._resolve(request_obj, new_request)
 
     # Absolute paths will be resolved only with the FilesystemLoaderSupport's
     # can_load() and suggest_try_files() methods.
-    elif os.path.isabs(request):
-      request = original_request = normpath(request)
+    elif not info:
+      request, original_request = normpath(request), request
 
       # Check if we have cached what this request leads us to.
       cache = self.cache.get(request)
@@ -519,14 +551,6 @@ class FilesystemResolver(BaseResolver):
         if not request_obj.original_resolve_location:
           request_obj.original_resolve_location = link.src
         request = os.path.join(link.dst, os.path.relpath(request, link.src))
-
-      # For absolute reuqests, we want to check the "resolve_root" field in
-      # the associated package manifest.
-      if abs_base_dir:
-        package = request_obj.context.get_package_for(request, maxdir=abs_base_dir)
-        if 'resolve_root' in package.json:
-          rel = os.path.relpath(request, package.directory)
-          request = os.path.join(package.directory, package.json['resolve_root'], rel)
 
       # If the file exists as it is, we will use it as it is.
       filename = try_file(request)
@@ -563,6 +587,9 @@ class FilesystemResolver(BaseResolver):
       # Dunno what to do with this absolute request.
       raise ResolveError(request_obj)
 
+    # This is a pure module request that we have to search for in the
+    # search path.
+    assert info
     if current_dir is None and request_obj.is_main:
       current_dir = '.'
 
@@ -574,9 +601,28 @@ class FilesystemResolver(BaseResolver):
       path.insert(0, current_dir)
 
     for directory in path:
-      new_request = os.path.join(os.path.abspath(directory), request)
+      directory = os.path.abspath(directory)
+      package_dir = os.path.join(directory, info.package)
+      if not os.path.isdir(package_dir):
+        continue
+
+      link = get_package_link(package_dir)
+      if link:
+        if not request_obj.original_resolve_location:
+          request_obj.original_resolve_location = link.src
+        package_dir = link.dst
+
+      # Take into account the 'resolve_root' of the package manifest.
+      package = request_obj.context.get_package_from_directory(
+        package_dir, doraise=False)
+
+      if package and 'resolve_root' in package.json:
+        new_request = os.path.join(package_dir, package.json['resolve_root'], info.path)
+      else:
+        new_request = os.path.join(package_dir, info.path)
+
       try:
-        return self._resolve(request_obj, new_request, directory)
+        return self._resolve(request_obj, new_request)
       except ResolveError:
         pass
 
@@ -1656,6 +1702,8 @@ def upiter_directory(current_dir, maxdir=None):
   directories (starting with `@`).
   """
 
+  if maxdir:
+    maxdir = os.path.abspath(maxdir)
   current_dir = os.path.abspath(current_dir)
   while True:
     dirname, base = os.path.split(current_dir)
