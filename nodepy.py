@@ -545,7 +545,7 @@ class FilesystemResolver(BaseResolver):
         # it for its "main" field to find the file we should be requiring
         # for this directory.
         package = request_obj.context.get_package_from_directory(request)
-        main = package.json.get('main') if main else None
+        main = package.json.get('main') if package else None
         if main:
           new_request = os.path.join(request, str(main))
           filename, support = self._resolve(request_obj, new_request)
@@ -1546,7 +1546,7 @@ class Context(object):
 
     module = None
     from_cache = False
-    filename = loader.get_filename(request)
+    filename = os.path.normpath(loader.get_filename(request))
     if cache:
       module = self._module_cache.get(filename)
       if module:
