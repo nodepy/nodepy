@@ -102,6 +102,7 @@ class PackageManifest:
       "repository": {"type": "string"},
       "license": {"type": "string"},
       "private": {"type": "boolean"},
+      "resolve_root": {"type": "string"},
       "main": {"type": "string"},
       "vendor-directories": {
         "type": "array",
@@ -158,7 +159,8 @@ class PackageManifest:
       author=None, license=None, dependencies=None, dev_dependencies=None,
       python_dependencies=None, dev_python_dependencies=None, scripts=None,
       bin=None, engines=None, engine_props=None, dist=None, repository=None,
-      private=False, main=None, extensions=None, vendor_directories=None):
+      private=False, resolve_root=None, main=None, extensions=None,
+      vendor_directories=None):
     if len(name) < 2 or len(name) > 127:
       raise ValueError('packag name must be at least 2 and maximum 127 characters')
     if name.startswith('_') or name.startswith('.'):
@@ -185,6 +187,7 @@ class PackageManifest:
     self.engine_props = {} if engine_props is None else engine_props
     self.dist = {} if dist is None else dist
     self.private = private
+    self.resolve_root = resolve_root
     self.main = main
     self.extensions = extensions
     self.vendor_directories = [] if vendor_directories is None else list(vendor_directories)

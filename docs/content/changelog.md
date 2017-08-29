@@ -17,6 +17,7 @@ __Node.py__
 - No longer augments `nodepy.executable` and `nodepy.proc_args` when
   `nodepy.script` is set. This resolves an issue when trying to create a
   subprocess from `nodepy.proc_args` from inside an installed script.
+- Add support for a "`resolve_root"` in the `FilesystemResolver`
 
 __NPPM__
 

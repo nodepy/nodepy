@@ -484,7 +484,7 @@ class FilesystemResolver(BaseResolver):
         raise ResolveError(request)
     return support.get_loader(filename, request)
 
-  def _resolve(self, request_obj, request):
+  def _resolve(self, request_obj, request, abs_base_dir=None):
     current_dir = request_obj.current_dir
 
     # Resolve relative requests by creating an absolute path and try
@@ -520,6 +520,14 @@ class FilesystemResolver(BaseResolver):
           request_obj.original_resolve_location = link.src
         request = os.path.join(link.dst, os.path.relpath(request, link.src))
 
+      # For absolute reuqests, we want to check the "resolve_root" field in
+      # the associated package manifest.
+      if abs_base_dir:
+        package = request_obj.context.get_package_for(request, maxdir=abs_base_dir)
+        if 'resolve_root' in package.json:
+          rel = os.path.relpath(request, package.directory)
+          request = os.path.join(package.directory, package.json['resolve_root'], rel)
+
       # If the file exists as it is, we will use it as it is.
       filename = try_file(request)
       if filename:
@@ -536,9 +544,10 @@ class FilesystemResolver(BaseResolver):
         # If there is a package.json file in this directory, we can parse
         # it for its "main" field to find the file we should be requiring
         # for this directory.
-        main = request_obj.context.get_package_main(request)
+        package = request_obj.context.get_package_from_directory(request)
+        main = package.json.get('main') if main else None
         if main:
-          new_request = os.path.join(request, main)
+          new_request = os.path.join(request, str(main))
           filename, support = self._resolve(request_obj, new_request)
           return cache_and_return(filename, support)
         else:
@@ -567,7 +576,7 @@ class FilesystemResolver(BaseResolver):
     for directory in path:
       new_request = os.path.join(os.path.abspath(directory), request)
       try:
-        return self._resolve(request_obj, new_request)
+        return self._resolve(request_obj, new_request, directory)
       except ResolveError:
         pass
 
@@ -1472,7 +1481,7 @@ class Context(object):
         return loader
     return None
 
-  def get_package_main(self, dirname):
+  def get_package_from_directory(self, dirname, doraise=True):
     """
     Checks if there exists a `package.json` in the specified *dirname*, loads
     it and then returns the value of its `"main"` field. If the field or the
@@ -1480,13 +1489,7 @@ class Context(object):
     """
 
     fn = os.path.abspath(os.path.join(dirname, 'package.json'))
-    package = self.get_package(fn, doraise=False)
-    if package:
-      main = package.json.get('main')
-      if main: main = str(main)
-      return main
-    else:
-      return None
+    return self.get_package(fn, doraise=doraise)
 
   def get_package(self, filename, doraise=True):
     """
@@ -1513,12 +1516,12 @@ class Context(object):
 
     return package
 
-  def get_package_for(self, filename, doraise=True):
+  def get_package_for(self, filename, doraise=True, maxdir=None):
     """
     Locates the nearest `package.json` for the specified *filename*.
     """
 
-    fn = find_nearest_package_json(filename)
+    fn = find_nearest_package_json(filename, maxdir)
     if not fn:
       return None
     return self.get_package(fn, doraise)
@@ -1645,7 +1648,7 @@ def get_exports(module):
   return getattr(module.namespace, 'exports', module.namespace)
 
 
-def upiter_directory(current_dir):
+def upiter_directory(current_dir, maxdir=None):
   """
   A helper function to iterate over the directory *current_dir* and all of
   its parent directories, excluding `nodepy_modules/` and package-scope
@@ -1657,33 +1660,33 @@ def upiter_directory(current_dir):
     dirname, base = os.path.split(current_dir)
     if not base.startswith('@') and base != 'nodepy_modules':
       yield current_dir
-    if dirname == current_dir:
+    if dirname == current_dir or (maxdir and dirname == maxdir):
       # Can happen on Windows for drive letters.
       break
     current_dir = dirname
   return
 
 
-def find_nearest_modules_directory(current_dir):
+def find_nearest_modules_directory(current_dir, maxdir=None):
   """
   Finds the nearest `nodepy_modules/` directory to *current_dir* and returns
   it. If no such directory exists, #None is returned.
   """
 
-  for directory in upiter_directory(current_dir):
+  for directory in upiter_directory(current_dir, maxdir):
     result = os.path.join(directory, 'nodepy_modules')
     if os.path.isdir(result):
       return result
   return None
 
 
-def find_nearest_package_json(current_file):
+def find_nearest_package_json(current_file, maxdir=None):
   """
   Finds the nearest `package.json` relative to *current_file* and returns it.
   If no such file exists, #None will be returned.
   """
 
-  for directory in upiter_directory(current_file):
+  for directory in upiter_directory(current_file, maxdir):
     result = os.path.join(directory, 'package.json')
     if os.path.isfile(result):
       return result
