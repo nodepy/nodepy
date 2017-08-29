@@ -628,11 +628,12 @@ class PythonLoader(BaseLoader):
   #: Implementation and version dependent suffix.
   pyc_suffix = '.{}-{}{}.pyc'.format(python_impl.lower(), *sys.version_info)
 
-  def __init__(self, filename, write_bytecache=None):
+  def __init__(self, filename, write_bytecache=None, python_module_class=None):
     if write_bytecache is None:
       write_bytecache = not bool(os.getenv('PYTHONDONTWRITEBYTECODE', '').strip())
     self.filename = filename
     self.write_bytecache = write_bytecache
+    self.python_module_class = python_module_class or PythonModule
 
   def get_filename(self, request):
     return self.filename
@@ -647,7 +648,7 @@ class PythonLoader(BaseLoader):
     filename_noext = os.path.splitext(self.filename)[0]
     name = os.path.basename(filename_noext)
 
-    return PythonModule(
+    return self.python_module_class(
       context=request.context,
       filename=self.filename,
       name=name,
