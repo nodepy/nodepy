@@ -575,7 +575,7 @@ class Installer:
         print('FOUND ({}@{})'.format(info.name, info.version))
         break
     else:
-      print('Error: package "{}" could not be located'.format(exc))
+      print('Error: package "{}@{}" could not be located'.format(package_name, selector))
       return False, None
     assert info.name == package_name, info
 
