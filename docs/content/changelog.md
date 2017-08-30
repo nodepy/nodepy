@@ -18,6 +18,7 @@ __Node.py__
   `nodepy.script` is set. This resolves an issue when trying to create a
   subprocess from `nodepy.proc_args` from inside an installed script.
 - Add support for a "`resolve_root"` in the `FilesystemResolver`
+- Removed `Session.get_package_from_directory()`
 
 __NPPM__
 

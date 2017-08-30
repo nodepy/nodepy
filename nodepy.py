@@ -515,7 +515,7 @@ class FilesystemResolver(BaseResolver):
         raise ResolveError(request)
     return support.get_loader(filename, request)
 
-  def _resolve(self, request_obj, request):
+  def _resolve(self, request_obj, request, package=None, parent_info=None):
     current_dir = request_obj.current_dir
     info = split_request_string(request)
 
@@ -568,8 +568,10 @@ class FilesystemResolver(BaseResolver):
         # If there is a package.json file in this directory, we can parse
         # it for its "main" field to find the file we should be requiring
         # for this directory.
-        package = request_obj.context.get_package_from_directory(request)
-        main = package.json.get('main') if package else None
+        if package and parent_info and not parent_info.path:
+          main = package.json.get('main') if package else None
+        else:
+          main = None
         if main:
           new_request = os.path.join(request, str(main))
           filename, support = self._resolve(request_obj, new_request)
@@ -613,7 +615,7 @@ class FilesystemResolver(BaseResolver):
         package_dir = link.dst
 
       # Take into account the 'resolve_root' of the package manifest.
-      package = request_obj.context.get_package_from_directory(
+      package = request_obj.context.get_package_for(
         package_dir, doraise=False)
 
       if package and 'resolve_root' in package.json:
@@ -622,7 +624,7 @@ class FilesystemResolver(BaseResolver):
         new_request = os.path.join(package_dir, info.path)
 
       try:
-        return self._resolve(request_obj, new_request)
+        return self._resolve(request_obj, new_request, package, info)
       except ResolveError:
         pass
 
@@ -1528,16 +1530,6 @@ class Context(object):
         return loader
     return None
 
-  def get_package_from_directory(self, dirname, doraise=True):
-    """
-    Checks if there exists a `package.json` in the specified *dirname*, loads
-    it and then returns the value of its `"main"` field. If the field or the
-    manifest does not exist, #None is returned.
-    """
-
-    fn = os.path.abspath(os.path.join(dirname, 'package.json'))
-    return self.get_package(fn, doraise=doraise)
-
   def get_package(self, filename, doraise=True):
     """
     Loads a `package.json` file, caches it and returns a #Package instance.
@@ -1554,7 +1546,6 @@ class Context(object):
       with open(filename) as fp:
         manifest = json.load(fp)
     except IOError:
-      self._package_cache[filename] = None
       if doraise: raise
       package = None
     else:
