@@ -594,6 +594,12 @@ class FilesystemResolver(BaseResolver):
     assert info
     if current_dir is None and request_obj.is_main:
       current_dir = '.'
+    if current_dir:
+      new_request = os.path.abspath(os.path.join(current_dir, request))
+      try:
+        return self._resolve(request_obj, new_request)
+      except ResolveError:
+        pass
 
     path = list(request_obj.path)
     nodepy_modules = find_nearest_modules_directory(current_dir)
