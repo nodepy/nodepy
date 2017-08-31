@@ -75,7 +75,7 @@ def main(args=None):
   # otherwise importing the newly installed Python modules will fail.
   sys.path_importer_cache.clear()
 
-  cmd = ['install']
+  cmd = ['install', '--ignore-installed']
   if args.upgrade:
     cmd.append('--upgrade')
   if args.global_:
