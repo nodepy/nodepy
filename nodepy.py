@@ -387,7 +387,7 @@ def split_request_string(request):
 
   parts = request.split('/')
   if parts and parts[0].startswith('@'):
-    scope = parts.pop(0)
+    scope = parts.pop(0)[1:]
   else:
     scope = None
   if not parts:
