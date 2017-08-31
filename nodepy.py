@@ -1981,6 +1981,7 @@ def _main(args):
         print_exc()
         if args.debug:
           post_mortem_debugger()
+        sys.exit(127)
 
   sys.exit(0)
 

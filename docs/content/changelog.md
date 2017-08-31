@@ -19,6 +19,7 @@ __Node.py__
   subprocess from `nodepy.proc_args` from inside an installed script.
 - Add support for a "`resolve_root"` in the `FilesystemResolver`
 - Removed `Session.get_package_from_directory()`
+- Add 127 exit-code when exception occurs
 
 __NPPM__
 
