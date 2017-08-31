@@ -57,7 +57,17 @@ the nearest `nodepy_modules/` directory.
 
 ## Installation
 
-    pip install node.py
+    pip install node.py -v
+
+Depending on your system and Python installation, you may need to update your
+`PATH` to be able to use the `nodepy` and especially the `nppm` commands. The
+output of the above command displays where these commands have been installed
+to.
+
+For example on Windows if you have a User-level python installation, you may
+need to add the following to your `PATH`:
+
+    C:\Users\{username}\AppData\Roaming\Python\Python{XY}\Scripts
 
 ## Building the Documentation
 
