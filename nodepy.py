@@ -517,6 +517,13 @@ class FilesystemResolver(BaseResolver):
 
   def _resolve(self, request_obj, request, package=None, parent_info=None):
     current_dir = request_obj.current_dir
+
+    if request == '.':
+      current_dir = os.path.abspath(current_dir)
+      package = request_obj.context.get_package_for(current_dir, doraise=False)
+      info = ParsedRequestString(package.json['name'], None) if package else None
+      return self._resolve(request_obj, os.path.abspath(current_dir), package, info)
+
     info = split_request_string(request)
 
     # Resolve relative requests by creating an absolute path and try
@@ -524,7 +531,7 @@ class FilesystemResolver(BaseResolver):
     if not info and not os.path.isabs(request):
       assert current_dir
       new_request = os.path.abspath(os.path.join(current_dir, request))
-      return self._resolve(request_obj, new_request)
+      return self._resolve(request_obj, new_request, package, parent_info)
 
     # Absolute paths will be resolved only with the FilesystemLoaderSupport's
     # can_load() and suggest_try_files() methods.
