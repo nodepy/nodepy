@@ -522,7 +522,9 @@ class FilesystemResolver(BaseResolver):
       current_dir = os.path.abspath(current_dir)
       package = request_obj.context.get_package_for(current_dir, doraise=False)
       info = ParsedRequestString(package.json['name'], None) if package else None
-      return self._resolve(request_obj, os.path.abspath(current_dir), package, info)
+      if package and package.directory == current_dir and 'resolve_root' in package.json:
+        current_dir = os.path.join(current_dir, package.json['resolve_root'])
+      return self._resolve(request_obj, current_dir, package, info)
 
     info = split_request_string(request)
 
