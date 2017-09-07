@@ -167,6 +167,7 @@ class PackageLifecycle(object):
     if script not in self.manifest.scripts:
       return
 
+    args = list(args)
     if script != 'pre-script':
       self._run_script('pre-script', [script] + args)
 
@@ -174,7 +175,7 @@ class PackageLifecycle(object):
     if request.startswith('!'):
       return self._run_command(request[1:])
     else:
-      args = shlex.split(request) + list(args)
+      args = shlex.split(request) + args
       return nodepy.main(['--current-dir', self.manifest.directory] + args)
 
   def _run_command(self, command):
