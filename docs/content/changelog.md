@@ -25,6 +25,8 @@ __NPPM__
 
 - Added `PYTHONPATH` back in commands and wrapper scripts, NOT in programs
   created from other Node.py applications
+- Fix #38: Uninstall of linked packages fails with "no package manifest, please remove the directory manually"
+  - Add `-f,--force` flag to `nppm install` which allows nppm to remove broken package links
 
 ### v0.0.21
 

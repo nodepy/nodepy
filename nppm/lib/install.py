@@ -114,6 +114,7 @@ class Installer:
     self.dirs['reference_dir'] = os.path.dirname(self.dirs['packages'])
     self.script = _script.ScriptMaker(self.dirs['bin'], self.install_location)
     self.ignore_installed = False
+    self.force = False
     if install_location in ('local', 'global'):
       self.script.path.append(self.dirs['pip_bin'])
       self.script.pythonpath.extend([self.dirs['pip_lib']])
@@ -210,8 +211,13 @@ class Installer:
     except (OSError, IOError) as exc:
       if exc.errno != errno.ENOENT:
         raise
-      print('Can not uninstall: directory "{}": No package manifest, please remove the directory manually'.format(directory))
-      return False
+      if not self.force:
+        print('Can not uninstall: directory "{}": No package manifest, please '
+          'remove the directory manually or pass -f,--force'.format(directory))
+        return False
+      print('Removing previous directory: "{}"'.format(directory))
+      shutil.rmtree(directory)
+      return True
     except InvalidPackageManifest as exc:
       print('Can not uninstall: directory "{}": Invalid manifest": {}'.format(directory, exc))
       return False
