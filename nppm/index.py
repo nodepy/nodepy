@@ -185,7 +185,7 @@ def install(packages, develop, python, develop_python, upgrade, global_,
       package_json = json.load(fp, object_pairs_hook=collections.OrderedDict)
 
   if dev is None:
-    dev = not packages
+    dev = not (packages or develop or python or develop_python)
 
   registry = RegistryClient.get(registry) if registry else None
   installer = get_installer(global_, root, upgrade, pip_separate_process,
