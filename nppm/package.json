@@ -1,6 +1,6 @@
 {
   "name": "@nodepy/nppm",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "license": "MIT",
   "description": "the nodepy package manager",
   "repository": "https://github.com/nodepy/nodepy",

@@ -157,7 +157,7 @@ class install(_install):
 
 setuptools.setup(
   name = name,
-  version = '0.0.21',
+  version = '0.0.22',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
