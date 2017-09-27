@@ -12,8 +12,8 @@ parser.add_argument('request')
 def main(argv=None):
   args = parser.parse_args(argv)
   ctx = Context()
-  module = ctx.resolve(args.request)
-  module.load()
+  ctx.main_module = ctx.resolve(args.request)
+  ctx.main_module.load()
 
 
 if __name__ == '__main__':

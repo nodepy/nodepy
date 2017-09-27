@@ -19,9 +19,6 @@ class Require(object):
     self.directory = directory
     self.cache = {}
 
-  def resolve(self, request):
-    return self.context.resolve(request, self.directory)
-
   def __call__(self, request):
     module = self.resolve(request)
     if not module.loaded:
@@ -29,6 +26,13 @@ class Require(object):
     if module.exports is NotImplemented:
       return module.namespace
     return module.exports
+
+  def resolve(self, request):
+    return self.context.resolve(request, self.directory)
+
+  @property
+  def main(self):
+    return self.context.main_module
 
 
 class Context(object):
@@ -38,6 +42,7 @@ class Context(object):
   def __init__(self, bare=False):
     self.resolvers = []
     self.modules = {}
+    self.main_module = None
     if not bare:
       resolver = FsResolver([])
       resolver.loaders.append(PythonLoader())
