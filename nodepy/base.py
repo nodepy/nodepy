@@ -8,6 +8,36 @@ import types
 import weakref
 
 
+class Request(object):
+
+  def __init__(self, context, directory, string):
+    assert isinstance(context, _context.Context)
+    assert isinstance(directory, pathlib.Path)
+    assert isinstance(string, str)
+    self.context = context
+    self.directory = directory
+    self.string = string
+
+  def __repr__(self):
+    return '<Request "{}" from "{}">'.format(self.string, self.directory)
+
+  def is_relative(self):
+    return self.string.startswith('./') or \
+      self.string.startswith('../')
+
+  @property
+  def related_paths(self):
+    if not hasattr(self, '_related_paths'):
+      self._related_paths = []
+      for path in pathutils.upiter(self.directory):
+        if pathutils.endswith(path, self.context.modules_directory_name):
+          continue
+        path = path.joinpath(self.context.modules_directory_name)
+        if path.is_dir():
+          self._related_paths.append(path)
+    return self._related_paths
+
+
 class Module(object):
 
   def __init__(self, context, package, filename, directory=None):
@@ -136,9 +166,14 @@ class Loader(object):
 
 class ResolveError(Exception):
 
-  def __init__(self, request):
+  def __init__(self, request, search_paths):
     self.request = request
+    self.search_paths = search_paths
 
   def __str__(self):
-    return str(self.request.string)
-
+    lines = [str(self.request.string)]
+    if self.search_paths:
+      lines.append('  searched in:')
+      for path in self.search_paths:
+        lines.append('    - {}'.format(path))
+    return '\n'.join(lines)

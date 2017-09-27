@@ -11,7 +11,7 @@ def parts(path):
 
 
 def upiter(path):
-  prev = path
+  prev = None
   while prev != path:
     yield path
     prev, path = path, path.parent
