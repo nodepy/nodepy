@@ -17,7 +17,6 @@ version 0.1.0.
 
 __Todo__
 
-* Proper ResolveError handling in `Context.resolve()`
 * Python bytecache loading/writing
 * Package-link support
 * Track currently executed `Module` in the `Context`

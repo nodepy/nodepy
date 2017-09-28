@@ -52,9 +52,15 @@ class Context(object):
         directory = pathlib.Path.cwd()
       request = base.Request(self, directory, request)
 
+    search_paths = []
     for resolver in self.resolvers:
-      # TODO: Catch possible #ResolveError and re-raise if no resolver matched.
-      module = resolver.resolve_module(request)
+      try:
+        module = resolver.resolve_module(request)
+      except base.ResolveError as exc:
+        assert exc.request is request, (exc.request, request)
+        search_paths.extend(exc.search_paths)
+        continue
+
       if not isinstance(module, base.Module):
         msg = '{!r} returned non-Module object {!r}'
         msg = msg.format(type(resolver).__name__, type(module).__name__)
@@ -67,3 +73,4 @@ class Context(object):
       self.modules[module.filename] = module
       return module
 
+    raise base.ResolveError(request, search_paths)
