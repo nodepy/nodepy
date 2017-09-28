@@ -22,7 +22,7 @@ class Request(object):
     return '<Request "{}" from "{}">'.format(self.string, self.directory)
 
   def is_relative(self):
-    return self.string.startswith('./') or \
+    return self.string in ('.', '..') or self.string.startswith('./') or \
       self.string.startswith('../')
 
   @property
@@ -30,9 +30,7 @@ class Request(object):
     if not hasattr(self, '_related_paths'):
       self._related_paths = []
       for path in pathutils.upiter(self.directory):
-        if pathutils.endswith(path, self.context.modules_directory_name):
-          continue
-        path = path.joinpath(self.context.modules_directory_name)
+        path = path.joinpath(self.context.modules_directory)
         if path.is_dir():
           self._related_paths.append(path)
     return self._related_paths
@@ -52,6 +50,7 @@ class Module(object):
     self.namespace = None
     self.exports = NotImplemented
     self.loaded = False
+    self.exception = None
     self.require = _context.Require(self.context, self.directory)
 
   def __repr__(self):
@@ -86,6 +85,7 @@ class Module(object):
 
     self.loaded = False
     self.exports = NotImplemented
+    self.exception = None
     self.namespace = types.ModuleType(self.name)
     self.namespace.__file__ = str(self.filename)
     self.namespace.module = self
@@ -93,9 +93,10 @@ class Module(object):
 
   def load(self):
     """
-    Implemented by subclass. Load the contents of the module. Remember to
-    call #Module.init() from the implementation of this method before the
-    module is actually loaded. Must set #Module.loaded to #True.
+    Implemented by subclass. Loads the contents of the module.
+
+    Use #Context.load_module() instead of calling this method directly for
+    the standard behaviour and integrity checks (also calls #init()).
     """
 
     raise NotImplementedError
@@ -117,17 +118,13 @@ class Package(object):
     The following keys are used by the Node.py runtime:
 
     * `package.name`
-    * `package.main` \*
-    * `package.extensions` \*
-    * `package.resolve_root` \*
+    * `package.main` (defaults to `"index"`)
+    * `package.extensions` (defaults to an empty list)
+    * `package.resolve_root` (defaults to #None)
   """
 
   def __init__(self, context, directory, payload):
     assert isinstance(directory, pathlib.Path)
-    self.context = context
-    self.directory = directory
-    self.require = _context.Require(context, directory)
-    self.payload = payload
 
     if 'package' not in payload:
       msg = 'invalid package payload for "{}": no "package" field'
@@ -135,6 +132,11 @@ class Package(object):
     if 'name' not in payload['package']:
       msg = 'invalid package payload for "{}": no "package.name" field'
       raise ValueError(msg.format(directory))
+
+    self.context = context
+    self.directory = directory
+    self.payload = payload
+    self.require = _context.Require(context, directory)
 
   def __repr__(self):
     return '<Package {!r} at "{}">'.format(self.name, self.directory)
@@ -153,7 +155,7 @@ class Package(object):
 
   @property
   def main(self):
-    return self.payload['package'].get('main', self.context.package_main_default)
+    return self.payload['package'].get('main', 'index')
 
 
 class Resolver(object):

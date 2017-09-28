@@ -4,6 +4,8 @@ Concrete implementation of the Node.py runtime.
 
 from nodepy import base, loader, resolver
 from nodepy.utils import pathlib
+from nodepy.utils.compat import reraise
+import sys
 
 
 class Require(object):
@@ -19,8 +21,13 @@ class Require(object):
     self.cache = {}
 
   def __call__(self, request):
+    assert isinstance(request, str)
+    module = self.cache.get(request)
+    if module and not module.exception:
+      return module
     module = self.resolve(request)
     self.context.load_module(module)
+    self.cache[request] = module
     if module.exports is NotImplemented:
       return module.namespace
     return module.exports
@@ -39,9 +46,9 @@ class Require(object):
 
 class Context(object):
 
-  modules_directory_name = '.nodepy/modules'
-  metadata_filename = '.nodepy/package.toml'
-  package_main_default = 'index'
+  modules_directory = '.nodepy_modules'
+  package_manifest = '.nodepy_package.toml'
+  package_main = 'index'
 
   def __init__(self, bare=False):
     self.resolvers = []
@@ -82,28 +89,36 @@ class Context(object):
 
     raise base.ResolveError(request, search_paths)
 
-  def load_module(self, module, remove_on_error=True):
+  def load_module(self, module):
     """
     This method should be the preferred way to call #Module.load() as it
     performs integrity checks and keeps track of the module in the
     #Context.module_stack list.
 
-    If an exception occurs while the module is executed, it is removed from
-    the #Context.modules cache as it is assumed to have an invalid state.
+    If loading the module resulted in an exception before and it is still
+    stored in #Module.exception, it is re-raised. Use #Module.init() to
+    restore a module's state to before the loading process.
     """
 
+    assert isinstance(module, base.Module)
+    if module.exception:
+      reraise(*module.exception)
     if module.loaded:
       return
+    if module.filename not in self.modules:
+      msg = '{!r} can not be loaded when not in Context.modules'
+      raise RuntimeError(msg.format(module))
 
+    module.init()
     self.module_stack.append(module)
     try:
       module.load()
-      if not module.loaded:
-        msg = '{!r}.load() did not set .loaded = True'
-        raise RuntimeError(msg.format(type(module).__name__))
     except:
-      self.modules.pop(module.filename, None)
+      module.exception = sys.exc_info()
+      del self.modules[module.filename]
       raise
+    else:
+      module.loaded = True
     finally:
       if self.module_stack.pop() is not module:
         raise RuntimeError('Context.module_stack corrupted')

@@ -16,7 +16,7 @@ def load_package(context, directory, doraise_exists=True):
 
   if not isinstance(directory, pathlib.Path):
     directory = pathlib.Path(directory)
-  filename = directory.joinpath(context.metadata_filename)
+  filename = directory.joinpath(context.package_manifest)
   if not doraise_exists and not filename.is_file():
     return None
   with filename.open('r') as fp:
@@ -36,26 +36,35 @@ class StdResolver(base.Resolver):
     self.loaders = loaders
 
   def __ask_loaders(self, paths, request):
-    for path in (x.joinpath(request.string) for x in paths):
-      # Check if the request aims for a top-level package directory.
+    for path in paths:
+      filename = path.joinpath(request.string)
       package = None
-      is_toplevel = False
-      if path.is_dir():
-        package = self.package_for_directory(request.context, path)
-        if package:
-          path = path.joinpath(package.main or context.package_main_default)
-          is_toplevel = True
+      is_package_root = False
+
+      # Check if the request aims for a top-level package.
+      is_dir = filename.is_dir()
+      if is_dir:
+        package = self.package_for_directory(request.context, filename)
+      if is_dir and package is not None:
+        is_package_root = True
+      else:
+        package = self.find_package(request.context, filename)
+
+      if package and package.resolve_root:
+        filename = path.joinpath(package.resolve_root).joinpath(request.string)
+      if is_package_root:
+        filename = filename.joinpath(package.main)
 
       # Check every registered loader if they can load the path or suggest
       # other paths from it.
       for loader in self.loaders:
-        if loader.can_load(path):
-          return package, loader, path
-        for filename in loader.suggest_files(path):
-          if filename.exists():
-            return package, loader, filename
+        if loader.can_load(filename):
+          return package, loader, filename
+        for suggestion in loader.suggest_files(filename):
+          if suggestion.exists():
+            return package, loader, suggestion
 
-    return None, False, None, None
+    return None, None, None
 
   def package_for_directory(self, context, path):
     path = path.resolve()
@@ -65,6 +74,13 @@ class StdResolver(base.Resolver):
       if package is not None:
         context.packages[path] = package
     return package
+
+  def find_package(self, context, path):
+    for path in pathutils.upiter(path):
+      package = self.package_for_directory(context, path)
+      if package is not None:
+        return package
+    return None
 
   def resolve_module(self, request):
     if request.is_relative():
