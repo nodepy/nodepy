@@ -2,7 +2,7 @@
 Concrete implementation of the Node.py runtime.
 """
 
-from nodepy import base, loader, resolver
+from nodepy import base, extensions, loader, resolver
 from nodepy.utils import pathlib
 from nodepy.utils.compat import reraise
 import sys
@@ -60,6 +60,7 @@ class Context(object):
     if not bare:
       std_resolver = resolver.StdResolver([], [loader.PythonLoader()])
       self.resolvers.append(std_resolver)
+      self.extensions.append(extensions.ImportSyntax())
 
   def resolve(self, request, directory=None):
     if not isinstance(request, base.Request):
