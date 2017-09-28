@@ -51,6 +51,7 @@ class Context(object):
   package_main = 'index'
 
   def __init__(self, bare=False):
+    self.extensions = []
     self.resolvers = []
     self.modules = {}
     self.packages = {}

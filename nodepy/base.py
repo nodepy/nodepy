@@ -182,23 +182,6 @@ class Package(object):
   def main(self):
     return self.payload['package'].get('main', 'index')
 
-  def iter_extensions(self, require=None, module=None):
-    """
-    Iterate over the extensions of the #Package, and initialize them if
-    necessary. Whether an extension is already initialized depends on the
-    #Require.cache.
-    """
-
-    if not require:
-      assert module is None
-    require = require or self.require
-    for ext in self.extensions:
-      initialized = ext in require.cache
-      ext_module = self.require(ext)
-      if not initialized and hasattr(ext_module, 'init_extension'):
-        ext_module.init_extension(self, module)
-      yield ext_module
-
 
 class Resolver(object):
   """
