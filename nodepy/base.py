@@ -151,19 +151,6 @@ class Resolver(object):
     raise NotImplementedError
 
 
-class Loader(object):
-  """
-  Interface for the standard #FsResolver that is used to extend the loading
-  process of modules from the filesystem.
-  """
-
-  def suggest_files(self, path):
-    raise NotImplementedError
-
-  def load_modules(self, request, filename):
-    raise NotImplementedError
-
-
 class ResolveError(Exception):
 
   def __init__(self, request, search_paths):
