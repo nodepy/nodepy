@@ -20,5 +20,8 @@ class PythonLoader(resolver.StdResolver.Loader):
   def suggest_files(self, path):
     return [path.with_suffix('.py')]
 
-  def load_module(self, context, filename):
-    return PythonModule(context, None, filename)
+  def can_load(self, path):
+    return path.suffix == '.py'
+
+  def load_module(self, context, package, filename):
+    return PythonModule(context, package, filename)

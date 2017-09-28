@@ -40,10 +40,13 @@ class Require(object):
 class Context(object):
 
   modules_directory_name = '.nodepy/modules'
+  metadata_filename = '.nodepy/package.toml'
+  package_main_default = 'index'
 
   def __init__(self, bare=False):
     self.resolvers = []
     self.modules = {}
+    self.packages = {}
     self.module_stack = []
     self.main_module = None
     if not bare:
