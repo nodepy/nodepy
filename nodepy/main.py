@@ -13,7 +13,7 @@ def main(argv=None):
   args = parser.parse_args(argv)
   ctx = Context()
   ctx.main_module = ctx.resolve(args.request)
-  ctx.main_module.load()
+  ctx.load_module(ctx.main_module)
 
 
 if __name__ == '__main__':

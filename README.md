@@ -19,4 +19,3 @@ __Todo__
 
 * Python bytecache loading/writing
 * Package-link support
-* Track currently executed `Module` in the `Context`
