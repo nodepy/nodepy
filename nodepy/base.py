@@ -8,6 +8,31 @@ import types
 import weakref
 
 
+class Extension(object):
+  """
+  This class only documents the interface that is used by the standard Node.py
+  runtime and does not need to be subclassed in order to implement an
+  extension. An object that provides any of the methods is sufficient (such
+  as the root namespace of a module).
+  """
+
+  def init_extensions(self, package, module):
+    """
+    Called when the extension is loaded for a package or module (only when the
+    extension is explicitly declared as an extension in the respective entity).
+    """
+
+    pass
+
+  def preprocess_python_source(self, module, source):
+    """
+    Preprocess the source code of a Python module before it is executed. Must
+    return the new source code string.
+    """
+
+    return source
+
+
 class Request(object):
 
   def __init__(self, context, directory, string):
@@ -156,6 +181,23 @@ class Package(object):
   @property
   def main(self):
     return self.payload['package'].get('main', 'index')
+
+  def iter_extensions(self, require=None, module=None):
+    """
+    Iterate over the extensions of the #Package, and initialize them if
+    necessary. Whether an extension is already initialized depends on the
+    #Require.cache.
+    """
+
+    if not require:
+      assert module is None
+    require = require or self.require
+    for ext in self.extensions:
+      initialized = ext in require.cache
+      ext_module = self.require(ext)
+      if not initialized and hasattr(ext_module, 'init_extension'):
+        ext_module.init_extension(self, module)
+      yield ext_module
 
 
 class Resolver(object):

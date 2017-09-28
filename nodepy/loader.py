@@ -11,7 +11,12 @@ class PythonModule(base.Module):
     self.init()
     self.loaded = True
     with self.filename.open('r') as fp:
-      code = compile(fp.read(), str(self.filename), 'exec', dont_inherit=True)
+      code = fp.read()
+    if self.package:
+      for ext_module in self.package.iter_extensions(self.require, self):
+        if hasattr(ext_module, 'preprocess_python_source'):
+          code = ext_module.preprocess_python_source(self, code)
+    code = compile(code, str(self.filename), 'exec', dont_inherit=True)
     exec(code, vars(self.namespace))
 
 
