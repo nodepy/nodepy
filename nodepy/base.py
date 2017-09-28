@@ -68,11 +68,12 @@ class Module(object):
 
     if self.package:
       try:
-        rel = self.filename.relative_to(self.package.directory)
+        rel = self.filename.with_suffix('').relative_to(self.package.directory)
       except ValueError:
         pass
-      finally:
-        return self.package.name + '/' + '/'.join(pathutils.parts(rel))
+      else:
+        parts = filter(bool, pathutils.lparts(rel))
+        return self.package.name + '/' + '/'.join(parts)
 
     return self.filename.stem
 

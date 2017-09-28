@@ -2,7 +2,20 @@
 from nodepy.utils import pathlib
 
 
-def parts(path):
+def lparts(path):
+  """
+  Yields the components of *path* from left to right.
+  """
+
+  return reversed(list(rparts(path)))
+
+
+def rparts(path):
+  """
+  Yields the components of *path* from right to left.
+  """
+
+  # Yield from the back of the path.
   name = path.name
   if name:
     yield name
@@ -20,7 +33,7 @@ def upiter(path):
 def endswith(path, ending):
   if not isinstance(ending, pathlib.Path):
     ending = pathlib.Path(ending)
-  for part in parts(ending):
+  for part in rparts(ending):
     if not part:
       continue
     if part != path.name:
