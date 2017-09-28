@@ -95,6 +95,9 @@ class Context(object):
     self.module_stack.append(module)
     try:
       module.load()
+      if not module.loaded:
+        msg = '{!r}.load() did not set .loaded = True'
+        raise RuntimeError(msg.format(type(module).__name__))
     except:
       self.modules.pop(module.filename, None)
       raise
