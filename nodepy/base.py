@@ -121,11 +121,19 @@ class Package(object):
     * `package.resolve_root` \*
   """
 
-  def __init__(self, directory, payload):
+  def __init__(self, context, directory, payload):
     assert isinstance(directory, pathlib.Path)
+    self.context = context
     self.directory = directory
-    self.require = context.Require(directory)
+    self.require = _context.Require(context, directory)
     self.payload = payload
+
+    if 'package' not in payload:
+      raise ValueError('invalid package payload for "{}": no "package" field'
+        .format(directory))
+    if 'name' not in payload['package']:
+      raise ValueError('invalid package payload for "{}": no "package.name" field'
+        .format(directory))
 
   def __repr__(self):
     return '<Package {!r} at "{}">'.format(self.name, self.directory)
@@ -141,6 +149,10 @@ class Package(object):
   @property
   def resolve_root(self):
     return self.payload['package'].get('resolve_root', '')
+
+  @property
+  def main(self):
+    return self.payload['package'].get('main', self.context.package_main_default)
 
 
 class Resolver(object):
