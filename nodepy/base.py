@@ -117,6 +117,7 @@ class Package(object):
     The following keys are used by the Node.py runtime:
 
     * `package.name`
+    * `package.main` \*
     * `package.extensions` \*
     * `package.resolve_root` \*
   """
@@ -129,11 +130,11 @@ class Package(object):
     self.payload = payload
 
     if 'package' not in payload:
-      raise ValueError('invalid package payload for "{}": no "package" field'
-        .format(directory))
+      msg = 'invalid package payload for "{}": no "package" field'
+      raise ValueError(msg.format(directory))
     if 'name' not in payload['package']:
-      raise ValueError('invalid package payload for "{}": no "package.name" field'
-        .format(directory))
+      msg = 'invalid package payload for "{}": no "package.name" field'
+      raise ValueError(msg.format(directory))
 
   def __repr__(self):
     return '<Package {!r} at "{}">'.format(self.name, self.directory)
