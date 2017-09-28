@@ -51,7 +51,7 @@ class StdResolver(base.Resolver):
         package = self.find_package(request.context, filename)
 
       if package and package.resolve_root:
-        filename = path.joinpath(package.resolve_root).joinpath(request.string)
+        filename = path.joinpath(package.resolve_root, request.string)
       if is_package_root:
         filename = filename.joinpath(package.main)
 

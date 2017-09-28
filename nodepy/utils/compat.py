@@ -16,6 +16,8 @@ if sys.version_info[0] == 3:
       raise value.with_traceback(tb)
     raise value
 
+  def iteritems(d):
+    return d.items()
 
 else:
 
@@ -33,3 +35,6 @@ else:
 
   exec_("def reraise(tp, value, tb=None):\n"
         "  raise tp, value, tb")
+
+  def iteritems(d):
+    return d.iteritems()

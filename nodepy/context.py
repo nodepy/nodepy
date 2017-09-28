@@ -2,9 +2,10 @@
 Concrete implementation of the Node.py runtime.
 """
 
-from nodepy import base, extensions, loader, resolver
+from nodepy import base, extensions, loader, resolver, utils
 from nodepy.utils import pathlib
-from nodepy.utils.compat import reraise
+import contextlib
+import localimport
 import sys
 
 
@@ -57,10 +58,42 @@ class Context(object):
     self.packages = {}
     self.module_stack = []
     self.main_module = None
+    self.localimport = localimport.localimport([])
     if not bare:
       std_resolver = resolver.StdResolver([], [loader.PythonLoader()])
       self.resolvers.append(std_resolver)
       self.extensions.append(extensions.ImportSyntax())
+
+  @contextlib.contextmanager
+  def enter(self, isolated=False):
+    """
+    Returns a context-manager that enters and leaves this context. If
+    *isolated* is #True, the #localimport module will be used to restore
+    the previous global importer state when the context is exited.
+
+    > Note: This method reloads the #pkg_resources module on entering and
+    > exiting the context. This is necessary to update the state of the
+    > module for the updated global importer state.
+    """
+
+    @contextlib.contextmanager
+    def reload_pkg_resources():
+      utils.machinery.reload_pkg_resources()
+      yield
+      if isolated:
+        utils.machinery.reload_pkg_resources()
+
+    @contextlib.contextmanager
+    def activate_localimport():
+      self.localimport.__enter__()
+      yield
+      if isolated:
+        self.localimport.__exit__()
+
+    with utils.context.ExitStack() as stack:
+      stack.add(activate_localimport())
+      stack.add(reload_pkg_resources())
+      yield
 
   def resolve(self, request, directory=None):
     if not isinstance(request, base.Request):
@@ -104,7 +137,7 @@ class Context(object):
 
     assert isinstance(module, base.Module)
     if module.exception:
-      reraise(*module.exception)
+      utils.compat.reraise(*module.exception)
     if module.loaded:
       return
     if module.filename not in self.modules:

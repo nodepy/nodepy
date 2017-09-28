@@ -19,14 +19,15 @@ def main(argv=None):
   args = parser.parse_args(argv)
   ctx = nodepy.context.Context()
 
-  if args.request:
-    ctx.main_module = ctx.resolve(args.request)
-    ctx.load_module(ctx.main_module)
-  else:
-    ctx.main_module = nodepy.base.Module(ctx, None, pathlib.Path('<repl>'), pathlib.Path.cwd())
-    ctx.main_module.init()
-    ctx.main_module.loaded = True
-    code.interact(VERSION, local=vars(ctx.main_module.namespace))
+  with ctx.enter():
+    if args.request:
+      ctx.main_module = ctx.resolve(args.request)
+      ctx.load_module(ctx.main_module)
+    else:
+      ctx.main_module = nodepy.base.Module(ctx, None, pathlib.Path('<repl>'), pathlib.Path.cwd())
+      ctx.main_module.init()
+      ctx.main_module.loaded = True
+      code.interact(VERSION, local=vars(ctx.main_module.namespace))
 
 
 if __name__ == '__main__':
