@@ -21,7 +21,7 @@ class Require(object):
     self.directory = directory
     self.cache = {}
 
-  def __call__(self, request):
+  def __call__(self, request, exports=True):
     assert isinstance(request, str)
     module = self.cache.get(request)
     if module and not module.exception:
@@ -29,9 +29,12 @@ class Require(object):
     module = self.resolve(request)
     self.context.load_module(module)
     self.cache[request] = module
-    if module.exports is NotImplemented:
-      return module.namespace
-    return module.exports
+    if exports:
+      if module.exports is NotImplemented:
+        return module.namespace
+      return module.exports
+    else:
+      return module
 
   def resolve(self, request):
     return self.context.resolve(request, self.directory)
