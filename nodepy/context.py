@@ -51,7 +51,7 @@ class Require(object):
 class Context(object):
 
   modules_directory = '.nodepy_modules'
-  package_manifest = '.nodepy_package.toml'
+  package_manifest = 'nodepy-package.toml'
   package_main = 'index'
 
   def __init__(self, bare=False):
