@@ -10,7 +10,6 @@ python:
 install:
 - pip install --upgrade pip>=8.0.0
 - pip --version
-# Temporary for until we have a setup script.
-- pip install pathlib2 toml localimport appdirs click distlib hammock jsonschema requests
+- pip install .
 script:
 - python -m nodepy.main ./nodepy-pm
