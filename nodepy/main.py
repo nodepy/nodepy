@@ -8,15 +8,20 @@ import code
 import nodepy
 import sys
 
-VERSION = 'Node.py v{} [{} {}]'.format(
+VERSION = 'node.py {} [{} {}]'.format(
   nodepy.__version__, nodepy.runtime.implementation, sys.version)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('request', nargs='?')
+parser.add_argument('--version', action='store_true')
 
 
 def main(argv=None):
   args = parser.parse_args(argv)
+  if args.version:
+    print(VERSION)
+    return 1
+
   ctx = nodepy.context.Context()
 
   with ctx.enter():
@@ -31,4 +36,4 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-  main()
+  sys.exit(main())

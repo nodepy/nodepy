@@ -1,22 +1,39 @@
 <p align="center"><img src=".assets/nodepy-logo.png" height="128px"></p>
 <h1 align="center">Node.py</h1>
-<p align="center">A Python runtime which offers a module-solution similar to Node.js.</p>
+<p align="center">A Node.js-like runtime for Python (incl. package manager).</p>
 
+```
+$ pip install node.py
+$ nodepy --version
+$ export PATH="$PATH:.nodepy_modules/.bin"
+```
 
-```python
-this = require('that')
-pathutils = require('./utils/path')
+__Upgrade nodepy-pm__
 
-if require.main == module:
-  print('Hello, World!')
+```
+$ nodepy-pm install --root --upgrade @nodepy/nodepy-pm
+```
+
+__Running scripts__
+
+```
+$ cat >hello.py <<EOL
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('name')
+
+if require.main:
+  args = parser.parse_args()
+  print('Hello,', args.name)
+EOL
+$ nodepy ./hello John
+Hello, John
 ```
 
 ---
 
-This is a re-implementation of Node.py 0.0.22 and will be released as
-version 0.1.0.
-
-__Todo__
+## Todolist
 
 * Python bytecache loading/writing
 * Package-link support
