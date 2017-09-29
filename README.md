@@ -1,8 +1,10 @@
 <p align="center"><img src=".assets/nodepy-logo.png" height="128px"></p>
 <h1 align="center">Node.py</h1>
 <img align="right" src="https://img.shields.io/badge/License-MIT-yellow.svg">
-<p align="center">A Node.js-like runtime for Python (incl. package manager).</p>
-
+<p align="center">
+  A Node.js-like runtime for Python (incl. a
+  <a href="https://github.com/nodepy/nodepy-pm">package manager</a>).
+</p>
 
 ```
 $ pip install node.py
