@@ -188,4 +188,4 @@ class PackageLifecycle(object):
       return getattr(exc, 'errno', 127)
 
 
-exports = PackageLifecycle
+module.exports = PackageLifecycle

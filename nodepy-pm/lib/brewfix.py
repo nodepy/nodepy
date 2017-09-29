@@ -67,4 +67,4 @@ def brewfix(prefix_dir='', force=False):
       os.rename(backupfile, filename)
 
 
-exports = brewfix
+module.exports = brewfix

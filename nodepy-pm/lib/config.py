@@ -181,4 +181,4 @@ config = Config(filename, {
   }
 })
 
-exports = config
+module.exports = config

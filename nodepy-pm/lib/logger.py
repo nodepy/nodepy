@@ -26,4 +26,4 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
 logger.addHandler(handler)
 
-exports = logger
+module.exports = logger
