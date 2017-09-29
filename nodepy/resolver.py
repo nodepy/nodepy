@@ -3,8 +3,8 @@ Implements the #StdResolver that is the default resolver when creating a
 non-bare context. It operates on the filesystem using the #pathlib module.
 """
 
-from nodepy import base
-from nodepy.utils import pathlib, pathutils
+from nodepy import base, utils
+from nodepy.utils import pathlib
 import itertools
 import toml
 
@@ -76,7 +76,7 @@ class StdResolver(base.Resolver):
     return package
 
   def find_package(self, context, path):
-    for path in pathutils.upiter(path):
+    for path in utils.path.upiter(path):
       package = self.package_for_directory(context, path)
       if package is not None:
         return package

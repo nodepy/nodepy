@@ -21,4 +21,3 @@ __Todo__
 * Python bytecache loading/writing
 * Package-link support
 * Node.js-style traceback (Python's traceback sucks)
-* Use `localimport` and allow loading of Python modules from `.nodepy_modules/.pip`

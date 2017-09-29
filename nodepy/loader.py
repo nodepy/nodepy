@@ -3,6 +3,7 @@ Implements the #resolver.StdResolverLoader interface for Python modules.
 """
 
 from nodepy import base, resolver, utils
+import sys
 
 
 class PythonModule(base.Module):
@@ -25,7 +26,26 @@ class PythonModule(base.Module):
         code = ext_module.preprocess_python_source(self, code)
 
     code = compile(code, str(self.filename), 'exec', dont_inherit=True)
-    exec(code, vars(self.namespace))
+
+    # Find the nearest modules directory and enable importing from it.
+    library_dir = None
+    for path in utils.path.upiter(self.directory):
+      path = path.joinpath(self.context.modules_directory, '.pip')
+      if path.is_dir():
+        library_dir = str(path)
+        break
+
+    try:
+      if library_dir:
+      # TODO: Maybe add a loader meta_path that can load from any PathLike?
+        sys.path.insert(0, library_dir)
+      exec(code, vars(self.namespace))
+    finally:
+      if library_dir:
+        try:
+          sys.path.remove(library_dir)
+        except ValueError:
+          pass
 
 
 class PythonLoader(resolver.StdResolver.Loader):

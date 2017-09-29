@@ -2,8 +2,8 @@
 Base classes and interfaces.
 """
 
-from nodepy import context as _context
-from nodepy.utils import pathlib, pathutils
+from nodepy import context as _context, utils
+from nodepy.utils import pathlib
 import types
 import weakref
 
@@ -54,7 +54,7 @@ class Request(object):
   def related_paths(self):
     if not hasattr(self, '_related_paths'):
       self._related_paths = []
-      for path in pathutils.upiter(self.directory):
+      for path in utils.path.upiter(self.directory):
         path = path.joinpath(self.context.modules_directory)
         if path.is_dir():
           self._related_paths.append(path)
@@ -96,7 +96,7 @@ class Module(object):
       except ValueError:
         pass
       else:
-        parts = filter(bool, pathutils.lparts(rel))
+        parts = filter(bool, utils.path.lparts(rel))
         return self.package.name + '/' + '/'.join(parts)
 
     return self.filename.stem
