@@ -7,7 +7,7 @@ import sys
 
 if sys.version_info[0] == 3:
 
-  exec_ = exec
+  exec_ = getattr(__import__('builtins'), 'exec')
 
   def reraise(tp, value, tb=None):
     if value is None:
