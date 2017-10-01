@@ -96,6 +96,7 @@ class Context(object):
     with utils.context.ExitStack() as stack:
       stack.add(activate_localimport())
       stack.add(reload_pkg_resources())
+      sys.path_importer_cache.clear()
       yield
 
   def resolve(self, request, directory=None):

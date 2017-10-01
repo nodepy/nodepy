@@ -14,7 +14,7 @@ script = None
 #: A list of command-line arguments to spawn a new Node.py child-process.
 #: This is usually the Python interpreter and the path to the Node.py Python
 #: module.
-exec_args = [sys.executable, os.path.dirname(__file__)]
+exec_args = [sys.executable, os.path.join(os.path.dirname(__file__), 'main.py')]
 
 #: The name of the Python implementation that we're running, eg. cpython,
 #: pypy, jython, ironpython, etc.

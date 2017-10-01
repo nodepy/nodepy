@@ -6,5 +6,4 @@ similar to Node.js.
 __version__ = '0.1.0'
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 
-from . import context
-from . import runtime
+from . import context, runtime, main

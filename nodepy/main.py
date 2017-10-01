@@ -14,16 +14,21 @@ VERSION = 'node.py {} [{} {}]'.format(
 parser = argparse.ArgumentParser()
 parser.add_argument('request', nargs='...')
 parser.add_argument('--version', action='store_true')
+parser.add_argument('--nodepy-path', action='append', default=[])
+parser.add_argument('--python-path', action='append', default=[])
 
 
 def main(argv=None):
   args = parser.parse_args(argv)
+  args.nodepy_path.insert(0, '.')
   if args.version:
     print(VERSION)
     return 1
 
   sys.argv = [sys.argv[0]] + args.request[1:]
   ctx = nodepy.context.Context()
+  ctx.resolvers[0].paths.extend(map(pathlib.Path, args.nodepy_path))
+  ctx.localimport.path.extend(args.python_path)
   with ctx.enter():
     if args.request:
       ctx.main_module = ctx.resolve(args.request[0])
