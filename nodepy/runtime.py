@@ -23,3 +23,13 @@ if hasattr(sys, 'implementation'):
   implementation = sys.implementation.name.lower()
 else:
   implementation = sys.subversion[0].lower()
+
+#: The value of the `NODEPY_ENV` environment variable, which must be either
+#: `"production"` or `"development"`. If an invalid value is specified, a
+#: warning is printed and it defaults to `"development"`.
+env = os.getenv('NODEPY_ENV', 'development')
+if env not in ('production', 'development'):
+  print('warning: invalid value of environment variable NODEPY_ENV="{}".'
+        .format(env))
+  print('         falling back to NODEPY_ENV="development".')
+  os.environ['NODEPY_ENV'] = env = 'development'
