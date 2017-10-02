@@ -59,7 +59,7 @@ class StdResolver(base.Resolver):
       # Check every registered loader if they can load the path or suggest
       # other paths from it.
       for loader in self.loaders:
-        if loader.can_load(filename):
+        if filename.exists() and loader.can_load(filename):
           return package, loader, filename
         for suggestion in loader.suggest_files(filename):
           if suggestion.exists():
