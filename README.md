@@ -6,16 +6,21 @@
   <a href="https://github.com/nodepy/nodepy-pm">package manager</a>).
 </p>
 
+__Installing Node.py__
+
 ```
 $ pip install node.py
 $ nodepy --version
-$ export PATH="$PATH:.nodepy_modules/.bin"
 ```
 
-__Upgrade nodepy-pm__
+__Installing Node.py PM__ (and relevant paths)
+
+  [Node.py PM]: https://github.com/nodepy/nodepy
 
 ```
-$ nodepy-pm install --root --upgrade @nodepy/nodepy-pm
+$ nodepy https://nodepy.org/install-pm
+$ nodepy-pm version
+$ export PATH="$PATH:$(nodepy-pm bin):$(nodepy-pm bin -g)"
 ```
 
 __Running scripts__

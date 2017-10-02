@@ -31,12 +31,11 @@ def get_site_packages(prefix):
   return prefix.joinpath(lib, 'site-packages')
 
 
-def reload_pkg_resources(insert_paths_index=None):
+def reload_pkg_resources(name='pkg_resources', insert_paths_index=None):
   """
   Cleanly reloads the `pkg_resources` module.
   """
 
-  name = 'pkg_resources'
   if name not in sys.modules:
     return
 
