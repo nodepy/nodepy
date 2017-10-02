@@ -6,3 +6,4 @@ except ImportError:
 
 
 from . import compat, context, iter, machinery, path
+from .urlpath import PureUrlPath, UrlPath
