@@ -3,10 +3,16 @@ The Node.py command-line interface.
 """
 
 from nodepy.utils import pathlib
+from nodepy.loader import PythonModule
 import argparse
 import code
 import nodepy
 import sys
+
+try:
+  from urllib.parse import urlparse
+except ImportError:
+  from urllib2 import urlparse
 
 VERSION = 'node.py {} [{} {}]'.format(
   nodepy.__version__, nodepy.runtime.implementation, sys.version)
@@ -33,7 +39,15 @@ def main(argv=None):
   ctx.localimport.path.extend(args.python_path)
   with ctx.enter():
     if args.request:
-      ctx.main_module = ctx.resolve(args.request[0])
+      url_info = urlparse(args.request[0])
+      if url_info.scheme in ('http', 'https'):
+        # Create a new module from a UrlPath filename.
+        filename = nodepy.utils.UrlPath(args.request[0])
+        module = PythonModule(ctx, None, filename)
+        ctx.modules[module.filename] = module
+        ctx.main_module = module
+      else:
+        ctx.main_module = ctx.resolve(args.request[0])
       if not args.keep_arg0:
         sys.argv[0] = str(ctx.main_module.filename)
       ctx.load_module(ctx.main_module)
