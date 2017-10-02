@@ -30,6 +30,7 @@ class _UrlFlavour(pathlib._PosixFlavour):
       res.path
     )
 
+
 class PureUrlPath(pathlib.PurePath):
   _flavour = _UrlFlavour()
   __slots__ = ()

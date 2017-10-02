@@ -43,7 +43,8 @@ def main(argv=None):
       if url_info.scheme in ('http', 'https'):
         # Create a new module from a UrlPath filename.
         filename = nodepy.utils.UrlPath(args.request[0])
-        module = PythonModule(ctx, None, filename)
+        directory = pathlib.Path.cwd()
+        module = PythonModule(ctx, None, filename, directory)
         ctx.modules[module.filename] = module
         ctx.main_module = module
       else:
@@ -52,7 +53,9 @@ def main(argv=None):
         sys.argv[0] = str(ctx.main_module.filename)
       ctx.load_module(ctx.main_module)
     else:
-      ctx.main_module = nodepy.base.Module(ctx, None, pathlib.Path('<repl>'), pathlib.Path.cwd())
+      filename = nodepy.utils.NoPath('<repl>')
+      directory = pathlib.Path.cwd()
+      ctx.main_module = nodepy.base.Module(ctx, None, filename, directory)
       ctx.main_module.init()
       ctx.main_module.loaded = True
       code.interact(VERSION, local=vars(ctx.main_module.namespace))

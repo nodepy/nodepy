@@ -6,4 +6,5 @@ except ImportError:
 
 
 from . import compat, context, iter, machinery, path
+from .nopath import PureNoPath, NoPath
 from .urlpath import PureUrlPath, UrlPath
