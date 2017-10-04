@@ -45,5 +45,4 @@ Hello, John
 ## Todolist
 
 * Python bytecache loading/writing
-* Package-link support
 * Node.js-style traceback (Python's traceback sucks)

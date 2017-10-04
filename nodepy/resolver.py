@@ -36,8 +36,20 @@ class StdResolver(base.Resolver):
     self.loaders = loaders
 
   def __ask_loaders(self, paths, request):
+    link_file = request.context.link_file
     for path in paths:
       filename = path.joinpath(request.string)
+
+      # Check if somewhere in that path there is a link file.
+      for lnk in (x.joinpath(link_file) for x in utils.path.upiter(filename)):
+        if lnk.exists():
+          with lnk.open() as fp:
+            package_dir = pathlib.Path(fp.readline().strip())
+            # TODO: Raise a resolve error immediately if the linked
+            # directory does not exist?
+            # if not package_dir.is_dir():
+            filename = package_dir.joinpath(filename.relative_to(lnk.parent))
+
       package = None
       is_package_root = False
 

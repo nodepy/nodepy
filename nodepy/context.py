@@ -53,6 +53,7 @@ class Context(object):
   modules_directory = '.nodepy_modules'
   package_manifest = 'nodepy-package.toml'
   package_main = 'index'
+  link_file = '.nodepy-link.txt'
 
   def __init__(self, bare=False):
     self.extensions = []
