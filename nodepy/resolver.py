@@ -5,8 +5,8 @@ non-bare context. It operates on the filesystem using the #pathlib module.
 
 from nodepy import base, utils
 from nodepy.utils import pathlib
+from nodepy.vendor import toml
 import itertools
-import toml
 
 
 def load_package(context, directory, doraise_exists=True):

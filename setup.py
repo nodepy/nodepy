@@ -39,7 +39,7 @@ setup(
   long_description = readme(),
   url = 'https://github.com/nodepy',
   packages = find_packages(),
-  install_requires = ['localimport>=1.5.2', 'pathlib2>=2.3.0', 'toml>=0.9.3'],
+  install_requires = ['localimport>=1.5.2', 'pathlib2>=2.3.0'],
   entry_points = {
     'console_scripts': [
       'nodepy{} = nodepy.main:main'.format(v)
