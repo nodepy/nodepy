@@ -65,8 +65,8 @@ class StdResolver(base.Resolver):
       # Package.main is regarded independent from Package.resolve_root.
       if is_package_root:
         filename = filename.joinpath(package.main)
-      elif package and package.resolve_root:
-        filename = package.directory.joinpath(package.resolve_root)
+      elif package and package.resolve_root and not request.is_relative():
+        filename = package.directory.joinpath(package.resolve_root, request.string)
 
       # Check every registered loader if they can load the path or suggest
       # other paths from it.
