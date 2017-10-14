@@ -9,7 +9,6 @@ import sys
 class PythonModule(base.Module):
 
   def load(self):
-    self.init()
     self.loaded = True
     with self.filename.open('r') as fp:
       code = fp.read()

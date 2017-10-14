@@ -130,15 +130,14 @@ class Context(object):
 
     raise base.ResolveError(request, search_paths)
 
-  def load_module(self, module):
+  def load_module(self, module, do_init=True):
     """
     This method should be the preferred way to call #Module.load() as it
     performs integrity checks and keeps track of the module in the
     #Context.module_stack list.
 
     If loading the module resulted in an exception before and it is still
-    stored in #Module.exception, it is re-raised. Use #Module.init() to
-    restore a module's state to before the loading process.
+    stored in #Module.exception, it is re-raised.
     """
 
     assert isinstance(module, base.Module)
@@ -150,7 +149,8 @@ class Context(object):
       msg = '{!r} can not be loaded when not in Context.modules'
       raise RuntimeError(msg.format(module))
 
-    module.init()
+    if do_init:
+      module.init()
     self.module_stack.append(module)
     try:
       module.load()
