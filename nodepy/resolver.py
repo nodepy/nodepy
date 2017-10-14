@@ -65,9 +65,9 @@ class StdResolver(base.Resolver):
 
     def confront_loaders(path, package):
       for loader in self.loaders:
-        if path.exists() and loader.can_load(path):
+        if path.exists() and loader.can_load(request.context, path):
           return package, loader, path
-        for suggestion in loader.suggest_files(path):
+        for suggestion in loader.suggest_files(request.context, path):
           if suggestion.exists():
             return package, loader, suggestion
       return None
@@ -100,6 +100,8 @@ class StdResolver(base.Resolver):
         filename = package.directory.joinpath(package.resolve_root, request.string)
 
       result = confront_loaders(filename, package)
+      if not result and is_package_root and not package.is_main_defined:
+        result = confront_loaders(package.directory, package)
       if result is not None:
         return result
 
@@ -143,11 +145,11 @@ class StdResolver(base.Resolver):
     this interface are added to the #StdResolver to "configure" it.
     """
 
-    def suggest_files(self, path):
+    def suggest_files(self, context, path):
       raise NotImplementedError
 
-    def can_load(self, path):
+    def can_load(self, context, path):
       raise NotImplementedError
 
-    def load_modules(self, request, package, filename):
+    def load_modules(self, context, package, filename):
       raise NotImplementedError

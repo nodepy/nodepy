@@ -182,6 +182,10 @@ class Package(object):
   def main(self):
     return self.payload['package'].get('main', 'index')
 
+  @property
+  def is_main_defined(self):
+    return bool(self.payload['package'].get('main'))
+
 
 class Resolver(object):
   """

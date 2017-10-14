@@ -64,7 +64,8 @@ class Context(object):
     self.main_module = None
     self.localimport = localimport.localimport([])
     if not bare:
-      std_resolver = resolver.StdResolver([], [loader.PythonLoader()])
+      loaders = [loader.PythonLoader(), loader.PackageRootLoader()]
+      std_resolver = resolver.StdResolver([], loaders)
       self.resolvers.append(std_resolver)
       self.extensions.append(extensions.ImportSyntax())
 

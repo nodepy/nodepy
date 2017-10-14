@@ -52,11 +52,36 @@ class PythonModule(base.Module):
 
 class PythonLoader(resolver.StdResolver.Loader):
 
-  def suggest_files(self, path):
+  def suggest_files(self, context, path):
     return [path.with_suffix('.py')]
 
-  def can_load(self, path):
+  def can_load(self, context, path):
     return path.suffix == '.py'
 
   def load_module(self, context, package, filename):
     return PythonModule(context, package, filename)
+
+
+class PackageRootModule(base.Module):
+
+  def load(self):
+    self.loaded = True
+
+
+class PackageRootLoader(resolver.StdResolver.Loader):
+  """
+  The package root loader is used to load packages that don't have a
+  package main file defined and have no `index` file. In that case, an
+  empty module is loaded (of type #PackageRootModule).
+  """
+
+  def suggest_files(self, context, path):
+    return []
+
+  def can_load(self, context, path):
+    if path.joinpath(context.package_manifest).is_file():
+      return True
+    return False
+
+  def load_module(self, context, package, filename):
+    return PackageRootModule(context, package, filename)
