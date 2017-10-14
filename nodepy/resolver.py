@@ -7,6 +7,7 @@ from nodepy import base, utils
 from nodepy.utils import pathlib
 from nodepy.vendor import toml
 import itertools
+import os
 
 
 def load_package(context, directory, doraise_exists=True):
@@ -35,20 +36,50 @@ class StdResolver(base.Resolver):
     self.paths = paths
     self.loaders = loaders
 
-  def __ask_loaders(self, paths, request):
-    link_file = request.context.link_file
+  def __resolve_link(self, context, path):
+    """
+    Checks if there exists a package-link file somewhere in the parent
+    directories of *path* and returns an update path pointing to the linked
+    location.
+    """
+
+    link_file = context.link_file
+    for lnk in (x.joinpath(link_file) for x in utils.path.upiter(path)):
+      if lnk.exists():
+        with lnk.open() as fp:
+          package_dir = pathlib.Path(fp.readline().strip())
+          # TODO: Raise a resolve error immediately if the linked
+          # directory does not exist?
+          # if not package_dir.is_dir():
+          path = package_dir.joinpath(path.relative_to(lnk.parent))
+          break
+    return path
+
+  def __try_load(self, paths, request):
+    """
+    Attempts to load determine the filename, package and loader for the
+    specified *request*, to be loaded from the specified *paths*, and
+    returns a tuple of (package, loader, path). If the request can not
+    be resolved, (None, None, None) is returned.
+    """
+
+    def confront_loaders(path, package):
+      for loader in self.loaders:
+        if path.exists() and loader.can_load(path):
+          return package, loader, path
+        for suggestion in loader.suggest_files(path):
+          if suggestion.exists():
+            return package, loader, suggestion
+      return None
+
+    if os.path.isabs(request.string):
+      path = self.__resolve_link(request.context, pathlib.Path(request.string))
+      package = self.find_package(request.context, path)
+      return confront_loaders(path, package) or (None, None, None)
+
     for path in paths:
       filename = path.joinpath(request.string)
-
-      # Check if somewhere in that path there is a link file.
-      for lnk in (x.joinpath(link_file) for x in utils.path.upiter(filename)):
-        if lnk.exists():
-          with lnk.open() as fp:
-            package_dir = pathlib.Path(fp.readline().strip())
-            # TODO: Raise a resolve error immediately if the linked
-            # directory does not exist?
-            # if not package_dir.is_dir():
-            filename = package_dir.joinpath(filename.relative_to(lnk.parent))
+      filename = self.__resolve_link(request.context, filename)
 
       package = None
       is_package_root = False
@@ -68,14 +99,9 @@ class StdResolver(base.Resolver):
       elif package and package.resolve_root and not request.is_relative():
         filename = package.directory.joinpath(package.resolve_root, request.string)
 
-      # Check every registered loader if they can load the path or suggest
-      # other paths from it.
-      for loader in self.loaders:
-        if filename.exists() and loader.can_load(filename):
-          return package, loader, filename
-        for suggestion in loader.suggest_files(filename):
-          if suggestion.exists():
-            return package, loader, suggestion
+      result = confront_loaders(filename, package)
+      if result is not None:
+        return result
 
     return None, None, None
 
@@ -101,7 +127,7 @@ class StdResolver(base.Resolver):
     else:
       paths = list(itertools.chain(request.related_paths, self.paths))
 
-    package, loader, filename = self.__ask_loaders(paths, request)
+    package, loader, filename = self.__try_load(paths, request)
     if not loader:
       raise base.ResolveError(request, paths)
 
