@@ -97,7 +97,8 @@ class StdResolver(base.Resolver):
       if is_package_root:
         filename = filename.joinpath(package.main)
       elif package and package.resolve_root and not request.is_relative():
-        filename = package.directory.joinpath(package.resolve_root, request.string)
+        rel = filename.relative_to(package.directory)
+        filename = package.directory.joinpath(package.resolve_root, rel)
 
       result = confront_loaders(filename, package)
       if not result and is_package_root and not package.is_main_defined:
