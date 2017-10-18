@@ -93,6 +93,8 @@ class StdResolver(base.Resolver):
       else:
         package = self.find_package(request.context, filename)
 
+      filename = filename.absolute()
+
       # Package.main is regarded independent from Package.resolve_root.
       if is_package_root:
         filename = filename.joinpath(package.main)
@@ -109,7 +111,7 @@ class StdResolver(base.Resolver):
     return None, None, None
 
   def package_for_directory(self, context, path):
-    path = path.resolve()
+    path = path.absolute()
     package = context.packages.get(path)
     if package is None:
       package = load_package(context, path, doraise_exists=False)
@@ -134,7 +136,7 @@ class StdResolver(base.Resolver):
     if not loader:
       raise base.ResolveError(request, paths)
 
-    filename = filename.resolve()
+    filename = filename.absolute()
     module = request.context.modules.get(filename)
     if not module:
       module = loader.load_module(request.context, package, filename)
