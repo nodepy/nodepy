@@ -86,7 +86,7 @@ class ImportSyntax(base.Extension):
         module = match.group('mod')
         members = match.group('members')
         if members == '*':
-          repl = 'require.symbols({!r})'.format(module)
+          repl = 'require.star({!r})'.format(module)
         elif '{' in members:
           if members.startswith('{'):
             default_name = None
@@ -100,7 +100,7 @@ class ImportSyntax(base.Extension):
             repl = '{}=require({!r});'.format(default_name, module) + repl
         elif members.endswith('*') and members.count(',') == 1:
           default_member = members.split(',')[0].strip()
-          repl = 'require.symbols({0!r}); {1}=require({0!r})'.format(module, default_member)
+          repl = 'require.star({0!r}); {1}=require({0!r})'.format(module, default_member)
         else:
           repl = '{}=require({!r})'.format(members, module)
       else:

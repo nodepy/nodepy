@@ -39,6 +39,30 @@ class Require(object):
   def resolve(self, request):
     return self.context.resolve(request, self.directory)
 
+  def star(self, request, symbols=None):
+    """
+    Performs a 'star' import into the parent frame.
+    """
+
+    if isinstance(symbols, str):
+      if ',' in symbols:
+        symbols = [x.strip() for x in symbols.split(',')]
+      else:
+        symbols = symbols.split()
+
+    into = sys._getframe(1).f_locals
+    namespace = self(request)
+
+    if symbols is None:
+      symbols = getattr(namespace, '__all__', None)
+    if symbols is None:
+      for key in dir(namespace):
+        if not key.startswith('_') and key not in ('module', 'require'):
+          into[key] = getattr(namespace, key)
+    else:
+      for key in symbols:
+        into[key] = getattr(namespace, key)
+
   @property
   def main(self):
     return self.context.main_module
