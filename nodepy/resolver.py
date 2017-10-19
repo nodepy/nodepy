@@ -136,7 +136,7 @@ class StdResolver(base.Resolver):
     if not loader:
       raise base.ResolveError(request, paths)
 
-    filename = filename.absolute()
+    filename = filename.resolve()
     module = request.context.modules.get(filename)
     if not module:
       module = loader.load_module(request.context, package, filename)
