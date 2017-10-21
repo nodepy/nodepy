@@ -36,7 +36,8 @@ class StdResolver(base.Resolver):
     self.paths = paths
     self.loaders = loaders
 
-  def __resolve_link(self, context, path):
+  @staticmethod
+  def resolve_link(context, path):
     """
     Checks if there exists a package-link file somewhere in the parent
     directories of *path* and returns an update path pointing to the linked
@@ -73,13 +74,13 @@ class StdResolver(base.Resolver):
       return None
 
     if os.path.isabs(request.string):
-      path = self.__resolve_link(request.context, pathlib.Path(request.string))
+      path = self.resolve_link(request.context, pathlib.Path(request.string))
       package = self.find_package(request.context, path)
       return confront_loaders(path, package) or (None, None, None)
 
     for path in paths:
       filename = path.joinpath(request.string)
-      filename = self.__resolve_link(request.context, filename)
+      filename = self.resolve_link(request.context, filename)
 
       package = None
       is_package_root = False
