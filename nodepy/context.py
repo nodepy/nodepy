@@ -19,6 +19,7 @@ class Require(object):
     assert isinstance(directory, pathlib.Path)
     self.context = context
     self.directory = directory
+    self.path = []
     self.cache = {}
 
   def __call__(self, request, exports=True):
@@ -37,7 +38,7 @@ class Require(object):
       return module
 
   def resolve(self, request):
-    return self.context.resolve(request, self.directory)
+    return self.context.resolve(request, self.directory, self.path)
 
   def star(self, request, symbols=None):
     """
@@ -125,11 +126,11 @@ class Context(object):
       sys.path_importer_cache.clear()
       yield
 
-  def resolve(self, request, directory=None):
+  def resolve(self, request, directory=None, additional_search_path=()):
     if not isinstance(request, base.Request):
       if directory is None:
         directory = pathlib.Path.cwd()
-      request = base.Request(self, directory, request)
+      request = base.Request(self, directory, request, additional_search_path)
 
     search_paths = []
     for resolver in self.resolvers:

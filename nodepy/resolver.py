@@ -130,7 +130,9 @@ class StdResolver(base.Resolver):
     if request.is_relative():
       paths = [request.directory]
     else:
-      paths = list(itertools.chain(request.related_paths, self.paths))
+      paths = itertools.chain(request.related_paths, self.paths)
+      paths = itertools.chain(paths, request.additional_search_path)
+      paths = list(paths)
 
     package, loader, filename = self.__try_load(paths, request)
     if not loader:

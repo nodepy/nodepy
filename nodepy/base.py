@@ -35,13 +35,14 @@ class Extension(object):
 
 class Request(object):
 
-  def __init__(self, context, directory, string):
+  def __init__(self, context, directory, string, additional_search_path=()):
     assert isinstance(context, _context.Context)
     assert isinstance(directory, pathlib.Path)
     assert isinstance(string, str)
     self.context = context
     self.directory = directory
     self.string = string
+    self.additional_search_path = additional_search_path
 
   def __repr__(self):
     return '<Request "{}" from "{}">'.format(self.string, self.directory)
@@ -49,6 +50,12 @@ class Request(object):
   def is_relative(self):
     return self.string in ('.', '..') or self.string.startswith('./') or \
       self.string.startswith('../')
+
+  def is_absolute(self):
+    return os.path.isabs(self.string)
+
+  def is_module(self):
+    return not self.is_relative() and not self.is_absolute()
 
   @property
   def related_paths(self):
