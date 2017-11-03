@@ -146,23 +146,20 @@ class Package(object):
 
   payload (dict):
     A dictionary that represents the Package metadata in the standard package
-    metadata format as defined by the `.nodepy/package.toml` specification.
-    The following keys are used by the Node.py runtime:
+    metadata format as defined by the `nodepy.json` specification. The
+    following keys are used by the Node.py runtime:
 
-    * `package.name`
-    * `package.main` (defaults to `"index"`)
-    * `package.extensions` (defaults to an empty list)
-    * `package.resolve_root` (defaults to #None)
+    * `name`
+    * `main` (defaults to `"index"`)
+    * `extensions` (defaults to an empty list)
+    * `resolve_root` (defaults to #None)
   """
 
   def __init__(self, context, directory, payload):
     assert isinstance(directory, pathlib.Path)
 
-    if 'package' not in payload:
-      msg = 'invalid package payload for "{}": no "package" field'
-      raise ValueError(msg.format(directory))
-    if 'name' not in payload['package']:
-      msg = 'invalid package payload for "{}": no "package.name" field'
+    if 'name' not in payload:
+      msg = 'invalid package payload for "{}": no "name" field'
       raise ValueError(msg.format(directory))
 
     self.context = context
@@ -175,23 +172,23 @@ class Package(object):
 
   @property
   def name(self):
-    return self.payload['package']['name']
+    return self.payload['name']
 
   @property
   def extensions(self):
-    return self.payload['package'].get('extensions', [])
+    return self.payload.get('extensions', [])
 
   @property
   def resolve_root(self):
-    return self.payload['package'].get('resolve_root', '')
+    return self.payload.get('resolve_root', '')
 
   @property
   def main(self):
-    return self.payload['package'].get('main', 'index')
+    return self.payload.get('main', 'index')
 
   @property
   def is_main_defined(self):
-    return bool(self.payload['package'].get('main'))
+    return bool(self.payload.get('main'))
 
 
 class Resolver(object):

@@ -76,7 +76,7 @@ class Require(object):
 class Context(object):
 
   modules_directory = '.nodepy_modules'
-  package_manifest = 'nodepy-package.toml'
+  package_manifest = 'nodepy.json'
   package_main = 'index'
   link_file = '.nodepy-link.txt'
 

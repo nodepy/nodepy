@@ -4,8 +4,7 @@ non-bare context. It operates on the filesystem using the #pathlib module.
 """
 
 from nodepy import base, utils
-from nodepy.utils import pathlib
-from nodepy.vendor import toml
+from nodepy.utils import json, pathlib
 import itertools
 import os
 
@@ -21,7 +20,7 @@ def load_package(context, directory, doraise_exists=True):
   if not doraise_exists and not filename.is_file():
     return None
   with filename.open('r') as fp:
-    payload = toml.load(fp)
+    payload = json.load(fp)
   return base.Package(context, directory, payload)
 
 
