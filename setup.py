@@ -3,17 +3,11 @@ from setuptools import setup, find_packages
 import os
 import sys
 
+is_dist = any('dist' in x for x in sys.argv[1:])
+
 
 def readme():
-  """
-  This helper function uses the `pandoc` command to convert the `README.md`
-  into a `README.rst` file, because we need the long_description in ReST
-  format. This function will only generate the `README.rst` if any of the
-  `setup dist...` commands are used, otherwise it will return an empty string
-  or return the content of the already existing `README.rst` file.
-  """
-
-  if os.path.isfile('README.md') and any('dist' in x for x in sys.argv[1:]):
+  if os.path.isfile('README.md') and is_dist:
     if os.system('pandoc -s README.md -o README.rst') != 0:
       print('-----------------------------------------------------------------')
       print('WARNING: README.rst could not be generated, pandoc command failed')
@@ -30,12 +24,12 @@ def readme():
 
 
 setup(
-  name = 'node.py',
-  version = '0.1.0',
+  name = 'nodepy-runtime',
+  version = '2.0.0-dev',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
-  description = 'A Node.js-like runtime for Python (incl. package manager).',
+  description = 'A Node.js-like runtime for Python.',
   long_description = readme(),
   url = 'https://github.com/nodepy',
   packages = find_packages(),

@@ -1,6 +1,6 @@
-<p align="center"><img src=".assets/nodepy-logo.png" height="128px"></p>
+<p align="center"><img src="https://img.shields.io/badge/License-MIT-yellow.svg"></p>
 <h1 align="center">Node.py</h1>
-<img align="right" src="https://img.shields.io/badge/License-MIT-yellow.svg">
+<p align="center"><img src=".assets/nodepy-logo.png" height="128px"></p>
 <p align="center">
   A Node.js-like runtime for Python (incl. a
   <a href="https://github.com/nodepy/nodepy-pm">package manager</a>).
@@ -8,19 +8,35 @@
 
 __Installing Node.py__
 
+> Note: This version is currently in development and not yet available
+> via Pip. Please install from the Git source repository instead.
+
 ```
-$ pip install node.py
+$ pip install nodepy-runtime
 $ nodepy --version
 ```
 
-__Installing Node.py PM__ (and relevant paths)
+__Installing the Node.py Package Manager__
 
-  [Node.py PM]: https://github.com/nodepy/nodepy
+The package manager can be installed by passing the URL to the remote install
+script to the `nodepy` command-line. Alternatively, you can clone the
+[Node.py PM] source repository and run the install script.
+
+  [Node.py PM]: https://github.com/nodepy/nodepy-package-manager
 
 ```
 $ nodepy https://nodepy.org/install-pm
+
+# Alternatively:
+$ git clone https://github.com/nodepy/nodepy-package-manager.git
+$ nodepy nodepy-package-manager/scripts/install
+```
+
+Check the package manager version and update your `PATH`:
+
+```
 $ nodepy-pm version
-$ export PATH="$PATH:$(nodepy-pm bin):$(nodepy-pm bin -g)"
+$ export PATH="$PATH:$(nodepypm bin):$(nodepypm bin -g)"
 ```
 
 __Running scripts__
