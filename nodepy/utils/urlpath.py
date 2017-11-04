@@ -11,7 +11,8 @@ try:
   from urllib.request import urlopen
   from urllib.parse import urlparse, urlunparse
 except ImportError:
-  from urllib2 import urlopen, urlparse, urlunparse
+  from urllib2 import urlopen
+  from urlparse import urlparse, urlunparse
 
 
 class _UrlFlavour(pathlib._PosixFlavour):
