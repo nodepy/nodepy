@@ -2,7 +2,7 @@
 A #pathlib.Path implementation for URLs.
 """
 
-from nodepy.utils import pathlib
+from nodepy.utils import compat, pathlib
 import os
 import io
 import posixpath
@@ -39,6 +39,24 @@ class PureUrlPath(pathlib.PurePath):
 class UrlPath(pathlib.Path, PureUrlPath):
   __slots__ = ()
 
+  # Wrapper for the socket._fileobject returned from #urlopen().
+  # Necessary in Python 2 because socket._fileobject does not support
+  # readable(), writable() and seekable(), and without this protocol it
+  # can not be wrapped in #io.BufferedReader or #io.TextIOWrapper.
+  class _readable(object):
+    def __init__(self, fp, seekable=False):
+      self._fp = fp
+      self._seekable = seekable
+      self._closed = False
+    def __getattr__(self, name):
+      return getattr(self._fp, name)
+    def readable(self):
+      return True
+    def writable(self):
+      return False
+    def seekable(self):
+      return self._seekable
+
   def owner(self):
     raise NotImplementedError("Path.owner() is unsupported for URLs")
 
@@ -48,8 +66,15 @@ class UrlPath(pathlib.Path, PureUrlPath):
   def open(self, flags='r', mode=0o666):
     if set(flags).difference('rbt'):
       raise IOError('URLs can be opened in read-mode only.')
-    request = urlopen(str(self))
-    return (io.BufferedReader if 'b' in flags else io.TextIOWrapper)(request)
+    if compat.PY2:
+      fp = self._readable(urlopen(str(self)).fp)
+    else:
+      fp = urlopen(str(self))
+    if not isinstance(fp, io.BufferedReader):
+      fp = io.BufferedReader(fp)
+    if 'b' not in flags:
+      fp = io.TextIOWrapper(fp)
+    return fp
 
   def is_dir(self):
     return False

@@ -19,7 +19,8 @@ def as_text(x, encoding=None):
 
 
 if sys.version_info[0] == 3:
-
+  PY2 = False
+  PY3 = True
   text_type = str
   string_types = (str,)
 
@@ -36,7 +37,8 @@ if sys.version_info[0] == 3:
     return d.items()
 
 else:
-
+  PY2 = True
+  PY3 = False
   text_type = unicode
   string_types = (str, unicode)
 
