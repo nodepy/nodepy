@@ -32,7 +32,7 @@ def _main(argv=None):
   args.nodepy_path.insert(0, '.')
   if args.version:
     print(VERSION)
-    return 1
+    return 0
 
   sys.argv = [sys.argv[0]] + args.request[1:]
 
