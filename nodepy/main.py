@@ -22,6 +22,7 @@ VERSION = 'node.py {} [{} {}]'.format(
 parser = argparse.ArgumentParser()
 parser.add_argument('request', nargs='...')
 parser.add_argument('--version', action='store_true')
+parser.add_argument('--pymain', action='store_true')
 parser.add_argument('--keep-arg0', action='store_true')
 parser.add_argument('--nodepy-path', action='append', default=[])
 parser.add_argument('--python-path', action='append', default=[])
@@ -53,7 +54,10 @@ def _main(argv=None):
         ctx.main_module = ctx.resolve(args.request[0])
       if not args.keep_arg0:
         sys.argv[0] = str(ctx.main_module.filename)
-      ctx.load_module(ctx.main_module)
+      ctx.main_module.init()
+      if args.pymain:
+        ctx.main_module.namespace.__name__ = '__main__'
+      ctx.load_module(ctx.main_module, do_init=False)
     else:
       filename = nodepy.utils.NoPath('<repl>')
       directory = pathlib.Path.cwd()
