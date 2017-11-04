@@ -52,10 +52,6 @@ class NoPath(pathlib.Path, PureNoPath):
 
   def open(self, flags='r', mode=0o666):
     raise NotImplementedError("NoPath.open() not supported")
-    if set(flags).difference('rbt'):
-      raise IOError('URLs can be opened in read-mode only.')
-    request = urlopen(str(self))
-    return (io.BufferedReader if 'b' in flags else io.TextIOWrapper)(request)
 
   def is_dir(self):
     return False

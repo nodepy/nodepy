@@ -9,10 +9,9 @@ import posixpath
 
 try:
   from urllib.request import urlopen
-  from urllib.parse import urlparse
+  from urllib.parse import urlparse, urlunparse
 except ImportError:
-  from urllib2 import urlopen, urlparse
-
+  from urllib2 import urlopen, urlparse, urlunparse
 
 
 class _UrlFlavour(pathlib._PosixFlavour):
@@ -27,7 +26,7 @@ class _UrlFlavour(pathlib._PosixFlavour):
     return (
       res.scheme + '://' if res.scheme else '',
       res.netloc + '/' if res.netloc else '',
-      res.path
+      urlunparse(('', '', res.path, res.params, res.query, res.fragment))
     )
 
 
