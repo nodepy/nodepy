@@ -10,11 +10,7 @@ def is_connected():
   if hasattr(is_connected, '_result'):
     return is_connected._result
   try:
-    # see if we can resolve the host name -- tells us if there is
-    # a DNS listening
     host = socket.gethostbyname(REMOTE_SERVER)
-    # connect to the host -- tells us if the host is actually
-    # reachable
     s = socket.create_connection((host, 80), 2)
     is_connected._result = True
   except:
