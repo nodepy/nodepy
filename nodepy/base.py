@@ -123,7 +123,7 @@ class Module(object):
     self.loaded = False
     self.exports = NotImplemented
     self.exception = None
-    self.namespace = types.ModuleType(self.name)
+    self.namespace = types.ModuleType(str(self.name))  # does not accept unicode in Python 2
     self.namespace.__file__ = str(self.filename)
     self.namespace.module = self
     self.namespace.require = self.require
