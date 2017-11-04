@@ -5,7 +5,23 @@ Small Python 2/3 compatibility layer.
 import sys
 
 
+def as_text(x, encoding=None):
+  """
+  Accepts a binary or unicode string and returns a unicode string. If *x* is
+  not a string type, a #TypeError is raised.
+  """
+
+  if not isinstance(x, string_types):
+    raise TypeError('expected string, got {} instead'.format(type(x).__name__))
+  if not isinstance(x, text_type):
+    x = x.decode(encoding or sys.getdefaultencoding())
+  return x
+
+
 if sys.version_info[0] == 3:
+
+  text_type = str
+  string_types = (str,)
 
   exec_ = getattr(__import__('builtins'), 'exec')
 
@@ -20,6 +36,9 @@ if sys.version_info[0] == 3:
     return d.items()
 
 else:
+
+  text_type = unicode
+  string_types = (str, unicode)
 
   def exec_(_code_, _globs_=None, _locs_=None):
     """Execute code in a namespace."""

@@ -14,7 +14,7 @@ import sys
 try:
   from urllib.parse import urlparse
 except ImportError:
-  from urllib2 import urlparse
+  from urlparse import urlparse
 
 VERSION = 'node.py {} [{} {}]'.format(
   nodepy.__version__, nodepy.runtime.implementation, sys.version)

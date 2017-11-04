@@ -23,7 +23,7 @@ class Require(object):
     self.cache = {}
 
   def __call__(self, request, exports=True):
-    assert isinstance(request, str)
+    request = utils.compat.as_text(request)
     module = self.cache.get(request)
     if module and not module.exception:
       return module
