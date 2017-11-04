@@ -12,4 +12,4 @@ install:
 - pip --version
 - pip install .
 script:
-- python -m nodepy.main ./nodepy-pm
+- python -m nodepy.main ./test/main
