@@ -6,6 +6,7 @@ from nodepy import base, extensions, loader, resolver, utils
 from nodepy.utils import pathlib
 import contextlib
 import localimport
+import six
 import sys
 
 
@@ -23,7 +24,7 @@ class Require(object):
     self.cache = {}
 
   def __call__(self, request, exports=True):
-    request = utils.compat.as_text(request)
+    request = utils.as_text(request)
     module = self.cache.get(request)
     if module and not module.exception:
       return module
@@ -167,7 +168,7 @@ class Context(object):
 
     assert isinstance(module, base.Module)
     if module.exception:
-      utils.compat.reraise(*module.exception)
+      six.reraise(*module.exception)
     if module.loaded:
       return
     if module.filename not in self.modules:

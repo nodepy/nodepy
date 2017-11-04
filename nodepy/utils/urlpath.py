@@ -2,7 +2,7 @@
 A #pathlib.Path implementation for URLs.
 """
 
-from nodepy.utils import compat, pathlib
+from nodepy.utils import pathlib
 import os
 import io
 import posixpath
@@ -66,7 +66,7 @@ class UrlPath(pathlib.Path, PureUrlPath):
   def open(self, flags='r', mode=0o666):
     if set(flags).difference('rbt'):
       raise IOError('URLs can be opened in read-mode only.')
-    if compat.PY2:
+    if six.PY2:
       fp = self._readable(urlopen(str(self)).fp)
     else:
       fp = urlopen(str(self))

@@ -46,7 +46,7 @@ class Request(object):
     assert isinstance(directory, pathlib.Path)
     self.context = context
     self.directory = directory
-    self.string = utils.compat.as_text(string)
+    self.string = utils.as_text(string)
     self.additional_search_path = additional_search_path
 
   def __repr__(self):

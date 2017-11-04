@@ -2,8 +2,9 @@
 Utilities related to Pip or Python's standard package/modules.
 """
 
-from nodepy.utils import pathlib, compat
+from nodepy.utils import pathlib
 import os
+import six
 import sys
 
 try:
@@ -57,7 +58,7 @@ def reload_pkg_resources(name='pkg_resources', insert_paths_index=None):
   vars(pkg_resources).update(keep)
 
   # Keep submodules.
-  for mod_name, module in compat.iteritems(sys.modules):
+  for mod_name, module in six.iteritems(sys.modules):
     if mod_name.startswith(name + '.') and mod_name.count('.') == 1:
       mod_name = mod_name.split('.')[1]
       setattr(pkg_resources, mod_name, module)
