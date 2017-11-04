@@ -2,7 +2,13 @@
 Base classes and interfaces.
 """
 
-from nodepy import context as _context, utils
+# Workaround because the module is not assigned as an attribute to the
+# nodepy parent module yet on cyclic imports.
+import sys
+import nodepy.context
+_context = sys.modules['nodepy.context']
+
+from nodepy import utils
 from nodepy.utils import pathlib
 import types
 import weakref
