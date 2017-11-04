@@ -22,14 +22,13 @@ The package manager can be installed by passing the URL to the remote install
 script to the `nodepy` command-line. Alternatively, you can clone the
 [Node.py PM] source repository and run the install script.
 
-  [Node.py PM]: https://github.com/nodepy/nodepy-package-manager
+  [Node.py PM]: https://github.com/nodepy/nodepy-pm
 
 ```
 $ nodepy https://nodepy.org/install-pm
-
-# Alternatively:
-$ git clone https://github.com/nodepy/nodepy-package-manager.git
-$ nodepy nodepy-package-manager/scripts/install
+$ ## Alternatively
+$ git clone https://github.com/nodepy/nodepy-pm.git
+$ nodepy nodepy-pm/scripts/install
 ```
 
 Check the package manager version and update your `PATH`:
