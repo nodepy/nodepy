@@ -1,6 +1,7 @@
 
 import pathlib2 as pathlib
 import six
+import sys
 
 from . import context, iter, machinery, path
 from .nopath import PureNoPath, NoPath
