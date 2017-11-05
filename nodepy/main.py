@@ -6,6 +6,7 @@ from nodepy.utils import pathlib
 from nodepy.loader import PythonModule
 import argparse
 import code
+import functools
 import os
 import pdb
 import nodepy
@@ -23,9 +24,48 @@ parser = argparse.ArgumentParser()
 parser.add_argument('request', nargs='...')
 parser.add_argument('--version', action='store_true')
 parser.add_argument('--pymain', action='store_true')
+parser.add_argument('--pmd', action='store_true')
 parser.add_argument('--keep-arg0', action='store_true')
 parser.add_argument('--nodepy-path', action='append', default=[])
 parser.add_argument('--python-path', action='append', default=[])
+
+
+def check_pmd_envvar():
+  """
+  Checks the value of the `NODEPY_PMD` environment variable. If it's an
+  integer, it will be decrement by one. If the value falls below one, then
+  the variable is unset so that future child processes can't inherit it.
+  If the value is anything other than a string, it will be left unchanged.
+  """
+
+  value = os.environ.get('NODEPY_PMD', '')
+  try:
+    level = int(value)
+  except ValueError:
+    level = None
+
+  if level is not None and level <= 0:
+    value = ''
+  elif level is not None and level <= 1:
+    os.environ.pop('NODEPY_PMD', '')
+  elif level is not None:
+    os.environ['NODEPY_PMD'] = str(level - 1)
+
+  return bool(value)
+
+
+def install_pmd(ctx):
+  """
+  Installs the post-mortem debugger which calls #Context.breakpoint().
+  """
+
+  @functools.wraps(sys.excepthook)
+  def wrapper(type, value, traceback):
+    ctx.breakpoint(traceback)
+    return wrapper.__wrapped__(type, value, traceback)
+
+  sys.excepthook = wrapper
+
 
 
 def main(argv=None):
@@ -35,12 +75,15 @@ def main(argv=None):
     print(VERSION)
     return 0
 
+  args.pmd = check_pmd_envvar() or args.pmd
   sys.argv = [sys.argv[0]] + args.request[1:]
 
   ctx = nodepy.context.Context()
   ctx.resolvers[0].paths.extend(map(pathlib.Path, args.nodepy_path))
   ctx.localimport.path.extend(args.python_path)
   with ctx.enter():
+    if args.pmd:
+      install_pmd(ctx)
     if args.request:
       url_info = urlparse(args.request[0])
       if url_info.scheme in ('http', 'https'):
