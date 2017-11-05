@@ -36,7 +36,7 @@ setup(
   install_requires = ['localimport>=1.5.2', 'pathlib2>=2.3.0', 'six>=1.11.0'],
   entry_points = {
     'console_scripts': [
-      'nodepy{} = nodepy.main:main'.format(v)
+      'nodepy{}=nodepy.main:main'.format(v)
       for v in ('', sys.version[0], sys.version[:3])
     ]
   }
