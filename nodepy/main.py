@@ -28,7 +28,7 @@ parser.add_argument('--nodepy-path', action='append', default=[])
 parser.add_argument('--python-path', action='append', default=[])
 
 
-def _main(argv=None):
+def main(argv=None):
   args = parser.parse_args(argv)
   args.nodepy_path.insert(0, '.')
   if args.version:
@@ -65,16 +65,6 @@ def _main(argv=None):
       ctx.main_module.init()
       ctx.main_module.loaded = True
       code.interact(VERSION, local=vars(ctx.main_module.namespace))
-
-
-def main(argv=None, pdb_enabled=False):
-  if os.getenv('NODEPY_PDB', '') == 'on' or pdb_enabled:
-    prev_hook = sys.excepthook
-    def excepthook(*args):
-      pdb.set_trace()
-      return prev_hook(*args)
-    sys.excepthook = excepthook
-  return _main(argv)
 
 
 if __name__ == '__main__':

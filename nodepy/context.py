@@ -6,6 +6,7 @@ from nodepy import base, extensions, loader, resolver, utils
 from nodepy.utils import pathlib
 import contextlib
 import localimport
+import os
 import six
 import sys
 
@@ -73,6 +74,36 @@ class Require(object):
   def current(self):
     return self.context.current_module
 
+  def breakpoint(self, tb=None, stackdepth=0):
+    """
+    Enters the interactive debugger. If *tb* is specified, the debugger will
+    be entered at the specified traceback. *tb* may also be the value #True
+    in which case `sys.exc_info()[2]` is used as the traceback.
+
+    The `NODEPY_BREAKPOINT` environment variable will be considered to
+    determine the implementation of the debugger. If it is an empty string
+    or unset, #Context.breakpoint() will be called. If it is `0`, the
+    function will return `None` immediately without invoking a debugger.
+    Otherwise, it must be a string that can be `require()`-ed from the
+    current working directory. The loaded module's `breakpoint()` function
+    will be called with *tb* as single parameter.
+    """
+
+    if tb is True:
+      tb = sys.exc_info()[2]
+      if not tb:
+        raise RuntimeError('no current exception information')
+
+    var = os.getenv('NODEPY_BREAKPOINT', '')
+    if var == '0':
+      return
+
+    if var:
+      # XXX Use Context.require once it is implemented.
+      self.context.require(var).breakpoint(tb, stackdepth+1)
+    else:
+      self.context.breakpoint(tb, stackdepth+1)
+
 
 class Context(object):
 
@@ -81,7 +112,9 @@ class Context(object):
   package_main = 'index'
   link_file = '.nodepy-link.txt'
 
-  def __init__(self, bare=False):
+  def __init__(self, bare=False, maindir=None):
+    self.maindir = maindir or pathlib.Path.cwd()
+    self.require = Require(self, self.maindir)
     self.extensions = []
     self.resolvers = []
     self.modules = {}
@@ -195,3 +228,24 @@ class Context(object):
     if self.module_stack:
       return self.module_stack[-1]
     return None
+
+  def __breakpoint__(self, tb=None, stackdepth=0):
+    """
+    Default implementation of the #breakpoint() method. Uses PDB.
+    """
+
+    if tb is not None:
+      utils.FrameDebugger().interaction(None, tb)
+    else:
+      frame = sys._getframe(stackdepth+1)
+      utils.FrameDebugger().set_trace(frame)
+
+  def breakpoint(self, tb=None, stackdepth=0):
+    """
+    The default implementation of this method simply calls #__breakpoint__().
+    It can be overwritten (eg. simply by setting the member on the #Context
+    object) to alter the behaviour. This method is called by
+    #Require.breakpoint().
+    """
+
+    self.__breakpoint__(tb, stackdepth+1)

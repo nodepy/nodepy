@@ -92,6 +92,26 @@ if require.main == module:
   main()
 ```
 
+#### `require.breakpoint(tb=None)`
+
+This function starts the interactive debugger. By default, this is Python's
+standard debugger `pdb`. The debugger that is invoked can be changed by
+changing the `Context.breakpoint` member or setting the `NODEPY_BREAKPOINT`
+environment variable. 
+
+If `NODEPY_BREAKPOINT=0`, the breakpoint will be ignored and the function
+returns `None` immediately. If it is `NODEPY_BREAKPOINT=` it will be treated
+as if it was unset and `Context.breakpoint` will be called. Otherwise, it is
+assumed to be a string that is passed to `Context.require()` and the
+`breakpoint()` function will be called on the resulting module.
+
+If the *tb* parameter is specified, it must be either `True`, in which case
+the traceback is retrieved with `sys.exc_info()[2]`, or otherwise must be a
+traceback object. The default implemenetation will then start PDB as a
+post-mortem debugger for the traceback.
+
+> See also: [PEP 553](https://www.python.org/dev/peps/pep-0553/)
+
 #### `module`
 
 The `nodepy.base.Module` object for this file. The `module.namespace` object
