@@ -16,6 +16,8 @@ class Require(object):
   Implements the `require` object that is available to Node.py modules.
   """
 
+  ResolveError = base.ResolveError
+
   def __init__(self, context, directory):
     assert isinstance(context, Context)
     assert isinstance(directory, pathlib.Path)
@@ -25,12 +27,9 @@ class Require(object):
     self.cache = {}
 
   def __call__(self, request, exports=True):
-    request = utils.as_text(request)
-    module = self.cache.get(request)
-    if not module or module.exception:
-      module = self.resolve(request)
+    module = self.resolve(request)
+    if not module.loaded:
       self.context.load_module(module)
-      self.cache[request] = module
     if exports:
       if module.exports is NotImplemented:
         return module.namespace
@@ -39,7 +38,12 @@ class Require(object):
       return module
 
   def resolve(self, request):
-    return self.context.resolve(request, self.directory, self.path)
+    request = utils.as_text(request)
+    module = self.cache.get(request)
+    if not module or module.exception:
+      module = self.context.resolve(request, self.directory, self.path)
+      self.cache[request] = module
+    return module
 
   def star(self, request, symbols=None):
     """
@@ -64,6 +68,32 @@ class Require(object):
     else:
       for key in symbols:
         into[key] = getattr(namespace, key)
+
+  def try_(self, *requests, load=True, exports=True):
+    """
+    Load every of the specified *requests* until the first can be required
+    without error. Only if the requested module can not be found will the
+    next module be tried, otherwise the error will be propagated.
+
+    If none of the requests match, the last #ResolveError will be re-raised.
+    If *requests* is empty, a #ValueError is raised.
+    """
+
+    exc_info = None
+    for request in requests:
+      try:
+        if load:
+          return self(request, exports=exports)
+        else:
+          return self.resolve(request)
+      except self.ResolveError as exc:
+        exc_info = sys.exc_info()
+        if exc.request.string != request:
+          raise
+
+    if exc_info:
+      raise six.reraise(*exc_info)
+    raise ValueError('no requests specified')
 
   @property
   def main(self):
@@ -102,6 +132,15 @@ class Require(object):
       self.context.require(var).breakpoint(tb, stackdepth+1)
     else:
       self.context.breakpoint(tb, stackdepth+1)
+
+  def new(self, directory):
+    """
+    Creates a new #Require instance for the specified *directory*.
+    """
+
+    if isinstance(directory, str):
+      directory = pathlib.Path(directory)
+    return type(self)(self.context, directory)
 
 
 class Context(object):
@@ -227,6 +266,23 @@ class Context(object):
     if self.module_stack:
       return self.module_stack[-1]
     return None
+
+  @contextlib.contextmanager
+  def push_main(self, module):
+    """
+    A context-manager to temporarily shadow the #Context.main_module with
+    the specified *module*.
+    """
+
+    if not isinstance(module, base.Module):
+      raise TypeError('expected nodepy.base.Module instance')
+
+    prev_module = self.main_module
+    self.main_module = module
+    try:
+      yield
+    finally:
+      self.main_module = prev_module
 
   def __breakpoint__(self, tb=None, stackdepth=0):
     """
