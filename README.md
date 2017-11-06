@@ -1,4 +1,4 @@
-<p align="center"><img src=".assets/nodepy-logo.png" height="128px"></p>
+<img align="right" src=".assets/nodepy-logo.png" height="128px">
 <h1 align="center">Node.py (WIP)</h1>
 <p align="center">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
