@@ -6,6 +6,7 @@ from nodepy.utils import pathlib
 import os
 import io
 import posixpath
+import six
 
 try:
   from urllib.request import urlopen
