@@ -27,11 +27,10 @@ class Require(object):
   def __call__(self, request, exports=True):
     request = utils.as_text(request)
     module = self.cache.get(request)
-    if module and not module.exception:
-      return module
-    module = self.resolve(request)
-    self.context.load_module(module)
-    self.cache[request] = module
+    if not module or module.exception:
+      module = self.resolve(request)
+      self.context.load_module(module)
+      self.cache[request] = module
     if exports:
       if module.exports is NotImplemented:
         return module.namespace
