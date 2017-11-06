@@ -23,6 +23,10 @@ class ImportSyntax(base.Extension):
   import * from 'module'
   import default_member, * from 'module'
 
+  # Importing members from the module's namespace instead of from the
+  # members of the exported object:
+  import {{some_hidden_member}} from 'module'
+
   # Assign to another member already in the scope.
   import existing_member.foo from 'module'
 
@@ -38,16 +42,22 @@ class ImportSyntax(base.Extension):
   )
   _re_import_from = re.compile(
     r'''
-    ^(?P<indent>[^\S\n]*)   # Keep track of the indentation level
+    ^(?P<indent>[^\S\n]*)     # Keep track of the indentation level
     import\s+
     (?P<members>
       (?:
-        [\.\w]+|            # Default member
-        (?:[\.\w]+\s*,\s*)?     # Default member + specific members
+        [\.\w]+|              # Default member
+        (?:[\.\w]+\s*,\s*)?   # Default member + specific members
       )?
       (?:
-        \{[^}]+\}|          # Specific members
-        \*                  # Starred-import
+        (?:
+          \{\{[^}]+\}\}|      # Specific members, not from exports
+          \*                  # Starred-import
+        )
+        |(?:
+          \{[^}]+\}|          # Specific members
+          \*                  # Starred-import
+        )
       )?
     )\s+
     from\s+
@@ -58,8 +68,11 @@ class ImportSyntax(base.Extension):
   _regexes = [(_re_import_as, 'as'), (_re_import_from, 'from')]
 
   @staticmethod
-  def __import_symbols_from_stmt(module, symbols):
-    stmt = '_reqres=require({!r}, exports=False).namespace;'.format(module)
+  def __import_symbols_from_stmt(module, symbols, exports=True):
+    if exports:
+      stmt = '_reqres=require({!r});'.format(module)
+    else:
+      stmt = '_reqres=require({!r}, exports=False).namespace;'.format(module)
     for name in symbols:
       alias = name = name.strip()
       parts = re.split('\s+', name)
@@ -88,6 +101,9 @@ class ImportSyntax(base.Extension):
         if members == '*':
           repl = 'require.star({!r})'.format(module)
         elif '{' in members:
+
+          # Handle brace-enclosed import of members, optionally preceeded by
+          # a default-member import.
           if members.startswith('{'):
             default_name = None
           else:
@@ -95,7 +111,18 @@ class ImportSyntax(base.Extension):
             members = members.lstrip()
             assert members.startswith('{')
           assert members.endswith('}')
-          repl = self.__import_symbols_from_stmt(module, members[1:-1].split(','))
+          members = members[1:-1]
+
+          # Second pair of braces indicates import from the module namespace
+          # instead of the exported object.
+          if members.startswith('{'):
+            exports = False
+            assert members.endswith('}')
+            members = members[1:-1]
+          else:
+            exports = True
+
+          repl = self.__import_symbols_from_stmt(module, members.split(','), exports)
           if default_name:
             repl = '{}=require({!r});'.format(default_name, module) + repl
         elif members.endswith('*') and members.count(',') == 1:
