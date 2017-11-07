@@ -5,6 +5,7 @@ A #pathlib.Path implementation for ZIP files.
 from nodepy.utils import pathlib, path
 import codecs
 import errno
+import functools
 import posixpath
 import six
 import sys
@@ -25,14 +26,42 @@ if six.PY2:
   PermissionError = _error_factory('PermissionError', errno.EPERM)
 
 
+class maybe_classmethod(object):
+
+  def __init__(self, func):
+    functools.update_wrapper(self, func)
+
+  def __get__(self, obj, type=None):
+    if obj is not None:
+      return functools.partial(self.__wrapped__, obj)
+    elif type is not None:
+      return functools.partial(self.__wrapped__, type)
+    raise RuntimeError
+
+
 class CopyFromSourceMixin(object):
 
   # This used to be a classmethod on #pathlib.PurePath.
   # You win some, you loose some.
+  @maybe_classmethod
   def _from_parsed_parts(self, *args, **kwargs):
     new = super(CopyFromSourceMixin, self)._from_parsed_parts(*args, **kwargs)
-    new._copy_from_source(self)
+    if not isinstance(self, type):
+      new._copy_from_source(self)
     return new
+
+  @maybe_classmethod
+  def _from_parts(self, *args, **kwargs):
+    new = super(CopyFromSourceMixin, self)._from_parts(*args, **kwargs)
+    if not isinstance(self, type):
+      new._copy_from_source(self)
+    return new
+
+  @property
+  def parents(self):
+    parents = pathlib._PathParents(self)
+    parents._pathcls = self
+    return parents
 
 
 class PureZipPath(CopyFromSourceMixin, pathlib.PurePath):
@@ -160,6 +189,6 @@ def make(s, pure=False):
         zipf = zipfile.ZipFile(fp, 'r')
         open_zipfiles[current] = zipf
       relname = s.relative_to(current)
-      relname = '/' + '/'.join(reversed([x.name for x in path.upiter(relname)]))
+      relname = '/'.join(reversed([x.name for x in path.upiter(relname)]))
       return ZipPath(zipf, relname)
   raise ValueError('can not create ZipPath: {!r}'.format(s))
