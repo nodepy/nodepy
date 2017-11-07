@@ -58,6 +58,7 @@ class StdResolver(base.Resolver):
           # directory does not exist?
           # if not package_dir.is_dir():
           path = package_dir.joinpath(path.relative_to(lnk.parent))
+          path = context.augment_path(path)
           break
     return path
 
@@ -85,6 +86,7 @@ class StdResolver(base.Resolver):
 
     for path in paths:
       filename = request.string.joinwith(path)
+      filename = request.context.augment_path(filename)
       filename = self.resolve_link(request.context, filename)
 
       package = None

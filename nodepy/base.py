@@ -297,3 +297,23 @@ class ResolveError(Exception):
       for path in self.search_paths:
         lines.append('    - {}'.format(path))
     return '\n'.join(lines)
+
+
+class PathAugmentor(object):
+  """
+  Interface for objects that can convert from one type of #pathlib.Path
+  to another. This is used, for example, to implement the support of loading
+  Node.py modules from ZIP files.
+  """
+
+  def augment_path(self, path):
+    raise NotImplementedError
+
+
+class ZipPathAugmentor(PathAugmentor):
+
+  def augment_path(self, path):
+    try:
+      return utils.path.zippath.make(path)
+    except ValueError:
+      return path

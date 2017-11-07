@@ -52,7 +52,11 @@ class PythonModule(base.Module):
 class PythonLoader(resolver.StdResolver.Loader):
 
   def suggest_files(self, context, path):
-    return [path.with_suffix('.py'), path.joinpath('__init__.py')]
+    try:
+      yield path.with_suffix('.py')
+    except ValueError:
+      pass
+    yield path.joinpath('__init__.py')
 
   def can_load(self, context, path):
     return path.suffix == '.py'

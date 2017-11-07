@@ -225,6 +225,7 @@ class Context(object):
     self.extensions = [extensions.ImportSyntax()]
     self.resolver = resolver.StdResolver([], [loader.PythonLoader(), loader.PackageRootLoader()])
     self.resolvers = []
+    self.pathaugmentors = [base.ZipPathAugmentor()]
     self.modules = {}
     self.packages = {}
     self.module_stack = []
@@ -263,6 +264,11 @@ class Context(object):
       stack.add(reload_pkg_resources())
       sys.path_importer_cache.clear()
       yield
+
+  def augment_path(self, path):
+    for augmentor in self.pathaugmentors:
+      path = augmentor.augment_path(path)
+    return path
 
   def resolve(self, request, directory=None, additional_search_path=()):
     if isinstance(request, six.string_types):
