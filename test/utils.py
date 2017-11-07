@@ -1,5 +1,5 @@
 
-from nodepy.utils import UrlPath
+from nodepy.utils.path import UrlPath
 import json
 import socket
 import unittest

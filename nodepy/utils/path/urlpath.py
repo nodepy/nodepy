@@ -37,6 +37,13 @@ class PureUrlPath(pathlib.PurePath):
   __slots__ = ()
 
 
+  def absolute(self):
+    return self
+
+  def is_absolute(self):
+    return True
+
+
 class UrlPath(pathlib.Path, PureUrlPath):
   __slots__ = ()
 
@@ -81,7 +88,10 @@ class UrlPath(pathlib.Path, PureUrlPath):
     return False
 
   def is_file(self):
-    return False
+    return True
+
+  def exists(self):
+    return True
 
   def is_symlink(self):
     return False
@@ -97,3 +107,20 @@ class UrlPath(pathlib.Path, PureUrlPath):
 
   def is_block_device(self):
     return False
+
+  def is_directory_listing_supported(self):
+    return False
+
+  def resolve(self):
+    return self
+
+
+def make(s, pure=False):
+  """
+  Maker for the #UrlPath.
+  """
+
+  res = urlparse(s)
+  if res.scheme and res.netloc:
+    return PureUrlPath(s) if pure else UrlPath(s)
+  raise ValueError('not a URL: {!r}'.format(s))

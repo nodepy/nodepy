@@ -10,6 +10,7 @@ _context = sys.modules['nodepy.context']
 
 from nodepy import utils
 from nodepy.utils import pathlib
+import os
 import types
 import weakref
 
@@ -40,24 +41,47 @@ class Extension(object):
 
 
 class Request(object):
+  """
+  Note that *string* is automatically converted to a #pathlib.Path instance
+  using #utils.path.make() if it is not a relative string.
+
+
+  Note: *string* can also be a #pathlib.Path object. In this case, relative
+  paths should be handled pointing to the resource that they actually point
+  to (ie. a relative #pathlib.Path should not be considered relative to the
+  *directory*).
+
+  An absolute OS filesystem string is automatically converted to a
+  #pathlib.Path object.
+  """
+
+  @staticmethod
+  def is_relative_request(s):
+    return s in ('.', '..') or s.startswith('./') or s.startswith('../')
 
   def __init__(self, context, directory, string, additional_search_path=()):
     assert isinstance(context, _context.Context)
     assert isinstance(directory, pathlib.Path)
+    if not isinstance(string, pathlib.Path):
+      string = utils.as_text(string)
+      if os.path.isabs(string):
+        string = pathlib.Path(string)
+
     self.context = context
     self.directory = directory
-    self.string = utils.as_text(string)
+    self.string = string
     self.additional_search_path = additional_search_path
 
   def __repr__(self):
     return '<Request "{}" from "{}">'.format(self.string, self.directory)
 
   def is_relative(self):
-    return self.string in ('.', '..') or self.string.startswith('./') or \
-      self.string.startswith('../')
+    if isinstance(self.string, pathlib.Path):
+      return False
+    return self.is_relative_request(self.string)
 
   def is_absolute(self):
-    return os.path.isabs(self.string)
+    return isinstance(self.string, pathlib.Path)
 
   def is_module(self):
     return not self.is_relative() and not self.is_absolute()

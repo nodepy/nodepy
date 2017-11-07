@@ -2,7 +2,7 @@
 The Node.py command-line interface.
 """
 
-from nodepy.utils import pathlib
+from nodepy.utils import pathlib, path
 from nodepy.loader import PythonModule
 import argparse
 import code
@@ -84,16 +84,11 @@ def main(argv=None):
     if args.pmd:
       install_pmd(ctx)
     if args.request:
-      url_info = urlparse(args.request[0])
-      if url_info.scheme in ('http', 'https'):
-        # Create a new module from a UrlPath filename.
-        filename = nodepy.utils.path.UrlPath(args.request[0])
-        directory = pathlib.Path.cwd()
-        module = PythonModule(ctx, None, filename, directory)
-        ctx.modules[module.filename] = module
-        ctx.main_module = module
-      else:
-        ctx.main_module = ctx.resolve(args.request[0])
+      try:
+        filename = path.urlpath.make(args.request[0])
+      except ValueError:
+        filename = args.request[0]
+      ctx.main_module = ctx.resolve(filename)
       if not args.keep_arg0:
         sys.argv[0] = str(ctx.main_module.filename)
       ctx.main_module.init()

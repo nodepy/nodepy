@@ -16,6 +16,9 @@ def load_package(context, directory, doraise_exists=True):
 
   if not isinstance(directory, pathlib.Path):
     directory = pathlib.Path(directory)
+  if not utils.path.is_directory_listing_supported(directory):
+    return None
+
   filename = directory.joinpath(context.package_manifest)
   if not doraise_exists and not filename.is_file():
     return None
@@ -42,6 +45,9 @@ class StdResolver(base.Resolver):
     directories of *path* and returns an update path pointing to the linked
     location.
     """
+
+    if not utils.path.is_directory_listing_supported(path):
+      return path
 
     link_file = context.link_file
     for lnk in (x.joinpath(link_file) for x in utils.path.upiter(path)):
@@ -72,8 +78,9 @@ class StdResolver(base.Resolver):
             return package, loader, suggestion
       return None
 
-    if os.path.isabs(request.string):
-      path = self.resolve_link(request.context, pathlib.Path(request.string))
+    if request.is_absolute():
+      assert isinstance(request.string, pathlib.Path), repr(request.string)
+      path = self.resolve_link(request.context, request.string)
       package = self.find_package(request.context, path)
       return confront_loaders(path, package) or (None, None, None)
 
@@ -129,6 +136,8 @@ class StdResolver(base.Resolver):
   def resolve_module(self, request):
     if request.is_relative():
       paths = [request.directory]
+    elif request.is_absolute():
+      paths = []
     else:
       paths = itertools.chain(request.related_paths, self.paths)
       paths = itertools.chain(paths, request.additional_search_path)
