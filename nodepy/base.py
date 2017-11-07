@@ -40,19 +40,89 @@ class Extension(object):
     return source
 
 
+class RequestString(object):
+  """
+  Represents a standard request string, which is either a relative request
+  or a module request. Such request strings are usually not absolute paths.
+  """
+
+  def __init__(self, value):
+    self._value = utils.as_text(value)
+
+  def __str__(self):
+    return self._value
+
+  def __repr__(self):
+    return '<RequestString value={!r}>'.format(self._value)
+
+  def path(self):
+    """
+    Returns a #pathlib.Path for this request string. The implementation for
+    #RequestString.path always raises a #RuntimeError because it is never
+    absolute. This property only works on absolute requests.
+    """
+
+    raise RuntimeError('RequestString.path not supported.')
+
+  def joinwith(self, path):
+    """
+    Join this request string with a path. Only works for non-absolute paths.
+    """
+
+    return path.joinpath(self._value)
+
+  def is_absolute(self):
+    return False
+
+  def is_relative(self):
+    s = self._value
+    return s in ('.', '..') or s.startswith('./') or s.startswith('../')
+
+  def is_module(self):
+    return not self.is_relative()
+
+
+class RequestPath(object):
+  """
+  Represents a #pathlib.Path as in a #Request. Path requests are always
+  considered absolute, even if the contained path is relative, because that
+  relative path can only be resolved in the current working directory.
+  """
+
+  def __init__(self, path):
+    if not isinstance(path, pathlib.Path):
+      raise TypeError('RequestPath() expected pathlib.Path object')
+    self._path = path
+
+  def __str__(self):
+    return self._path
+
+  def __repr__(self):
+    return '<RequestPath value={!r}>'.format(self._path)
+
+  def path(self):
+    return self._path
+
+  def joinpath(self, path):
+    raise RuntimeError('RequestPath.joinpath() not supported.')
+
+  def is_absolute(self):
+    return True
+
+  def is_relative(self):
+    return False
+
+  def is_module(self):
+    return False
+
+
 class Request(object):
   """
-  Note that *string* is automatically converted to a #pathlib.Path instance
-  using #utils.path.make() if it is not a relative string.
-
-
-  Note: *string* can also be a #pathlib.Path object. In this case, relative
-  paths should be handled pointing to the resource that they actually point
-  to (ie. a relative #pathlib.Path should not be considered relative to the
-  *directory*).
-
-  An absolute OS filesystem string is automatically converted to a
-  #pathlib.Path object.
+  # Parameters
+  context (Context)
+  directory (pathlib.Path)
+  string (RequestString, RequestPath)
+  additional_search_path (list of str)
   """
 
   @staticmethod
@@ -60,13 +130,9 @@ class Request(object):
     return s in ('.', '..') or s.startswith('./') or s.startswith('../')
 
   def __init__(self, context, directory, string, additional_search_path=()):
-    assert isinstance(context, _context.Context)
-    assert isinstance(directory, pathlib.Path)
-    if not isinstance(string, pathlib.Path):
-      string = utils.as_text(string)
-      if os.path.isabs(string):
-        string = pathlib.Path(string)
-
+    assert isinstance(context, _context.Context), type(context)
+    assert isinstance(directory, pathlib.Path), type(directory)
+    assert isinstance(string, (RequestString, RequestPath)), type(string)
     self.context = context
     self.directory = directory
     self.string = string
@@ -74,17 +140,6 @@ class Request(object):
 
   def __repr__(self):
     return '<Request "{}" from "{}">'.format(self.string, self.directory)
-
-  def is_relative(self):
-    if isinstance(self.string, pathlib.Path):
-      return False
-    return self.is_relative_request(self.string)
-
-  def is_absolute(self):
-    return isinstance(self.string, pathlib.Path)
-
-  def is_module(self):
-    return not self.is_relative() and not self.is_absolute()
 
   @property
   def related_paths(self):

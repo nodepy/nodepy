@@ -78,7 +78,7 @@ def main(argv=None):
   sys.argv = [sys.argv[0]] + args.request[1:]
 
   ctx = nodepy.context.Context()
-  ctx.resolvers[0].paths.extend(map(pathlib.Path, args.nodepy_path))
+  ctx.resolver.paths.extend(map(pathlib.Path, args.nodepy_path))
   ctx.localimport.path.extend(args.python_path)
   with ctx.enter():
     if args.pmd:

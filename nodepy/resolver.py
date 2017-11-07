@@ -78,14 +78,13 @@ class StdResolver(base.Resolver):
             return package, loader, suggestion
       return None
 
-    if request.is_absolute():
-      assert isinstance(request.string, pathlib.Path), repr(request.string)
-      path = self.resolve_link(request.context, request.string)
+    if request.string.is_absolute():
+      path = self.resolve_link(request.context, request.string.path())
       package = self.find_package(request.context, path)
       return confront_loaders(path, package) or (None, None, None)
 
     for path in paths:
-      filename = path.joinpath(request.string)
+      filename = request.string.joinwith(path)
       filename = self.resolve_link(request.context, filename)
 
       package = None
@@ -105,7 +104,7 @@ class StdResolver(base.Resolver):
       # Package.main is regarded independent from Package.resolve_root.
       if is_package_root:
         filename = filename.joinpath(package.main)
-      elif package and package.resolve_root and not request.is_relative():
+      elif package and package.resolve_root and not request.string.is_relative():
         rel = filename.relative_to(package.directory)
         filename = package.directory.joinpath(package.resolve_root, rel)
 
@@ -134,9 +133,9 @@ class StdResolver(base.Resolver):
     return None
 
   def resolve_module(self, request):
-    if request.is_relative():
+    if request.string.is_relative():
       paths = [request.directory]
-    elif request.is_absolute():
+    elif request.string.is_absolute():
       paths = []
     else:
       paths = itertools.chain(request.related_paths, self.paths)

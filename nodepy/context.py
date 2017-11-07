@@ -2,6 +2,7 @@
 Concrete implementation of the Node.py runtime.
 """
 
+from itertools import chain
 from nodepy import base, extensions, loader, resolver, utils
 from nodepy.utils import pathlib, tracing
 import contextlib
@@ -218,10 +219,11 @@ class Context(object):
   package_main = 'index'
   link_file = '.nodepy-link.txt'
 
-  def __init__(self, bare=False, maindir=None):
+  def __init__(self, maindir=None):
     self.maindir = maindir or pathlib.Path.cwd()
     self.require = Require(self, self.maindir)
-    self.extensions = []
+    self.extensions = [extensions.ImportSyntax()]
+    self.resolver = resolver.StdResolver([], [loader.PythonLoader(), loader.PackageRootLoader()])
     self.resolvers = []
     self.modules = {}
     self.packages = {}
@@ -229,11 +231,6 @@ class Context(object):
     self.main_module = None
     self.localimport = localimport.localimport([])
     self.tracer = None
-    if not bare:
-      loaders = [loader.PythonLoader(), loader.PackageRootLoader()]
-      std_resolver = resolver.StdResolver([], loaders)
-      self.resolvers.append(std_resolver)
-      self.extensions.append(extensions.ImportSyntax())
 
   @contextlib.contextmanager
   def enter(self, isolated=False):
@@ -268,13 +265,17 @@ class Context(object):
       yield
 
   def resolve(self, request, directory=None, additional_search_path=()):
+    if isinstance(request, six.string_types):
+      request = base.RequestString(request)
+    elif isinstance(request, pathlib.Path):
+      request = base.RequestPath(request)
     if not isinstance(request, base.Request):
       if directory is None:
-        directory = pathlib.Path.cwd()
+        directory = self.maindir
       request = base.Request(self, directory, request, additional_search_path)
 
     search_paths = []
-    for resolver in self.resolvers:
+    for resolver in chain([self.resolver], self.resolvers):
       try:
         module = resolver.resolve_module(request)
       except base.ResolveError as exc:
