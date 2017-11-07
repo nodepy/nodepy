@@ -51,7 +51,7 @@ def is_directory_listing_supported(path):
 
   if hasattr(path, 'is_directory_listing_supported'):
     return path.is_directory_listing_supported()
-  elif type(path) in (pathlib.Path, pathlib.WindowsPath, pathlib.PurePosixPath):
+  elif type(path) in (pathlib.Path, pathlib.WindowsPath, pathlib.PosixPath):
     return True
   else:
     raise TypeError('unsupported type: ' + type(path).__name__)
