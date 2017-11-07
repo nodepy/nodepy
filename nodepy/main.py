@@ -10,6 +10,7 @@ import functools
 import os
 import pdb
 import nodepy
+import six
 import sys
 
 try:
@@ -22,6 +23,7 @@ VERSION = 'node.py {} [{} {}]'.format(
 
 parser = argparse.ArgumentParser()
 parser.add_argument('request', nargs='...')
+parser.add_argument('-c')
 parser.add_argument('--version', action='store_true')
 parser.add_argument('--pymain', action='store_true')
 parser.add_argument('--pmd', action='store_true')
@@ -80,9 +82,21 @@ def main(argv=None):
   ctx = nodepy.context.Context()
   ctx.resolver.paths.extend(map(pathlib.Path, args.nodepy_path))
   ctx.localimport.path.extend(args.python_path)
+
+  # Create the module in which we run the REPL or the command
+  # specified via -c.
+  if args.c or not args.request:
+    filename = nodepy.utils.path.VoidPath('<repl>')
+    directory = pathlib.Path.cwd()
+    repl_module = nodepy.base.Module(ctx, None, filename, directory)
+    repl_module.init()
+    repl_module.loaded = True
+
   with ctx.enter():
     if args.pmd:
       install_pmd(ctx)
+    if args.c:
+      six.exec_(args.c, vars(repl_module.namespace))
     if args.request:
       try:
         filename = path.urlpath.make(args.request[0])
@@ -96,12 +110,8 @@ def main(argv=None):
         ctx.main_module.namespace.__name__ = '__main__'
       ctx.load_module(ctx.main_module, do_init=False)
     else:
-      filename = nodepy.utils.path.VoidPath('<repl>')
-      directory = pathlib.Path.cwd()
-      ctx.main_module = nodepy.base.Module(ctx, None, filename, directory)
-      ctx.main_module.init()
-      ctx.main_module.loaded = True
-      code.interact(VERSION, local=vars(ctx.main_module.namespace))
+      ctx.main_module = repl_module
+      code.interact(VERSION, local=vars(repl_module.namespace))
 
 
 if __name__ == '__main__':
