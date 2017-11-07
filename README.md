@@ -171,3 +171,5 @@ that propagate all the way up to `sys.excepthook()`.
 
 * Python bytecache loading/writing
 * Node.js-style traceback (Python's traceback sucks)
+* Support importing Pip packages from ZIP files (eg. if a `ZipPath` is on
+  the `Context.path` or if a module is executed from a file in a ZIP file)
