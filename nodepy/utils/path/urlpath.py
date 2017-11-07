@@ -107,11 +107,11 @@ class UrlPath(pathlib.Path, PureUrlPath):
   def is_block_device(self):
     return False
 
-  def is_directory_listing_supported(self):
-    return False
-
   def resolve(self):
     return self
+
+  def iterdir(self):
+    raise NotImplementedError
 
 
 def make(s, pure=False):

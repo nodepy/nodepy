@@ -47,11 +47,12 @@ def endswith(path, ending):
 def is_directory_listing_supported(path):
   """
   Returns #True if the specified *path* object support directory listing.
+  This is determined by testing it `path.iterdir()` raises a
+  #NotImplementedError.
   """
 
-  if hasattr(path, 'is_directory_listing_supported'):
-    return path.is_directory_listing_supported()
-  elif type(path) in (pathlib.Path, pathlib.WindowsPath, pathlib.PosixPath):
+  try:
+    path.iterdir()
     return True
-  else:
-    raise TypeError('unsupported type: ' + type(path).__name__)
+  except NotImplementedError:
+    return False
