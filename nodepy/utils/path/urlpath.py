@@ -36,7 +36,6 @@ class PureUrlPath(pathlib.PurePath):
   _flavour = _UrlFlavour()
   __slots__ = ()
 
-
   def absolute(self):
     return self
 
@@ -117,10 +116,12 @@ class UrlPath(pathlib.Path, PureUrlPath):
 
 def make(s, pure=False):
   """
-  Maker for the #UrlPath.
+  If *s* is a valid URL with a scheme and netloc, returns an #UrlPath or
+  #PureUrlPath (depending on *pure*). Otherwise, a #ValueError is raised.
   """
 
-  res = urlparse(s)
-  if res.scheme and res.netloc:
-    return PureUrlPath(s) if pure else UrlPath(s)
+  if isinstance(s, six.string_types):
+    res = urlparse(s)
+    if res.scheme and res.netloc:
+      return PureUrlPath(s) if pure else UrlPath(s)
   raise ValueError('not a URL: {!r}'.format(s))

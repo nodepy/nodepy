@@ -109,7 +109,7 @@ def main(argv=None):
       if args.pymain:
         ctx.main_module.namespace.__name__ = '__main__'
       ctx.load_module(ctx.main_module, do_init=False)
-    else:
+    elif not args.c:
       ctx.main_module = repl_module
       code.interact(VERSION, local=vars(repl_module.namespace))
 
