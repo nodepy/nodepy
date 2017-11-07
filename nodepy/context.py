@@ -3,7 +3,7 @@ Concrete implementation of the Node.py runtime.
 """
 
 from nodepy import base, extensions, loader, resolver, utils
-from nodepy.utils import pathlib
+from nodepy.utils import pathlib, tracing
 import contextlib
 import localimport
 import os
@@ -128,10 +128,68 @@ class Require(object):
       return
 
     if var:
-      # XXX Use Context.require once it is implemented.
       self.context.require(var).breakpoint(tb, stackdepth+1)
     else:
       self.context.breakpoint(tb, stackdepth+1)
+
+  def starttracing(self, tracer=None, daemon=True, options=None):
+    """
+    Starts a thread that allows you to trace the Python stack frames.
+
+    If a tracer is already running, a #RuntimeError is raised. The tracer
+    that is being used is determined from the `NODEPY_TRACING` environment
+    variable. If `NODEPY_TRACIN=`, it is treated as if it was not set.
+    Otherwise, the variable must contain a request that will be required using
+    #Context.require() and it must provide a #starttracing() function that
+    creates a tracer, starts and returns it.
+    """
+
+    if self.context.tracer:
+      raise RuntimeError('a tracer is already running')
+
+    if options is None:
+      options = {}
+
+    var = os.getenv('NODEPY_TRACING', '')
+    if var == '0':
+      return
+    if tracer is None:
+      tracer = var
+
+    if isinstance(tracer, str):
+      if tracer in ('http', ''):
+        tracer = tracing.HttpServerTracer(host=options.get('host'), port=options.get('port'))
+      elif tracer == 'file':
+        tracer = tracing.HtmlFileTracer(fname=options.get('path'), interval=options.get('interval'))
+      else:
+        tracer = self.context.require(tracer).starttracing(daemon, options)
+        if not isinstance(tracer, BaseThread):
+          raise RuntimeError('"{}:starttracing()" did not return a '
+            'tracing.BaseThread instance, got {} instead'
+            .format(tracer, type(tracer).__name__))
+        if not tracer.is_alive():
+          raise RuntimeError('"{}:starttracing()" did not return a '
+            'running tracer thread.')
+    elif isinstance(tracer, tracing.BaseThread):
+      pass
+    else:
+      raise TypeError('unexpected type for tracer: {}'.format(
+        type(tracer).__name__))
+
+    if not tracer.is_alive():
+      tracer.daemon = daemon
+      tracer.start()
+
+    self.context.tracer = tracer
+
+  def stoptracing(self, wait=True):
+    """
+    Stops the #Context.tracer if one exists.
+    """
+
+    if self.context.tracer:
+      self.context.tracer.stop(wait)
+      self.context.tracer = None
 
   def new(self, directory):
     """
@@ -160,6 +218,7 @@ class Context(object):
     self.module_stack = []
     self.main_module = None
     self.localimport = localimport.localimport([])
+    self.tracer = None
     if not bare:
       loaders = [loader.PythonLoader(), loader.PackageRootLoader()]
       std_resolver = resolver.StdResolver([], loaders)

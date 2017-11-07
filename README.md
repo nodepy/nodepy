@@ -112,6 +112,29 @@ post-mortem debugger for the traceback.
 
 > See also: [PEP 553](https://www.python.org/dev/peps/pep-0553/)
 
+### `require.starttracing(tracer=None, daemon=True, options=None)`
+
+Start a tracer thread that allows you to inspect the Python stack frames.
+By default, it will start an HTTP server listening on `localhost:8081`
+which serves an HTML file with all stack frames.
+
+The *tracer* parameter can be `'http'` (default) or `'file'`, or a tracer
+object (inheriting from `nodepy.utils.tracing.BaseThread`). The *options*
+argument can be used to pass options to the tracer.
+
+If *tracer* is any other string, it will be treated as a requeste and is
+`require()`-ed using the `Context.require()` function. The loaded module
+must provide a `starttracing(daemon, options)` function that creates,
+starts and returns a tracer.
+
+If *tracer* is `None`, it defaults to the value of the `NODEPY_TRACING`
+environment variable.
+
+### `require.stoptracing()`
+
+Stops the current tracer, if there is any. The tracer is stored in
+`Context.tracer`.
+
 #### `module`
 
 The `nodepy.base.Module` object for this file. The `module.namespace` object
