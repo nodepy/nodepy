@@ -5,8 +5,6 @@ import six
 import sys
 
 from . import context, iter, machinery, path
-from .nopath import PureNoPath, NoPath
-from .urlpath import PureUrlPath, UrlPath
 
 
 def as_text(x, encoding=None):

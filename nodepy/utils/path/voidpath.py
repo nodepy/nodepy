@@ -5,7 +5,7 @@ A void implementation of #pathlib.Path.
 from nodepy.utils import pathlib
 
 
-class _NoPathFlavour(pathlib._Flavour):
+class _VoidPathFlavour(pathlib._Flavour):
   sep = '/'
   altsep = ''
   has_drv = False
@@ -16,8 +16,8 @@ class _NoPathFlavour(pathlib._Flavour):
     return '', '', path
 
 
-class PureNoPath(pathlib.PurePath):
-  _flavour = _NoPathFlavour()
+class PureVoidPath(pathlib.PurePath):
+  _flavour = _VoidPathFlavour()
   __slots__ = ()
 
   drive = ''
@@ -32,26 +32,26 @@ class PureNoPath(pathlib.PurePath):
     return self
 
   def joinpath(self, *args):
-    raise NotImplementedError("can not join PureNoPath")
+    raise NotImplementedError("can not join PureVoidPath")
 
   def with_name(self, name):
     return type(self)(name)
 
   def with_suffix(self, suffix):
-    raise NotImplementedError('PureNoPath.with_suffix() is not supported')
+    raise NotImplementedError('PureVoidPath.with_suffix() is not supported')
 
 
-class NoPath(pathlib.Path, PureNoPath):
+class VoidPath(pathlib.Path, PureVoidPath):
   __slots__ = ()
 
   def owner(self):
-    raise NotImplementedError("NoPath.owner() is not unsupported")
+    raise NotImplementedError("VoidPath.owner() is not unsupported")
 
   def group(self):
-    raise NotImplementedError("NoPath.group() is not unsupported")
+    raise NotImplementedError("VoidPath.group() is not unsupported")
 
   def open(self, flags='r', mode=0o666):
-    raise NotImplementedError("NoPath.open() not supported")
+    raise NotImplementedError("VoidPath.open() not supported")
 
   def is_dir(self):
     return False

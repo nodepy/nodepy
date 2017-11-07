@@ -1,5 +1,7 @@
 
 from nodepy.utils import pathlib
+from .urlpath import PureUrlPath, UrlPath
+from .voidpath import PureVoidPath, VoidPath
 
 
 def lparts(path):

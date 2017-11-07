@@ -67,7 +67,6 @@ def install_pmd(ctx):
   sys.excepthook = wrapper
 
 
-
 def main(argv=None):
   args = parser.parse_args(argv)
   args.nodepy_path.insert(0, '.')
@@ -88,7 +87,7 @@ def main(argv=None):
       url_info = urlparse(args.request[0])
       if url_info.scheme in ('http', 'https'):
         # Create a new module from a UrlPath filename.
-        filename = nodepy.utils.UrlPath(args.request[0])
+        filename = nodepy.utils.path.UrlPath(args.request[0])
         directory = pathlib.Path.cwd()
         module = PythonModule(ctx, None, filename, directory)
         ctx.modules[module.filename] = module
@@ -102,7 +101,7 @@ def main(argv=None):
         ctx.main_module.namespace.__name__ = '__main__'
       ctx.load_module(ctx.main_module, do_init=False)
     else:
-      filename = nodepy.utils.NoPath('<repl>')
+      filename = nodepy.utils.path.VoidPath('<repl>')
       directory = pathlib.Path.cwd()
       ctx.main_module = nodepy.base.Module(ctx, None, filename, directory)
       ctx.main_module.init()
