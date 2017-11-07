@@ -69,7 +69,7 @@ class Require(object):
       for key in symbols:
         into[key] = getattr(namespace, key)
 
-  def try_(self, *requests, load=True, exports=True):
+  def try_(self, *requests, **kwargs):
     """
     Load every of the specified *requests* until the first can be required
     without error. Only if the requested module can not be found will the
@@ -77,7 +77,17 @@ class Require(object):
 
     If none of the requests match, the last #ResolveError will be re-raised.
     If *requests* is empty, a #ValueError is raised.
+
+    Additional keyword arguments are:
+
+    * load (bool)
+    * exports (bool)
     """
+
+    load = kwargs.pop('load', True)
+    exports = kwargs.pop('exports', True)
+    for key in kwargs:
+      raise TypeError('unexpected keyword argument: {}'.format(key))
 
     exc_info = None
     for request in requests:
