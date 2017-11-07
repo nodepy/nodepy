@@ -112,7 +112,7 @@ post-mortem debugger for the traceback.
 
 > See also: [PEP 553](https://www.python.org/dev/peps/pep-0553/)
 
-### `require.starttracing(tracer=None, daemon=True, options=None)`
+#### `require.starttracing(tracer=None, daemon=True, options=None)`
 
 Start a tracer thread that allows you to inspect the Python stack frames.
 By default, it will start an HTTP server listening on `localhost:8081`
@@ -130,7 +130,7 @@ starts and returns a tracer.
 If *tracer* is `None`, it defaults to the value of the `NODEPY_TRACING`
 environment variable.
 
-### `require.stoptracing()`
+#### `require.stoptracing()`
 
 Stops the current tracer, if there is any. The tracer is stored in
 `Context.tracer`.
