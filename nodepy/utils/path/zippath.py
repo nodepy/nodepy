@@ -2,7 +2,8 @@
 A #pathlib.Path implementation for ZIP files.
 """
 
-from nodepy.utils import pathlib, path
+from . import _core as path
+from ._core import pathlib
 import codecs
 import errno
 import functools
