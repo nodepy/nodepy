@@ -2,7 +2,7 @@
 A void implementation of #pathlib.Path.
 """
 
-from nodepy.utils import pathlib
+from ._core import pathlib
 
 
 class _VoidPathFlavour(pathlib._Flavour):

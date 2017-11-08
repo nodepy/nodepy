@@ -1,8 +1,5 @@
 
-from nodepy.utils import pathlib
-from .urlpath import PureUrlPath, UrlPath
-from .voidpath import PureVoidPath, VoidPath
-from .zippath import PureZipPath, ZipPath
+import pathlib2 as pathlib
 
 
 def lparts(path):

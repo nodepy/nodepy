@@ -2,7 +2,7 @@
 A #pathlib.Path implementation for URLs.
 """
 
-from nodepy.utils import pathlib
+from ._core import pathlib
 import os
 import io
 import posixpath
