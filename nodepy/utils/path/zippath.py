@@ -97,7 +97,7 @@ class ZipPath(pathlib.Path, PureZipPath):
   def _get_zipinfo(self):
     if self._info is not NotImplemented:
       return self._info
-    name = str(self).strip('/')
+    name = posixpath.normpath(str(self)).strip('/')
     try:
       self._info = self._zipf.getinfo(name)
     except KeyError:
@@ -166,6 +166,10 @@ class ZipPath(pathlib.Path, PureZipPath):
     if 'b' not in flags:
       fp = codecs.getreader(sys.getdefaultencoding())(fp)
     return fp
+
+  def absolute(self):
+    new = super(ZipPath, self).absolute()
+    return type(self)(self._zipf, posixpath.normpath(str(new)))
 
 
 def make(s, pure=False):
