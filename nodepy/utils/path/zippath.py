@@ -31,6 +31,7 @@ class maybe_classmethod(object):
 
   def __init__(self, func):
     functools.update_wrapper(self, func)
+    self.__wrapped__ = func
 
   def __get__(self, obj, type=None):
     if obj is not None:
@@ -158,12 +159,17 @@ class ZipPath(pathlib.Path, PureZipPath):
           yield type(self)(self._zipf, name)
 
   def open(self, flags='r', mode=0o666):
+    if 'b' in flags:
+      binary = True
+      flags = flags.replace('b', '')
+    else:
+      binary = False
     if not self.exists():
       raise FileNotFoundError('ZipFile item does not exist: ' + str(self))
     if not self.is_file():
       raise PermissionError('Permission denied: ' + str(self))
     fp = self._zipf.open(self._info, flags)
-    if 'b' not in flags:
+    if not binary:
       fp = codecs.getreader(sys.getdefaultencoding())(fp)
     return fp
 
