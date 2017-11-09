@@ -62,6 +62,8 @@ class RequestString(object):
     absolute. This property only works on absolute requests.
     """
 
+    if os.path.isabs(self._value):
+      return pathlib.Path(self._value)
     raise RuntimeError('RequestString.path not supported.')
 
   def joinwith(self, path):
@@ -72,7 +74,7 @@ class RequestString(object):
     return path.joinpath(self._value)
 
   def is_absolute(self):
-    return False
+    return os.path.isabs(self._value)
 
   def is_relative(self):
     s = self._value
