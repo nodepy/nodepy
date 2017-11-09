@@ -5,6 +5,7 @@ invoke the test cases.
 """
 
 import unittest
+import sys
 
 suite = unittest.TestSuite([
   unittest.defaultTestLoader.loadTestsFromModule(require('./utils')),
@@ -12,4 +13,8 @@ suite = unittest.TestSuite([
 ])
 
 if require.main == module:
-  unittest.TextTestRunner(verbosity=2).run(suite)
+  result = unittest.TextTestRunner(verbosity=2).run(suite)
+  if result.errors or result.failures:
+    sys.exit(1)
+  else:
+    sys.exit(0)
