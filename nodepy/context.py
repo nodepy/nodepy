@@ -19,6 +19,9 @@ class Require(object):
 
   ResolveError = base.ResolveError
 
+  class TryResolveError(Exception):
+    pass
+
   def __init__(self, context, directory):
     assert isinstance(context, Context)
     assert isinstance(directory, pathlib.Path)
@@ -74,10 +77,10 @@ class Require(object):
     """
     Load every of the specified *requests* until the first can be required
     without error. Only if the requested module can not be found will the
-    next module be tried, otherwise the error will be propagated.
+    next module be tried. Any other exception that occurs while loading a
+    module will not be caught.
 
-    If none of the requests match, the last #ResolveError will be re-raised.
-    If *requests* is empty, a #ValueError is raised.
+    If none of the requests match, a #TryResolveError is raised.
 
     Additional keyword arguments are:
 
@@ -90,7 +93,6 @@ class Require(object):
     for key in kwargs:
       raise TypeError('unexpected keyword argument: {}'.format(key))
 
-    exc_info = None
     for request in requests:
       try:
         if load:
@@ -98,13 +100,10 @@ class Require(object):
         else:
           return self.resolve(request)
       except self.ResolveError as exc:
-        exc_info = sys.exc_info()
         if exc.request.string != request:
           raise
 
-    if exc_info:
-      raise six.reraise(*exc_info)
-    raise ValueError('no requests specified')
+    raise TryResolveError(requests)
 
   @property
   def main(self):
