@@ -24,6 +24,7 @@ VERSION = 'node.py {} [{} {}]'.format(
 parser = argparse.ArgumentParser()
 parser.add_argument('request', nargs='...')
 parser.add_argument('-c')
+parser.add_argument('--maindir')
 parser.add_argument('--version', action='store_true')
 parser.add_argument('--pymain', action='store_true')
 parser.add_argument('--pmd', action='store_true')
@@ -79,7 +80,8 @@ def main(argv=None):
   args.pmd = check_pmd_envvar() or args.pmd
   sys.argv = [sys.argv[0]] + args.request[1:]
 
-  ctx = nodepy.context.Context()
+  maindir = pathlib.Path(args.maindir) if args.maindir else pathlib.Path.cwd()
+  ctx = nodepy.context.Context(maindir)
   ctx.resolver.paths.extend(map(pathlib.Path, args.nodepy_path))
   ctx.localimport.path.extend(args.python_path)
 
