@@ -30,7 +30,7 @@ class PythonModule(base.Module):
     # TODO: Could this value be cached on a Package level?
     library_dir = None
     for path in utils.path.upiter(self.directory):
-      path = path.joinpath(self.context.modules_directory, '.pip')
+      path = path.joinpath(self.context.pipprefix_directory)
       path = utils.machinery.get_site_packages(path)
       if path.is_dir():
         library_dir = str(path)

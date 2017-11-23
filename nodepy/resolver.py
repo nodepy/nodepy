@@ -49,8 +49,10 @@ class StdResolver(base.Resolver):
     if not utils.path.is_directory_listing_supported(path):
       return path
 
-    link_file = context.link_file
-    for lnk in (x.joinpath(link_file) for x in utils.path.upiter(path)):
+    link_suffix = context.link_suffix
+    for lnk in utils.path.upiter(path):
+      if not lnk.name: continue
+      lnk = lnk.with_name(lnk.name + link_suffix)
       if lnk.exists():
         with lnk.open() as fp:
           package_dir = pathlib.Path(fp.readline().strip())

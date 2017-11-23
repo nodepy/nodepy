@@ -213,10 +213,11 @@ class Require(object):
 
 class Context(object):
 
-  modules_directory = '.nodepy_modules'
+  modules_directory = '.nodepy/modules'
+  pipprefix_directory = '.nodepy/pip'
   package_manifest = 'nodepy.json'
   package_main = 'index'
-  link_file = '.nodepy-link.txt'
+  link_suffix = '.nodepy-link'
 
   def __init__(self, maindir=None):
     self.maindir = maindir or pathlib.Path.cwd()

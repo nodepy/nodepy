@@ -1,175 +1,52 @@
-<img align="right" src=".assets/nodepy-logo.png" height="128px">
-<h1 align="center">Node.py (WIP)</h1>
+<p align="center"><img src=".assets/nodepy-logo.png" height="128px"></p>
 <p align="center">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
   <img src="https://travis-ci.org/nodepy/nodepy.svg?branch=develop">
 </p>
-<p align="center">
-  A Node.js-like runtime for Python.
-</p>
+<h2>Node.py</h2>
 
-### Installation
+Node.py is a Python runtime compatible with CPython 2.7 and 3.3 &ndash; 3.6.
+It provides a separate but superior import mechanism for modules, bringing
+dependency management and ease of deployment for Python applications up to par
+with other languages, **without virtualenvs**. Node.py is inspired by
+[Node.js](https://nodejs.org).
 
-From Git:
+Nodepy-pm, Node.py's package manager, allows you to install and manage
+standard Python packages (using Pip under the hood) *as well* as Node.py
+package. Nodepy-pm is a powerful tool for deploying Node.py applications and
+command-line tools.
 
-    $ pip install git+https://github.com/nodepy/nodepy.git@develop
+## Installation
 
-### Packages
+Node.py is available from PyPI as `nodepy-runtime`. The Python version that
+you install it into will also be the Python version that you will use in your
+Node.py code. (Note that the `six` module is always available when using
+Node.py, allowing you to write cross-Python version code easily).
 
-  [Node.py PM]: https://github.com/nodepy/nodepy-pm
+    $ pip install nodepy-runtime
 
-Node.py has its [own package manager][Node.py PM]. Similar to Node.js,
-packages are installed into a local modules directory (`./.nodepy_modules`).
-It supports the installation of PyPI packages to this modules directory
-as well.
+Add the `--user` flag if you don't want to install Node.py system-wide.
 
-To install `nodepypm`:
+## Installing nodepy-pm
 
-    $ nodepy https://nodepy.org/install-pm
+Either **install from the online script** using the following command:
 
-Append the `-g` flag if you installed Node.py with the Pip `--user` flag.
+    $ nodepy https://nodepy.org/install-pm.py
 
-The Node.py runtime understands only a small part of the package ecosystem.
-It will parse package manifests (`nodepy.json`) when executing Python scripts
-and importing other modules from other packages. That information is only used
-to determine the main entry point for a package and the directory that module
-requests are resolved in.
+Or **install from the repository**:
 
-```json
-{
-  "name": "mypackage",
-  "version": "1.13.3",
-  "resolve_root": "./lib",
-  "main": "./lib/index.py"
-}
-```
+    $ git clone https://github.com/nodepy/nodepy-pm.git
+    $ nodepy nodepy-pm/scripts/install.py
 
-### Running Scripts
+**Note** The installer is *not* able to automatically detect whether Node.py
+was installed system-wide or with the `--user` option. If you installed Node.py
+with the `--user` option, pass the `--global` option to the install-script
+(global meaning user-location). The default is to install with `--root`
+(system-wide).
 
-The `nodepy` command-line allows you to use a REPL or run a Python script.
-Node.py can load and execute all standard Python scripts, only that such
-scripts will then have access to Node.py's additional built-ins, such as the
-`require()` function and the specialized `import` syntax.
+    $ nodepy https://nodepy.org/install-pm.py --global
 
-```python
-import {hello} from './hello'   # same as: hello = require('./hello').hello
-
-if require.main == module:
-  hello('John')
-```
-
-> Note that in Node.py we test for `require.main == module` instead of
-> `__name__ == '__main__'`. If you want to run a standard Python script
-> that tests for `__name__` with Node.py, you need to pass the `--pymain`
-> argument, like
->
->     $ nodepy --pymain myscript.py
-
-### Built-ins
-
-#### `require`
-
-Every module has it's own copy of the `require()` function, which is actually
-an instance of the `nodepy.context.Require` class. The `require()` function
-takes the following arguments:
-
-* request (str) &ndash; A string that can be used to find another module.
-  That module will be loaded and it's namespace or exported member
-  (`Module.exports`) will be returned.
-* exports (bool) &ndash; `True` by default. If this argument is `False`, the
-  actual `nodepy.base.Module` object will be returned instead of its namespace
-  or exported member.
-
-#### `require.main`
-
-The module that is executed via the command-line as the main module. This
-module is supposed to behave as being invoked as a program. Modules that
-support execution as a program are supposed to check if they are the chosen
-module:
-
-```python
-if require.main == module:
-  main()
-```
-
-#### `require.breakpoint(tb=None)`
-
-This function starts the interactive debugger. By default, this is Python's
-standard debugger `pdb`. The debugger that is invoked can be changed by
-changing the `Context.breakpoint` member or setting the `NODEPY_BREAKPOINT`
-environment variable. 
-
-If `NODEPY_BREAKPOINT=0`, the breakpoint will be ignored and the function
-returns `None` immediately. If it is `NODEPY_BREAKPOINT=` it will be treated
-as if it was unset and `Context.breakpoint` will be called. Otherwise, it is
-assumed to be a string that is passed to `Context.require()` and the
-`breakpoint()` function will be called on the resulting module.
-
-If the *tb* parameter is specified, it must be either `True`, in which case
-the traceback is retrieved with `sys.exc_info()[2]`, or otherwise must be a
-traceback object. The default implemenetation will then start PDB as a
-post-mortem debugger for the traceback.
-
-> See also: [PEP 553](https://www.python.org/dev/peps/pep-0553/)
-
-#### `require.starttracing(tracer=None, daemon=True, options=None)`
-
-Start a tracer thread that allows you to inspect the Python stack frames.
-By default, it will start an HTTP server listening on `localhost:8081`
-which serves an HTML file with all stack frames.
-
-The *tracer* parameter can be `'http'` (default) or `'file'`, or a tracer
-object (inheriting from `nodepy.utils.tracing.BaseThread`). The *options*
-argument can be used to pass options to the tracer.
-
-If *tracer* is any other string, it will be treated as a requeste and is
-`require()`-ed using the `Context.require()` function. The loaded module
-must provide a `starttracing(daemon, options)` function that creates,
-starts and returns a tracer.
-
-If *tracer* is `None`, it defaults to the value of the `NODEPY_TRACING`
-environment variable.
-
-#### `require.stoptracing()`
-
-Stops the current tracer, if there is any. The tracer is stored in
-`Context.tracer`.
-
-#### `module`
-
-The `nodepy.base.Module` object for this file. The `module.namespace` object
-is the Python module object in which the file is executed.
-
-```python
-assert globals() is vars(module.namespace)
-```
-
-#### `module.filename`, `module.directory`
-
-A `pathlib2.Path` instance that resembles the filename or directory of the
-module, respectively. A module could be loaded not directly from the
-filesystem but instead, for example, an internet resource or ZIP file. You
-should load resources not using the Python `open()` function or the `os`
-module, but instead by starting from the `module.directory` Path object.
-
-### Debugging
-
-For program tracing, please check the `require.breakpoint()` documentation.
-If your application terminates due to an exception, you can either pass the
-`--pmd` flag to the Node.py command-line or set the `NODEPY_PMD` environment
-variable. This will automatically enter the post-mortem debugger on exceptions
-that propagate all the way up to `sys.excepthook()`.
-
-    $ NODEPY_PMD=x my-nodepy-app
-
-> Important: If the value of `NODEPY_PMD` is an integer, it will be
-> decremented for the continuation of the process. If the value reaches zero,
-> the variable will be unset. This gives you some flexibility when debugging
-> applications that spawn other Node.py child processes.
-
-### Todolist
+## Todolist
 
 * Python bytecache loading/writing
 * Node.js-style traceback (Python's traceback sucks)
-* Support importing Pip packages from ZIP files (eg. if a `ZipPath` is on
-  the `Context.path` or if a module is executed from a file in a ZIP file)
