@@ -13,19 +13,6 @@ class PythonModule(base.Module):
     with self.filename.open('r') as fp:
       code = fp.read()
 
-    extensions = utils.iter.Chain(self.context.extensions)
-    if self.package:
-      require = self.package.require
-      extensions << (require(ext) for ext in self.package.extensions)
-
-    for ext_module in extensions:
-      if hasattr(ext_module, 'init_extension'):
-        ext_module.init_extension(self.package, self)
-      if hasattr(ext_module, 'preprocess_python_source'):
-        code = ext_module.preprocess_python_source(self, code)
-
-    code = compile(code, str(self.filename), 'exec', dont_inherit=True)
-
     # Find the nearest modules directory and enable importing from it.
     # TODO: Could this value be cached on a Package level?
     library_dir = None
@@ -37,9 +24,20 @@ class PythonModule(base.Module):
         break
 
     try:
-      if library_dir:
+      # NOTE: It's important we do this before extensions are executed.
       # TODO: Maybe add a loader meta_path that can load from any PathLike?
+      #       As this, it will only work for filesystem paths.
+      if library_dir:
         sys.path.insert(0, library_dir)
+
+      # Load and initialize all extensions, allow them to preprocess the code.
+      for ext_module in self.iter_extensions():
+        if hasattr(ext_module, 'init_extension'):
+          ext_module.init_extension(self.package, self)
+        if hasattr(ext_module, 'preprocess_python_source'):
+          code = ext_module.preprocess_python_source(self, code)
+
+      code = compile(code, str(self.filename), 'exec', dont_inherit=True)
       exec(code, vars(self.namespace))
     finally:
       if library_dir:
@@ -47,6 +45,13 @@ class PythonModule(base.Module):
           sys.path.remove(library_dir)
         except ValueError:
           pass
+
+  def iter_extensions(self):
+    extensions = utils.iter.Chain(self.context.extensions)
+    if self.package:
+      require = self.package.require
+      extensions << (require(ext) for ext in self.package.extensions)
+    return extensions
 
 
 class PythonLoader(resolver.StdResolver.Loader):
