@@ -50,16 +50,16 @@ class StdResolver(base.Resolver):
       return path
 
     link_suffix = context.link_suffix
-    for lnk in utils.path.upiter(path):
-      if not lnk.name: continue
-      lnk = lnk.with_name(lnk.name + link_suffix)
+    for curr in utils.path.upiter(path):
+      if not curr.name: break  # probably root of the filesystem
+      lnk = curr.with_name(curr.name + link_suffix)
       if lnk.exists():
         with lnk.open() as fp:
           package_dir = pathlib.Path(fp.readline().strip())
           # TODO: Raise a resolve error immediately if the linked
           # directory does not exist?
           # if not package_dir.is_dir():
-          path = package_dir.joinpath(path.relative_to(lnk.parent))
+          path = package_dir.joinpath(path.relative_to(curr))
           path = context.augment_path(path)
           break
     return path
