@@ -18,8 +18,8 @@ try:
 except ImportError:
   from urlparse import urlparse
 
-VERSION = 'node.py {} [{} {}]'.format(
-  nodepy.__version__, nodepy.runtime.implementation, sys.version)
+VERSION = 'nodepy {}\n[{} {}]'.format(
+  nodepy.__version__, nodepy.runtime.implementation, sys.version.replace('\n', ''))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('request', nargs='...')
@@ -113,7 +113,7 @@ def main(argv=None):
       ctx.load_module(ctx.main_module, do_init=False)
     elif not args.c:
       ctx.main_module = repl_module
-      code.interact(VERSION, local=vars(repl_module.namespace))
+      code.interact('', local=vars(repl_module.namespace))
 
 
 if __name__ == '__main__':
