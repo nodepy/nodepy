@@ -7,6 +7,7 @@ from nodepy import base, utils
 from nodepy.utils import json, pathlib
 import itertools
 import os
+import warnings
 
 
 def load_package(context, directory, doraise_exists=True):
@@ -56,12 +57,13 @@ class StdResolver(base.Resolver):
       if lnk.exists():
         with lnk.open() as fp:
           package_dir = pathlib.Path(fp.readline().strip())
-          # TODO: Raise a resolve error immediately if the linked
-          # directory does not exist?
-          # if not package_dir.is_dir():
-          path = package_dir.joinpath(path.relative_to(curr))
-          path = context.augment_path(path)
-          break
+          if package_dir.exists():
+            path = package_dir.joinpath(path.relative_to(curr))
+            path = context.augment_path(path)
+            break
+          else:
+            msg = 'Broken link file "{}" --> "{}"'.format(lnk, package_dir)
+            warnings.warn(msg, ImportWarning)
     return path
 
   def __try_load(self, paths, request):
