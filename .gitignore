@@ -1,0 +1,3 @@
+.nodepy_modules
+.env
+*.egg-info
