@@ -1,7 +1,0 @@
-.env[23]
-*.egg-info
-*.py[oc]
-*.rst
-dist/
-nodepy_modules/
-docs/build/
