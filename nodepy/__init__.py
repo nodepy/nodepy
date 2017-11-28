@@ -10,24 +10,35 @@ from . import context, runtime
 from .utils import pathlib
 import atexit
 
-default_context = context.Context()
+_default_context = None
 _default_context_enter = None
 _require_cache = {}
 
+
+def get_default_context():
+  global _default_context
+  if not _default_context:
+    _default_context = context.Context()
+  return _default_context
+
+
 def require(*args, **kwargs):
   """
-  Enters the #default_context once and registers the exit function with
-  #atexit.register(). The returns the result of #default_context.require().
-  Optionally, the additional *directory* keyword argument can be passed. A
-  separate #Require instance will be created for that directory.
+  Enters the default context (as returned by #get_ddefault_context())
+  and registers the exit function with #atexit.register(). The returns the
+  result of the default context's `require()` with the specified arguments,
+  or alternatively the result of a require at the specified *directory*
+  (keyword argument only).
 
   IMPORTANT: This function should only be used for one-off aplications
   that would never create multiple Node.py contexts.
   """
 
+  ctx = get_default_context()
+
   global _default_context_enter
   if not _default_context_enter:
-    _default_context_enter = default_context.enter()
+    _default_context_enter = ctx.enter()
     _default_context_enter.__enter__()
     atexit.register(_default_context_enter.__exit__, None, None, None)
 
@@ -37,9 +48,9 @@ def require(*args, **kwargs):
       directory = pathlib.Path(directory)
     require = _require_cache.get(directory)
     if not require:
-      require = context.Require(default_context, directory)
+      require = context.Require(ctx, directory)
       _require_cache[directory] = require
   else:
-    require = default_context.require
+    require = ctx.require
 
   return require(*args, **kwargs)
