@@ -5,6 +5,7 @@ Concrete implementation of the Node.py runtime.
 from itertools import chain
 from nodepy import base, extensions, loader, resolver, utils
 from nodepy.utils import pathlib, tracing
+from nodepy.utils.config import Config
 import contextlib
 import localimport
 import os
@@ -212,6 +213,24 @@ class Require(object):
 
 
 class Context(object):
+  """
+  Members:
+    config (Config): The Node.py configuration, read from the file
+      `~/.nodepy/config` if no value was given on construction. The
+      `NODEPY_CONFIG` environment variable can be used to alter the change
+      the path of the configuration file.
+    maindir (str):
+    require (Require):
+    extensions (List[base.Extension]):
+    resolver (resolver.StdResolver):
+    resolvers (List[base.Resolver]):
+    pathaugmentors (List[base.PathAugmentor]):
+    modules (Dict[pathlib.Path, base.Module]):
+    packages (Dict[pathlib.Path, base.Package]):
+    module_stack (List[base.Module]):
+    localimport (localimport.localimport):
+    tracer (Union[None, tracing.HtmlFileTracer, tracing.HttpServerTracer]):
+  """
 
   modules_directory = '.nodepy/modules'
   pipprefix_directory = '.nodepy/pip'
@@ -219,7 +238,12 @@ class Context(object):
   package_main = 'index'
   link_suffix = '.nodepy-link'
 
-  def __init__(self, maindir=None):
+  def __init__(self, maindir=None, config=None):
+    if not config:
+      filename = os.path.expanduser(os.getenv('NODEPY_CONFIG', '~/.nodepy/config'))
+      print(filename, os.path.exists(filename))
+      config = Config(filename, {})
+    self.config = config
     self.maindir = maindir or pathlib.Path.cwd()
     self.require = Require(self, self.maindir)
     self.extensions = [extensions.ImportSyntax()]
