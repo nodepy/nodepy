@@ -25,7 +25,7 @@ def readme():
 
 setup(
   name = 'nodepy-runtime',
-  version = '2.0.0',
+  version = '2.0.1-dev',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   license = 'MIT',
