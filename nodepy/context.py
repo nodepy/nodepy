@@ -241,7 +241,6 @@ class Context(object):
   def __init__(self, maindir=None, config=None):
     if not config:
       filename = os.path.expanduser(os.getenv('NODEPY_CONFIG', '~/.nodepy/config'))
-      print(filename, os.path.exists(filename))
       config = Config(filename, {})
     self.config = config
     self.maindir = maindir or pathlib.Path.cwd()

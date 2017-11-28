@@ -102,6 +102,9 @@ class Config(object):
     except KeyError:
       return default
 
+  def sections(self):
+    return self._parser.sections()
+
   def section(self, name):
     if not self.has_section(name):
       raise NoSuchSection(name)
