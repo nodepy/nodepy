@@ -36,11 +36,11 @@ class FrameDebugger(pdb.Pdb):
 
     # This is just a proxy function for documentation purposes.
     self.reset()
-    return super(FrameDebugger, self).interaction(frame, traceback)
+    return pdb.Pdb.interaction(self, frame, traceback)
 
   def setup(self, f, tb):
     if tb is not None:
-      return super(FrameDebugger, self).setup(f, tb)
+      return pdb.Pdb.setup(self, f, tb)
     else:
       # Imitate what the parent function is doing as much as possible,
       # but without a traceback
