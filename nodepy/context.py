@@ -104,7 +104,7 @@ class Require(object):
         if exc.request.string != request:
           raise
 
-    raise TryResolveError(requests)
+    raise self.TryResolveError(requests)
 
   @property
   def main(self):

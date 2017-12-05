@@ -11,6 +11,7 @@ _context = sys.modules['nodepy.context']
 from nodepy import utils
 from nodepy.utils import pathlib
 import os
+import six
 import types
 import weakref
 
@@ -54,6 +55,14 @@ class RequestString(object):
 
   def __repr__(self):
     return '<RequestString value={!r}>'.format(self._value)
+
+  def __eq__(self, other):
+    if isinstance(other, six.text_type):
+      return other == self._value
+    elif isinstance(other, RequestString):
+      return other._value == self._value
+    else:
+      return False
 
   def path(self):
     """
