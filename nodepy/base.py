@@ -193,11 +193,23 @@ class Module(object):
     """
 
     if self.package:
+      directory = self.package.directory
+      if self.package.resolve_root:
+        directory = directory.joinpath(self.package.resolve_root)
+      rel = None
       try:
-        rel = self.filename.with_suffix('').relative_to(self.package.directory)
-      except ValueError:
+        rel = self.filename.with_suffix('').relative_to(directory)
+      except ValueError as e:
+        if self.package.resolve_root:
+          # Possibly this module is required from a directory outside of
+          # the package's resolve_root, and Path.relative_to() will raise a
+          # ValueError if the file is not inside the specified directory.
+          try:
+            rel = type(self.filename)(os.path.relpath(str(self.filename.with_suffix('')), str(directory)))
+          except ValueError as e:
+            pass  # On a different drive
         pass
-      else:
+      if rel:
         parts = filter(bool, utils.path.lparts(rel))
         return self.package.name + '/' + '/'.join(parts)
 
