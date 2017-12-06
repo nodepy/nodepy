@@ -123,7 +123,7 @@ class StdResolver(base.Resolver):
     return None, None, None
 
   def package_for_directory(self, context, path):
-    path = path.absolute()
+    path = path.absolute().resolve(strict=False)
     package = context.packages.get(path)
     if package is None:
       package = load_package(context, path, doraise_exists=False)
