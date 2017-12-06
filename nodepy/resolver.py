@@ -107,16 +107,27 @@ class StdResolver(base.Resolver):
 
       filename = filename.absolute()
 
-      # Package.main is regarded independent from Package.resolve_root.
+      # Concatenate with the package main.
       if is_package_root:
         filename = filename.joinpath(package.main)
-      elif package and package.resolve_root and not request.string.is_relative():
+
+      # Apply Package.resolve_root (not if Package.main is defined explicitly).
+      if package and package.resolve_root and not package.is_main_defined \
+          and not request.string.is_relative():
         rel = filename.relative_to(package.directory)
         filename = package.directory.joinpath(package.resolve_root, rel)
 
       result = confront_loaders(filename, package)
+
+      # If no loader matched the current filename, and this request aims
+      # for the package entry point, try asking the loaders if they manage
+      # to load the package's directory.
       if not result and is_package_root and not package.is_main_defined:
-        result = confront_loaders(package.directory, package)
+        directory = package.directory
+        if package.resolve_root:
+          directory = directory.joinpath(package.resolve_root)
+        result = confront_loaders(directory, package)
+
       if result is not None:
         return result
 
