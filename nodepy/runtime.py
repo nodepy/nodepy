@@ -9,6 +9,7 @@ import sys
 #: * location: Either `system`, `global` or `local`
 #: * original_path: The original value of `sys.path` before it was augmented
 #:   by the Node.py entry point.
+#: * args: The original value of `sys.argv` when the script was invoked.
 script = None
 
 #: A list of command-line arguments to spawn a new Node.py child-process.
