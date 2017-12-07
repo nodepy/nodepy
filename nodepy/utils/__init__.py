@@ -1,9 +1,9 @@
 
+import pathlib2 as pathlib
 import pdb
 import six
 import sys
 
-from .path import pathlib
 from . import context, iter, machinery, path
 
 

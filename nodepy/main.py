@@ -2,12 +2,13 @@
 The Node.py command-line interface.
 """
 
-from nodepy.utils import pathlib, path
+from nodepy.utils import path
 from nodepy.loader import PythonModule
 import argparse
 import code
 import functools
 import os
+import pathlib2 as pathlib
 import pdb
 import nodepy
 import six

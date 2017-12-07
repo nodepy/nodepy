@@ -2,8 +2,8 @@
 Utilities related to Pip or Python's standard package/modules.
 """
 
-from nodepy.utils import pathlib
 import os
+import pathlib2 as pathlib
 import six
 import sys
 

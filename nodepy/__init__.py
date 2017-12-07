@@ -7,7 +7,7 @@ __version__ = '2.0.1-dev'
 __author__ = 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
 
 from . import context, runtime
-from .utils import pathlib
+import pathlib2 as pathlib
 import atexit
 
 _default_context = None

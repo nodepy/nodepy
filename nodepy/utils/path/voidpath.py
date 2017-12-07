@@ -2,7 +2,7 @@
 A void implementation of #pathlib.Path.
 """
 
-from ._core import pathlib
+import pathlib2 as pathlib
 
 
 class _VoidPathFlavour(pathlib._Flavour):

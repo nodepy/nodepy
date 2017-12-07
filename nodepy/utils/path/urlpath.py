@@ -2,9 +2,9 @@
 A #pathlib.Path implementation for URLs.
 """
 
-from ._core import pathlib
-import os
 import io
+import os
+import pathlib2 as pathlib
 import posixpath
 import six
 

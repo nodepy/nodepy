@@ -9,8 +9,8 @@ import nodepy.context
 _context = sys.modules['nodepy.context']
 
 from nodepy import utils
-from nodepy.utils import pathlib
 import os
+import pathlib2 as pathlib
 import six
 import types
 import weakref

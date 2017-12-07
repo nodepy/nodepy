@@ -3,10 +3,10 @@ A #pathlib.Path implementation for ZIP files.
 """
 
 from . import _core as path
-from ._core import pathlib
 import codecs
 import errno
 import functools
+import pathlib2 as pathlib
 import posixpath
 import six
 import sys

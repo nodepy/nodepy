@@ -4,11 +4,12 @@ Concrete implementation of the Node.py runtime.
 
 from itertools import chain
 from nodepy import base, extensions, loader, resolver, utils
-from nodepy.utils import pathlib, tracing
+from nodepy.utils import tracing
 from nodepy.utils.config import Config
 import contextlib
 import localimport
 import os
+import pathlib2 as pathlib
 import six
 import sys
 
