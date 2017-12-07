@@ -107,7 +107,7 @@ class UrlPath(pathlib.Path, PureUrlPath):
   def is_block_device(self):
     return False
 
-  def resolve(self):
+  def resolve(self, strict=False):
     return self
 
   def iterdir(self):
