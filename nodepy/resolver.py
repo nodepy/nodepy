@@ -111,9 +111,14 @@ class StdResolver(base.Resolver):
       if is_package_root:
         filename = filename.joinpath(package.main)
 
-      # Apply Package.resolve_root (not if Package.main is defined explicitly).
-      if package and package.resolve_root and not package.is_main_defined \
-          and not request.string.is_relative():
+      # Apply Package.resolve_root unless the package root is requested
+      # and the package entry point is explicitly defined.
+      if (package and
+          package.resolve_root and
+          not request.string.is_relative() and (
+            not is_package_root or
+            (is_package_root and not package.is_main_defined)
+          )):
         rel = filename.relative_to(package.directory)
         filename = package.directory.joinpath(package.resolve_root, rel)
 
