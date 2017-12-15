@@ -8,10 +8,26 @@ import sys
 
 class PythonModule(base.Module):
 
+  def _load_code(self):
+    with self.filename.open('r') as fp:
+      return fp.read()
+
+  def _init_extensions(self, code):
+    for ext_module in self.iter_extensions():
+      if hasattr(ext_module, 'init_extension'):
+        ext_module.init_extension(self.package, self)
+      if code is not None and hasattr(ext_module, 'preprocess_python_source'):
+        code = ext_module.preprocess_python_source(self, code)
+    return code
+
+  def _exec_code(self, code):
+    if code:
+      code = compile(code, str(self.filename), 'exec', dont_inherit=True)
+      exec(code, vars(self.namespace))
+
   def load(self):
     self.loaded = True
-    with self.filename.open('r') as fp:
-      code = fp.read()
+    code = self._load_code()
 
     # Find the nearest modules directory and enable importing from it.
     # TODO: Could this value be cached on a Package level?
@@ -30,15 +46,8 @@ class PythonModule(base.Module):
       if library_dir:
         sys.path.insert(0, library_dir)
 
-      # Load and initialize all extensions, allow them to preprocess the code.
-      for ext_module in self.iter_extensions():
-        if hasattr(ext_module, 'init_extension'):
-          ext_module.init_extension(self.package, self)
-        if hasattr(ext_module, 'preprocess_python_source'):
-          code = ext_module.preprocess_python_source(self, code)
-
-      code = compile(code, str(self.filename), 'exec', dont_inherit=True)
-      exec(code, vars(self.namespace))
+      code = self._init_extensions(code)
+      self._exec_code(code)
     finally:
       if library_dir:
         try:

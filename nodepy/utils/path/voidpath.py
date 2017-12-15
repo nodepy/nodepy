@@ -53,6 +53,9 @@ class VoidPath(pathlib.Path, PureVoidPath):
   def open(self, flags='r', mode=0o666):
     raise NotImplementedError("VoidPath.open() not supported")
 
+  def exists(self):
+    False
+
   def is_dir(self):
     return False
 

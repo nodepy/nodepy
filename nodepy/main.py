@@ -34,6 +34,18 @@ parser.add_argument('--nodepy-path', action='append', default=[])
 parser.add_argument('--python-path', action='append', default=[])
 
 
+class ReplModule(nodepy.loader.PythonModule):
+
+  def set_exec_handler(self, handler):
+    self._exec_code = lambda code: handler()
+
+  def _load_code(self):
+    return None
+
+  def _init_extensions(self, code):
+    pass
+
+
 def check_pmd_envvar():
   """
   Checks the value of the `NODEPY_PMD` environment variable. If it's an
@@ -91,15 +103,15 @@ def main(argv=None):
   if args.c or not args.request:
     filename = nodepy.utils.path.VoidPath('<repl>')
     directory = pathlib.Path.cwd()
-    repl_module = nodepy.base.Module(ctx, None, filename, directory)
+    repl_module = ReplModule(ctx, None, filename, directory)
     repl_module.init()
-    repl_module.loaded = True
 
   with ctx.enter():
     if args.pmd:
       install_pmd(ctx)
     if args.c:
-      six.exec_(args.c, vars(repl_module.namespace))
+      repl_module.set_exec_handler(lambda: six.exec_(args.c, vars(repl_module.namespace)))
+      repl_module.load()
     if args.request:
       try:
         filename = path.urlpath.make(args.request[0])
@@ -114,7 +126,8 @@ def main(argv=None):
       ctx.load_module(ctx.main_module, do_init=False)
     elif not args.c:
       ctx.main_module = repl_module
-      code.interact('', local=vars(repl_module.namespace))
+      repl_module.set_exec_handler(lambda: code.interact('', local=vars(repl_module.namespace)))
+      repl_module.load()
 
 
 if __name__ == '__main__':
