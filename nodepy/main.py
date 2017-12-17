@@ -95,7 +95,10 @@ def main(argv=None):
 
   maindir = pathlib.Path(args.maindir) if args.maindir else pathlib.Path.cwd()
   ctx = nodepy.context.Context(maindir)
-  ctx.resolver.paths.extend(map(pathlib.Path, args.nodepy_path))
+
+  # Updat the module search path.
+  args.nodepy_path.insert(0, ctx.modules_directory)
+  ctx.resolver.paths.extend(x for x in map(pathlib.Path, args.nodepy_path) if x.is_dir())
   ctx.localimport.path.extend(args.python_path)
 
   # Create the module in which we run the REPL or the command
