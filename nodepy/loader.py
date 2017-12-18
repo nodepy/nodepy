@@ -3,14 +3,16 @@ Implements the #resolver.StdResolverLoader interface for Python modules.
 """
 
 from nodepy import base, resolver, utils
+import codecs
 import sys
 
 
 class PythonModule(base.Module):
 
   def _load_code(self):
-    with self.filename.open('r') as fp:
-      return fp.read()
+    # TODO: Properly peek into the file for a coding: <name> instruction.
+    with self.filename.open('rb') as fp:
+      return codecs.getreader('utf8')(fp).read()
 
   def _init_extensions(self, code):
     for ext_module in self.iter_extensions():
