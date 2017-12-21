@@ -2,6 +2,11 @@
 title = "Changelog"
 +++
 
+## v2.0.2
+
+* `PythonLoader.load()` no longer adds to `sys.path` if the path already is
+  in the list
+
 ## v2.0.1
 
 * `PythonLoader._load_code()` now uses utf8 encoding by default, however we

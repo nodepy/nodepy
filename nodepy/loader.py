@@ -45,7 +45,7 @@ class PythonModule(base.Module):
       # NOTE: It's important we do this before extensions are executed.
       # TODO: Maybe add a loader meta_path that can load from any PathLike?
       #       As this, it will only work for filesystem paths.
-      if library_dir:
+      if library_dir and library_dir not in sys.path:
         sys.path.insert(0, library_dir)
 
       code = self._init_extensions(code)
