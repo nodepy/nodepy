@@ -34,10 +34,13 @@ parser.add_argument('--nodepy-path', action='append', default=[])
 parser.add_argument('--python-path', action='append', default=[])
 
 
-class ReplModule(nodepy.loader.PythonModule):
+class EntryModule(nodepy.loader.PythonModule):
 
-  def set_exec_handler(self, handler):
+  def run_with_exec_handler(self, handler):
     self._exec_code = lambda code: handler()
+    self.load()
+
+  # Overrides
 
   def _load_code(self):
     return None
@@ -70,7 +73,7 @@ def check_pmd_envvar():
   return bool(value)
 
 
-def install_pmd(ctx):
+def enable_post_mortem_debugger(ctx):
   """
   Installs the post-mortem debugger which calls #Context.breakpoint().
   """
@@ -96,41 +99,44 @@ def main(argv=None):
   maindir = pathlib.Path(args.maindir) if args.maindir else pathlib.Path.cwd()
   ctx = nodepy.context.Context(maindir)
 
-  # Updat the module search path.
+  # Update the module search path.
   args.nodepy_path.insert(0, ctx.modules_directory)
-  ctx.resolver.paths.extend(x for x in map(pathlib.Path, args.nodepy_path) if x.is_dir())
+  ctx.resolver.paths.extend(x for x in map(pathlib.Path, args.nodepy_path))
   ctx.localimport.path.extend(args.python_path)
 
-  # Create the module in which we run the REPL or the command
-  # specified via -c.
-  if args.c or not args.request:
-    filename = nodepy.utils.path.VoidPath('<repl>')
-    directory = pathlib.Path.cwd()
-    repl_module = ReplModule(ctx, None, filename, directory)
-    repl_module.init()
+  # This is the entry-point module. It will set up the Python sys.path
+  # for the current working directory when executed.
+  entry_module = EntryModule(
+    ctx, None, nodepy.utils.path.VoidPath('<entry>'), pathlib.Path.cwd()
+  )
+  entry_module.init()
 
   with ctx.enter():
     if args.pmd:
-      install_pmd(ctx)
+      enable_post_mortem_debugger(ctx)
     if args.c:
-      repl_module.set_exec_handler(lambda: six.exec_(args.c, vars(repl_module.namespace)))
-      repl_module.load()
+      def exec_hanlder():
+        six.exec_(args.c, vars(entry_module.namespace))
+      entry_module.run_with_exec_handler(exec_handler)
     if args.request:
-      try:
-        filename = path.urlpath.make(args.request[0])
-      except ValueError:
-        filename = args.request[0]
-      ctx.main_module = ctx.resolve(filename)
-      if not args.keep_arg0:
-        sys.argv[0] = str(ctx.main_module.filename)
-      ctx.main_module.init()
-      if args.pymain:
-        ctx.main_module.namespace.__name__ = '__main__'
-      ctx.load_module(ctx.main_module, do_init=False)
+      def exec_handler():
+        try:
+          filename = path.urlpath.make(args.request[0])
+        except ValueError:
+          filename = args.request[0]
+        ctx.main_module = ctx.resolve(filename)
+        if not args.keep_arg0:
+          sys.argv[0] = str(ctx.main_module.filename)
+        ctx.main_module.init()
+        if args.pymain:
+          ctx.main_module.namespace.__name__ = '__main__'
+        ctx.load_module(ctx.main_module, do_init=False)
+      entry_module.run_with_exec_handler(exec_handler)
     elif not args.c:
       ctx.main_module = repl_module
-      repl_module.set_exec_handler(lambda: code.interact('', local=vars(repl_module.namespace)))
-      repl_module.load()
+      def exec_handler():
+        code.interact('', local=vars(entry_module.namespace))
+      entry_module.run_with_exec_handler(exec_handler)
 
 
 if __name__ == '__main__':

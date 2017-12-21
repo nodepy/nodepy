@@ -4,6 +4,9 @@ title = "Changelog"
 
 ## v2.0.2
 
+* local `.nodepy/pip` directory is now always added to `sys.path` by
+  using the `EntryModule.run_with_exec_handler()` method instead of
+  loading and executing the module directly
 * `PythonLoader.load()` no longer adds to `sys.path` if the path already is
   in the list
 
