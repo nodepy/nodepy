@@ -247,7 +247,7 @@ class Context(object):
     self.maindir = maindir or pathlib.Path.cwd()
     self.require = Require(self, self.maindir)
     self.extensions = [extensions.ImportSyntax()]
-    self.resolver = resolver.StdResolver([], [loader.PythonLoader(), loader.PackageRootLoader()])
+    self.resolver = resolver.StdResolver([], [loader.PythonLoader()]) #, loader.PackageRootLoader()])
     self.resolvers = []
     self.pathaugmentors = [base.ZipPathAugmentor()]
     self.modules = {}
