@@ -115,7 +115,7 @@ def main(argv=None):
     if args.pmd:
       enable_post_mortem_debugger(ctx)
     if args.c:
-      def exec_hanlder():
+      def exec_handler():
         six.exec_(args.c, vars(entry_module.namespace))
       entry_module.run_with_exec_handler(exec_handler)
     if args.request:
