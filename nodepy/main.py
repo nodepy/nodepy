@@ -131,12 +131,11 @@ def main(argv=None):
         if args.pymain:
           ctx.main_module.namespace.__name__ = '__main__'
         ctx.load_module(ctx.main_module, do_init=False)
-      entry_module.run_with_exec_handler(exec_handler)
     elif not args.c:
       ctx.main_module = entry_module
       def exec_handler():
         code.interact('', local=vars(entry_module.namespace))
-      entry_module.run_with_exec_handler(exec_handler)
+    entry_module.run_with_exec_handler(exec_handler)
 
 
 if __name__ == '__main__':
