@@ -168,7 +168,7 @@ class Module(object):
   def __init__(self, context, package, filename, directory=None):
     assert isinstance(context, _context.Context) or context is None
     assert isinstance(package, Package) or package is None
-    assert isinstance(filename, pathlib.Path)
+    assert isinstance(filename, pathlib.Path), type(filename)
     assert isinstance(directory, pathlib.Path) or directory is None
     self.context = context
     self.package = package

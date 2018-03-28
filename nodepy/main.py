@@ -45,7 +45,7 @@ class EntryModule(nodepy.loader.PythonModule):
   def _load_code(self):
     return None
 
-  def _init_extensions(self, code):
+  def _init_extensions(self):
     pass
 
 

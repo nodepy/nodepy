@@ -14,12 +14,16 @@ class PythonModule(base.Module):
     with self.filename.open('rb') as fp:
       return codecs.getreader('utf8')(fp).read()
 
-  def _init_extensions(self, code):
+  def _init_extensions(self):
     for ext_module in self.iter_extensions():
       if hasattr(ext_module, 'init_extension'):
         ext_module.init_extension(self.package, self)
-      if code is not None and hasattr(ext_module, 'preprocess_python_source'):
-        code = ext_module.preprocess_python_source(self, code)
+
+  def _preprocess_code(self, code):
+    if code:
+      for ext_module in self.iter_extensions():
+        if hasattr(ext_module, 'preprocess_python_source'):
+          code = ext_module.preprocess_python_source(self, code)
     return code
 
   def _exec_code(self, code):
@@ -48,7 +52,8 @@ class PythonModule(base.Module):
       if library_dir and library_dir not in sys.path:
         sys.path.insert(0, library_dir)
 
-      code = self._init_extensions(code)
+      self._init_extensions()
+      code = self._preprocess_code(code)
       self._exec_code(code)
     finally:
       if library_dir:

@@ -186,5 +186,5 @@ class StdResolver(base.Resolver):
     def can_load(self, context, path):
       raise NotImplementedError
 
-    def load_modules(self, context, package, filename):
+    def load_module(self, context, package, filename):
       raise NotImplementedError
