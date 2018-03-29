@@ -239,12 +239,17 @@ class Context(object):
   package_main = 'index'
   link_suffix = '.nodepy-link'
 
-  def __init__(self, maindir=None, config=None):
-    if not config:
+  def __init__(self, maindir=None, config=None, parent=None, isolate=True, inherit=True):
+    if not config and not parent:
       filename = os.path.expanduser(os.getenv('NODEPY_CONFIG', '~/.nodepy/config'))
       config = Config(filename, {})
-    self.config = config
-    self.maindir = maindir or pathlib.Path.cwd()
+    if not maindir and not parent:
+      maindir = pathlib.Path.cwd()
+    self.parent = parent
+    self.isolate = isolate
+    self.inherit = inherit
+    self._config = config
+    self._maindir = maindir
     self.require = Require(self, self.maindir)
     self.extensions = [extensions.ImportSyntax()]
     self.resolver = resolver.StdResolver([], [loader.PythonLoader()]) #, loader.PackageRootLoader()])
@@ -256,6 +261,18 @@ class Context(object):
     self.main_module = None
     self.localimport = localimport.localimport([])
     self.tracer = None
+
+  @property
+  def config(self):
+    if self._config is not None or not self.parent:
+      return self._config
+    return self.parent.config
+
+  @property
+  def maindir(self):
+    if self._maindir is not None or not self.parent:
+      return self._maindir
+    return self.parent.maindir
 
   @contextlib.contextmanager
   def enter(self, isolated=False):
@@ -295,6 +312,20 @@ class Context(object):
     return path
 
   def resolve(self, request, directory=None, additional_search_path=()):
+    """
+    Checks all resolvers in this context to determine the module matching
+    the specified *request*. If the context has a parent, it will be used
+    for resolving the request as well.
+
+    If the sub-context is configured to be isolated from its parent (which it
+    is by default), modules resolved by the parent will be associated with
+    the sub-context instead and they will not be registered on the parent.
+
+    Additionally, if the sub-context is configured to *inherit* already loaded
+    modules from its parent, a module that is resolved by the sub-context will
+    first be checked for an already loaded module in the parent (on by default).
+    """
+
     if isinstance(request, six.string_types):
       request = base.RequestString(request)
     elif isinstance(request, pathlib.Path):
@@ -304,6 +335,8 @@ class Context(object):
         directory = self.maindir
       request = base.Request(self, directory, request, additional_search_path)
 
+    # Check all resolvers in the context.
+    module = None
     search_paths = []
     for resolver in chain([self.resolver], self.resolvers):
       try:
@@ -312,20 +345,56 @@ class Context(object):
         assert exc.request is request, (exc.request, request)
         search_paths.extend(exc.search_paths)
         continue
-
       if not isinstance(module, base.Module):
         msg = '{!r} returned non-Module object {!r}'
         msg = msg.format(type(resolver).__name__, type(module).__name__)
         raise RuntimeError(msg)
-      have_module = self.modules.get(module.filename)
+      break
+
+    # Check the parent.
+    if self.parent and module and self.inherit:
+      # Inherit the module that was already loaded by the parent.
+      module = self.parent.modules.get(module.filename, module)
+    elif self.parent and not module:
+      assert isinstance(request, base.Request)
+      if not self.isolate:
+        request.context = self.parent
+      try:
+        module = self.parent.resolve(request, directory, additional_search_path)
+      except base.ResolveError as exc:
+        for path in exc.search_paths:
+          if path not in search_paths:
+            search_paths.append(path)
+
+    if module:
+      have_module = request.context.modules.get(module.filename)
       if have_module is not None and have_module is not module:
         msg = '{!r} returned new Module object besides an existing entry '\
               'in the cache'.format(type(resolver).__name__)
         raise RuntimeError(msg)
-      self.modules[module.filename] = module
+      request.context.modules[module.filename] = module
       return module
 
     raise base.ResolveError(request, search_paths)
+
+  def register_module(self, module, force=False):
+    """
+    Adds a module to the Context, allowing it to be loaded using
+    #load_module(). If *force* is not set to #True and a different module with
+    the filename already exists, a #RuntimeError will be raised.
+
+    Note that if an exception happens during #load_module(), the module will
+    be unregistered again.
+    """
+
+    have_module = self.modules.get(module.filename)
+    if have_module:
+      if have_module is module:
+        return
+      if not force:
+        msg = '{!r} a different module with that filename is already registered'
+        raise RuntimeError(msg.format(module))
+    self.modules[module.filename] = module
 
   def load_module(self, module, do_init=True):
     """
@@ -342,8 +411,13 @@ class Context(object):
       six.reraise(*module.exception)
     if module.loaded:
       return
-    if module.filename not in self.modules:
+
+    have_module = self.modules.get(module.filename)
+    if have_module is None:
       msg = '{!r} can not be loaded when not in Context.modules'
+      raise RuntimeError(msg.format(module))
+    if have_module is not module:
+      msg = '{!r} is registered but has a different identitity'
       raise RuntimeError(msg.format(module))
 
     if do_init:

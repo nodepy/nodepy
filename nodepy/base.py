@@ -183,6 +183,9 @@ class Module(object):
   def __repr__(self):
     return '<{} {!r} at "{}">'.format(type(self).__name__, self.name, self.filename)
 
+  def create_namespace(self):
+    return types.ModuleType(str(self.name))  # does not accept unicode in Python 2
+
   @property
   def name(self):
     """
@@ -225,7 +228,7 @@ class Module(object):
     self.loaded = False
     self.exports = NotImplemented
     self.exception = None
-    self.namespace = types.ModuleType(str(self.name))  # does not accept unicode in Python 2
+    self.namespace = self.create_namespace()
     self.namespace.__file__ = str(self.filename)
     self.namespace.module = self
     self.namespace.require = self.require
