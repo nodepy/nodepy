@@ -312,15 +312,28 @@ class Resolver(object):
 
 class ResolveError(Exception):
 
-  def __init__(self, request, search_paths):
+  def __init__(self, request, search_paths=None, linked_paths=None):
     self.request = request
-    self.search_paths = search_paths
+    self.search_paths = search_paths or []
+    self.linked_paths = linked_paths or []
+
+  def append_from(self, other):
+    for path in other.search_paths:
+      if path not in self.search_paths:
+        self.search_paths.append(path)
+    for path in other.linked_paths:
+      if path not in self.linked_paths:
+        self.linked_paths.append(path)
 
   def __str__(self):
     lines = [str(self.request.string)]
     if self.search_paths:
       lines.append('  searched in:')
       for path in self.search_paths:
+        lines.append('    - {}'.format(path))
+    if self.linked_paths:
+      lines.append('  followed links to:')
+      for path in self.linked_paths:
         lines.append('    - {}'.format(path))
     return '\n'.join(lines)
 

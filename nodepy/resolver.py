@@ -75,7 +75,7 @@ class StdResolver(base.Resolver):
     self.paths = paths
     self.loaders = loaders
 
-  def __try_load(self, paths, request):
+  def __try_load(self, paths, request, linked_paths):
     """
     Attempts to load determine the filename, package and loader for the
     specified *request*, to be loaded from the specified *paths*, and
@@ -101,6 +101,8 @@ class StdResolver(base.Resolver):
       filename = request.string.joinwith(path)
       filename = request.context.augment_path(filename)
       max_dir, filename = resolve_link(request.context, filename, True)
+      if max_dir:
+        linked_paths.append(max_dir)
 
       package = None
       is_package_root = False
@@ -179,9 +181,10 @@ class StdResolver(base.Resolver):
       paths = itertools.chain(paths, request.additional_search_path)
       paths = list(paths)
 
-    package, loader, filename = self.__try_load(paths, request)
+    linked_paths = []
+    package, loader, filename = self.__try_load(paths, request, linked_paths)
     if not loader:
-      raise base.ResolveError(request, paths)
+      raise base.ResolveError(request, paths, linked_paths)
 
     filename = filename.resolve()
     module = request.context.modules.get(filename)

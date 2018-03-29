@@ -337,13 +337,13 @@ class Context(object):
 
     # Check all resolvers in the context.
     module = None
-    search_paths = []
+    exception = base.ResolveError(request)
     for resolver in chain([self.resolver], self.resolvers):
       try:
         module = resolver.resolve_module(request)
       except base.ResolveError as exc:
         assert exc.request is request, (exc.request, request)
-        search_paths.extend(exc.search_paths)
+        exception.append_from(exc)
         continue
       if not isinstance(module, base.Module):
         msg = '{!r} returned non-Module object {!r}'
@@ -362,9 +362,7 @@ class Context(object):
       try:
         module = self.parent.resolve(request, directory, additional_search_path)
       except base.ResolveError as exc:
-        for path in exc.search_paths:
-          if path not in search_paths:
-            search_paths.append(path)
+        exception.append_from(exc)
 
     if module:
       have_module = request.context.modules.get(module.filename)
@@ -375,7 +373,7 @@ class Context(object):
       request.context.modules[module.filename] = module
       return module
 
-    raise base.ResolveError(request, search_paths)
+    raise exception
 
   def register_module(self, module, force=False):
     """
