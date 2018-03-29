@@ -28,6 +28,42 @@ def load_package(context, directory, doraise_exists=True):
   return base.Package(context, directory, payload)
 
 
+def resolve_link(context, path, with_link_target=False):
+  """
+  Checks if there exists a package-link file somewhere in the parent
+  directories of *path* and returns an updated path pointing to the linked
+  location.
+
+  If *with_link_target* is #True, a tuple is returned instead where the
+  first element is the link target directory.
+  """
+
+  if not utils.path.is_directory_listing_supported(path):
+    return path
+
+  link_target = None
+  link_suffix = context.link_suffix
+  for curr in utils.path.upiter(path):
+    if not curr.name: break  # probably root of the filesystem
+    lnk = curr.with_name(curr.name + link_suffix)
+    if lnk.exists():
+      with lnk.open() as fp:
+        package_dir = pathlib.Path(fp.readline().strip())
+        if package_dir.exists():
+          path = package_dir.joinpath(path.relative_to(curr))
+          path = context.augment_path(path)
+          link_target = package_dir
+          break
+        else:
+          msg = 'Broken link file "{}" --> "{}"'.format(lnk, package_dir)
+          warnings.warn(msg, ImportWarning)
+
+  if with_link_target:
+    return link_target, path
+  else:
+    return path
+
+
 class StdResolver(base.Resolver):
   """
   The standard resolver implementation.
@@ -38,33 +74,6 @@ class StdResolver(base.Resolver):
     assert all(isinstance(x, StdResolver.Loader) for x in loaders)
     self.paths = paths
     self.loaders = loaders
-
-  @staticmethod
-  def resolve_link(context, path):
-    """
-    Checks if there exists a package-link file somewhere in the parent
-    directories of *path* and returns an update path pointing to the linked
-    location.
-    """
-
-    if not utils.path.is_directory_listing_supported(path):
-      return path
-
-    link_suffix = context.link_suffix
-    for curr in utils.path.upiter(path):
-      if not curr.name: break  # probably root of the filesystem
-      lnk = curr.with_name(curr.name + link_suffix)
-      if lnk.exists():
-        with lnk.open() as fp:
-          package_dir = pathlib.Path(fp.readline().strip())
-          if package_dir.exists():
-            path = package_dir.joinpath(path.relative_to(curr))
-            path = context.augment_path(path)
-            break
-          else:
-            msg = 'Broken link file "{}" --> "{}"'.format(lnk, package_dir)
-            warnings.warn(msg, ImportWarning)
-    return path
 
   def __try_load(self, paths, request):
     """
@@ -84,14 +93,14 @@ class StdResolver(base.Resolver):
       return None
 
     if request.string.is_absolute():
-      path = self.resolve_link(request.context, request.string.path())
+      path = resolve_link(request.context, request.string.path())
       package = self.find_package(request.context, path)
       return confront_loaders(path, package) or (None, None, None)
 
     for path in paths:
       filename = request.string.joinwith(path)
       filename = request.context.augment_path(filename)
-      filename = self.resolve_link(request.context, filename)
+      max_dir, filename = resolve_link(request.context, filename, True)
 
       package = None
       is_package_root = False
@@ -103,7 +112,11 @@ class StdResolver(base.Resolver):
       if is_dir and package is not None:
         is_package_root = True
       else:
-        package = self.find_package(request.context, filename)
+        # We pass the max_dir from resolve_link() here to ensure that we
+        # don't load a package manifest from another package that is located
+        # above the linked package (which could potentially not contain a
+        # package manifest).
+        package = self.find_package(request.context, filename, stop_at=max_dir)
 
       filename = filename.absolute()
 
@@ -147,11 +160,13 @@ class StdResolver(base.Resolver):
         context.packages[path] = package
     return package
 
-  def find_package(self, context, path):
+  def find_package(self, context, path, stop_at=None):
     for path in utils.path.upiter(path):
       package = self.package_for_directory(context, path)
       if package is not None:
         return package
+      if stop_at and path == stop_at:
+        break
     return None
 
   def resolve_module(self, request):
