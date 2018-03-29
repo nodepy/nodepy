@@ -100,7 +100,7 @@ def main(argv=None):
   ctx = nodepy.context.Context(maindir)
 
   # Update the module search path.
-  args.nodepy_path.insert(0, ctx.modules_directory)
+  args.nodepy_path.insert(0, ctx.modules_directory)  # TODO:  Use the nearest available .nodepy/modules directory?
   ctx.resolver.paths.extend(x for x in map(pathlib.Path, args.nodepy_path))
   ctx.localimport.path.extend(args.python_path)
 
