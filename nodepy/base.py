@@ -170,6 +170,7 @@ class Module(object):
     assert isinstance(package, Package) or package is None
     assert isinstance(filename, pathlib.Path), type(filename)
     assert isinstance(directory, pathlib.Path) or directory is None
+    assert filename.is_absolute(), "Module filename must be absolute ({!r})".format(filename)
     self.context = context
     self.package = package
     self.filename = filename

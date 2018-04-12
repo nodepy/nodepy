@@ -40,6 +40,9 @@ class PureVoidPath(pathlib.PurePath):
   def with_suffix(self, suffix):
     raise NotImplementedError('PureVoidPath.with_suffix() is not supported')
 
+  def is_absolute(self):
+    return True
+
 
 class VoidPath(pathlib.Path, PureVoidPath):
   __slots__ = ()
