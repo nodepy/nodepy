@@ -1,4 +1,7 @@
-.nodepy_modules
-.env
+.env/
+.venv/
+.nodepy/
 *.egg-info
-__pycache__
+__pycache__/
+dist/
+build/
