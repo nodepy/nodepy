@@ -15,7 +15,7 @@ def requirements():
 
 setuptools.setup(
   name = 'nodepy-runtime',
-  version = '2.0.2',
+  version = '2.0.3',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   url = 'https://github.com/nodepy/nodepy',
