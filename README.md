@@ -14,7 +14,8 @@ with other languages, **without virtualenvs**. Node.py is inspired by
 **nppm** is Node.py's package manager that allows you to install and manage
 standard Python packages (using Pip under the hood) *as well* as Node.py
 packages without the hazzle of virtual environments. **nppm** is a powerful
-tool for deploying Node.py applications and command-line tools.
+tool for deploying Node.py applications and command-line tools. You can find
+the nppm repository [here](https://github.com/nodepy/nppm).
 
 ## Installation
 
