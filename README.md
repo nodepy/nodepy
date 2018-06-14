@@ -3,7 +3,8 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg">
   <img src="https://travis-ci.org/nodepy/nodepy.svg?branch=develop">
 </p>
-<h2>Node.py</h2>
+
+## Node.py
 
 Node.py is a Python runtime compatible with CPython 2.7 and 3.3 &ndash; 3.6.
 It provides a separate but superior import mechanism for modules, bringing
