@@ -2,20 +2,17 @@
 import setuptools
 import sys
 
-
 def readme():
   with open('README.md') as fp:
     return fp.read()
-
 
 def requirements():
   with open('requirements.txt') as fp:
     return fp.readlines()
 
-
 setuptools.setup(
   name = 'nodepy-runtime',
-  version = '2.0.3',
+  version = '2.1.0',
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
   url = 'https://github.com/nodepy/nodepy',

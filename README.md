@@ -49,6 +49,7 @@ Alternatively, you can clone the repository and use the local install script.
 ### v2.1.0 (unreleased)
 
 * Rename `nodepy-pm` to `nppm` in `README.md`
+* Add MIT license to the header of all source files
 
 ### v2.0.3 (2018-06-03)
 

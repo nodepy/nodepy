@@ -1,3 +1,0 @@
-tag v{VERSION}
-upgrade setup.py:  version = '{VERSION}'
-upgrade nodepy/__init__.py:__version__ = '{VERSION}'
