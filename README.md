@@ -8,8 +8,9 @@
 Node.py is a Python runtime compatible with CPython 2.7 and 3.3 &ndash; 3.6.
 It provides a separate but superior import mechanism for modules, bringing
 dependency management and ease of deployment for Python applications up to par
-with other languages, **without virtualenvs**. Node.py is inspired by
-[Node.js](https://nodejs.org).
+with other languages, **without virtualenvs**.
+
+> Node.py is inspired by [Node.js](https://nodejs.org).
 
 **nppm** is Node.py's package manager that allows you to install and manage
 standard Python packages (using Pip under the hood) *as well* as Node.py
@@ -17,13 +18,45 @@ packages without the hazzle of virtual environments. **nppm** is a powerful
 tool for deploying Node.py applications and command-line tools. You can find
 the nppm repository [here](https://github.com/nodepy/nppm).
 
+## Usage Example
+
+Node.py allows you to write very modular Python applications with module
+import semantics that are more easily trackable. It also does not have the
+concept of a separate `__main__` module as standard Python does. Any valid
+Python script is a valid Node.py script.
+
+```
+$ ls
+app.py models.py nodepy.json
+$ head app.py
+import flask
+import * from './models'  # Node.py special syntax
+require('werkzeug-reloader-patch').install()  # Node.py require() function
+app = flask.Flask('myapp')
+# ...
+$ cat nodepy.json
+{
+  "name": "myapp",
+  "pip_dependencies": {
+    "Flask": ">=1.0.2",
+    "pony": ">=0.7.3"
+  },
+  "dependencies": {
+    "werkzeug-reloader-patch": "^0.0.7"
+  }
+}
+$ nppm install
+$ nodepy app
+... Starting Flask server at localhost:8000
+```
+
 ## Installation
 
 Node.py is available from PyPI as `nodepy-runtime`. The Python version that
 you install it into will also be the Python version that you will use in your
 Node.py code.
 
-> Tipp: Add the `--user` flag if you don't want to install Node.py system-wide.
+> Tip: Add the `--user` flag if you don't want to install Node.py system-wide.
 
     $ pip install nodepy-runtime
 
