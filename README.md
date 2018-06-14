@@ -31,7 +31,7 @@ use the remote install script. If you want to install a specific version,
 pass the Git ref as an argument (eg. `develop` or `v2.0.2`). If you don't
 specify a tag, the highest tagged version will be installed.
 
-    $ nodepy https://nodepy.org/install-pm.py
+    $ nodepy https://nodepy.org/get-nppm.py
 
 Alternatively, you can clone the repository and use the local install script.
 
@@ -43,6 +43,18 @@ Alternatively, you can clone the repository and use the local install script.
 > installed Node.py with the `--user` option, pass the `--global` option to
 > the install-script (global meaning user-location). The default is to install
 > with `--root` (system-wide).
+
+## Changes
+
+### v2.1.0 (unreleased)
+
+* Rename `nodepy-pm` to `nppm` in `README.md`
+
+### v2.0.3 (2018-06-03)
+
+* The `nodepy.base.Module()` constructor now accepts absolute filenames only
+* Update `setup.py` to include Markdown `long_description` and read install
+    requirements from `requirements.txt`
 
 ---
 
