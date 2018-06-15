@@ -81,11 +81,15 @@ Alternatively, you can clone the repository and use the local install script.
 
 ## Changes
 
-### v2.1.1 (2018-14-06)
+### v2.1.2 (2018-06-15)
+
+* Fix `MANIFEST.in` which now includes `requirements.txt` (required by `setup.py`)
+
+### v2.1.1 (2018-06-14)
 
 * Release date fix for v2.1.0
 
-### v2.1.0 (2018-14-06)
+### v2.1.0 (2018-06-14)
 
 * Rename `nodepy-pm` to `nppm` in `README.md`
 * Add MIT license to the header of all source files
