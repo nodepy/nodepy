@@ -71,6 +71,8 @@ def resolve_link(context, path, with_link_target=False):
     if lnk.exists():
       with lnk.open() as fp:
         package_dir = pathlib.Path(fp.readline().strip())
+        if not package_dir.is_absolute():
+          package_dir = lnk.parent.joinpath(package_dir).resolve(strict=False)
         if package_dir.exists():
           path = package_dir.joinpath(path.relative_to(curr))
           path = context.augment_path(path)
