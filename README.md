@@ -81,7 +81,7 @@ Alternatively, you can clone the repository and use the local install script.
 
 ## Changes
 
-### v2.1.3
+### v2.1.3 (2018-08-13)
 
 * Fix `PythonLoader.suggest_files()`, no longer replaces an existing suffix
   when trying to add `.py` suffix
