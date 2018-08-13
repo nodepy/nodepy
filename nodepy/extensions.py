@@ -97,7 +97,7 @@ class ImportSyntax(base.Extension):
       stmt = '_reqres=require({!r}, exports=False).namespace;'.format(module)
     for name in symbols:
       alias = name = name.strip()
-      parts = re.split('\s+', name)
+      parts = re.split(r'\s+', name)
       if len(parts) == 3 and parts[1] == 'as':
         name, __, alias = parts
       stmt += '{0}=_reqres.{1};'.format(alias, name)

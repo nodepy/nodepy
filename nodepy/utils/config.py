@@ -68,7 +68,13 @@ class Config(object):
 
   def __init__(self, filename, defaults=None):
     self.filename = filename
-    self._parser = configparser.SafeConfigParser()
+    if sys.version <= '3.2':
+      parser_class = configparser.SafeConfigParser
+    else:
+      # SafeConfigParser was renamed to ConfigParser, SafeConfigParser is
+      # deprecated.
+      parser_class = configparser.ConfigParser
+    self._parser = parser_class()
     self.defaults = defaults or {}
     self.read(filename, doraise=False)
 
