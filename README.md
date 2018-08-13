@@ -81,6 +81,11 @@ Alternatively, you can clone the repository and use the local install script.
 
 ## Changes
 
+### v2.1.3
+
+* Fix `PythonLoader.suggest_files()`, no longer replaces an existing suffix
+  when trying to add `.py` suffix
+
 ### v2.1.2 (2018-06-15)
 
 * Fix `MANIFEST.in` which now includes `requirements.txt` (required by `setup.py`)

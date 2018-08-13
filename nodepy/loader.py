@@ -96,7 +96,7 @@ class PythonLoader(resolver.StdResolver.Loader):
 
   def suggest_files(self, context, path):
     try:
-      yield path.with_suffix('.py')
+      yield path.with_name(path.name + '.py')
     except ValueError:
       pass
     yield path.joinpath('__init__.py')
