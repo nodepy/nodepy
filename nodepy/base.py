@@ -174,6 +174,12 @@ class Request(object):
   def __repr__(self):
     return '<Request "{}" from "{}">'.format(self.string, self.directory)
 
+  def copy(self, context=None, directory=None, string=None, additional_search_path=None):
+    if additional_search_path is None:
+      additional_search_path = self.additional_search_path
+    return type(self)(context or self.context, directory or self.directory,
+                      string or self.string, additional_search_path)
+
   @property
   def related_paths(self):
     if not hasattr(self, '_related_paths'):

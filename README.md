@@ -81,6 +81,10 @@ Alternatively, you can clone the repository and use the local install script.
 
 ## Changes
 
+### v2.1.5
+
+* Add `Request.copy()` method
+
 ### v2.1.4 (2018-08-13)
 
 * Handle relative package links (actually already in 2.1.3)
