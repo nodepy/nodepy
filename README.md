@@ -81,7 +81,7 @@ Alternatively, you can clone the repository and use the local install script.
 
 ## Changes
 
-### v2.1.5
+### v2.1.5 (2018-08-18)
 
 * Add `Request.copy()` method
 
