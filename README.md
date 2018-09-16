@@ -22,20 +22,36 @@ the nppm repository [here](https://github.com/nodepy/nppm).
 ## Usage Example
 
 Node.py allows you to write very modular Python applications with module
-import semantics that are more easily trackable. It also does not have the
-concept of a separate `__main__` module as standard Python does. Any valid
-Python script is a valid Node.py script.
+import semantics that are more easily trackable. From a language standpoint,
+it is a superset of standard Python. It provides some syntactic sugar as well
+as additional built-ins for scripts loaded with Node.py
 
-```
-$ ls
-app.py models.py nodepy.json
-$ head app.py
+| Built-in | Description |
+| -------- | ----------- |
+| `require` | An instance of the `Require` class created specificially your module. Allows you to load other modules like `require('./module')` |
+| `module` | The `PythonModule` object that represents your Node.py module. |
+
+| Concept | Description |
+| ------- | ----------- |
+| `if require.main == module:` | The Node.py way of saying `if __name__ == '__main__':`. |
+| `import <...> from '<module-name>'` | Syntactic sugar for the `require()` built-in function. |
+
+__Example script__
+
+```python
 import flask
-import * from './models'  # Node.py special syntax
-require('werkzeug-reloader-patch').install()  # Node.py require() function
+import sys
+import cli from './cli'
+require('werkzeug-reloader-patch').install()
 app = flask.Flask('myapp')
-# ...
-$ cat nodepy.json
+import './models'
+if require.main == module:
+  sys.exit(cli.main())
+```
+
+__Example `nodepy.json`__
+
+```json
 {
   "name": "myapp",
   "pip_dependencies": {
@@ -46,10 +62,8 @@ $ cat nodepy.json
     "werkzeug-reloader-patch": "^0.0.7"
   }
 }
-$ nppm install
-$ nodepy app
-... Starting Flask server at localhost:8000
 ```
+
 
 ## Installation
 
