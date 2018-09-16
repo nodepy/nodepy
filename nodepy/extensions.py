@@ -25,12 +25,17 @@ Standard extensions usually available to Node.py instances.
 """
 
 from nodepy import base
+
+import io
 import re
+import sys
+import types
+import warnings
 
 
 class ImportSyntax(base.Extension):
   """
-  This extension preprocess Python source code to replace a new form of the
+  This extension preprocesses Python source code to replace a new form of the
   import syntax with valid Python code.
 
   # Examples
@@ -163,3 +168,119 @@ class ImportSyntax(base.Extension):
       source = source[:match.start()] + repl + source[match.end():]
 
     return source
+
+
+class NamespaceSyntax(base.Extension):
+  """
+  This extension preprocesses Python source code to replace a new form of
+  declaration with valid Python code.
+
+  ```python
+  namespace Example:
+
+    def hello(name):
+      print('Hello, {}!'.format(name))
+
+  Example.hello('World')
+  ```
+
+  This is implemented by converting the declaration to
+
+  ```python
+  @require._NamespaceSyntax__namespace_decorator
+  def Example():
+    # ...
+  ```
+
+  You may have noticed that it requires one more line. The preprocessor will
+  try to move the decorator the previous line if it is empty or contains
+  just a comment. If the line above the `namespace` declaration is not free,
+  a warning is printed as the line reporting in exceptions will be off by one.
+  """
+
+  _re_namespace_decl = re.compile(r'^(?!\n)\s*namespace\s+([\.\w]+)\s*:', re.M)
+
+  @staticmethod
+  def namespace_decorator(func):
+    module = types.ModuleType(func.__module__ + '.' + func.__name__)
+    module.__doc__ = func.__doc__
+    frame, result = call_function_get_frame(func)
+    try:
+      module.__dict__.update(frame.f_locals)
+      return module
+    finally:
+      del frame
+
+  def preprocess_python_source(self, module, source):
+    module.require._NamespaceSyntax__namespace_decorator = self.namespace_decorator
+
+    source = source.replace('\r\n', '\n')
+    lineno_offset = 0
+    while True:
+      match = self._re_namespace_decl.search(source)
+      if not match:
+        break
+
+      content = ''
+      replace_begin = None
+      if match.start() > 0:
+        assert source[match.start()-1] == '\n'
+        # We are in any but the first line. Check if immediately preceeds
+        # our match and use that index to begin the insertion.
+        if match.start() > 1 and source[match.start()-2] == '\n':
+          # We've got a pure empty line before the delcaration.
+          replace_begin = match.start()-1
+        else:
+          # Otherwise, search for the start of the line before the match.
+          replace_begin = max(0, source.rfind('\n', 0, match.start()-1))
+          if source[replace_begin] == '\n':
+            replace_begin += 1
+          content = source[replace_begin:match.start()].rstrip('\n')
+      else:
+        replace_begin = 0
+
+      if content and not content.lstrip().startswith('#'):
+        lineno = source.count('\n', 0, replace_begin) + 1 - lineno_offset
+        message = 'line {} before \'namespace {}\' declaration not empty ({})'
+        warnings.warn(message.format(lineno, match.group(1), module.filename),
+                      SyntaxWarning)
+        lineno_offset += 1
+        replace_begin = match.start()
+        content = ''
+
+      buffer = io.StringIO()
+      buffer.write(source[:replace_begin])
+
+      buffer.write('@require._NamespaceSyntax__namespace_decorator')
+      if content:
+        if not content[0].isspace():
+          buffer.write(' ')
+        buffer.write(content)
+      buffer.write('\ndef {}():'.format(match.group(1)))
+
+      buffer.write(source[match.end():])
+      source = buffer.getvalue()
+
+    return source
+
+
+def call_function_get_frame(func, *args, **kwargs):
+  """
+  Calls the function *func* with the specified arguments and keyword
+  arguments and snatches its local frame before it actually executes.
+  """
+
+  frame = None
+  trace = sys.gettrace()
+  def snatch_locals(_frame, name, arg):
+    nonlocal frame
+    if frame is None and name == 'call':
+      frame = _frame
+      sys.settrace(trace)
+    return trace
+  sys.settrace(snatch_locals)
+  try:
+    result = func(*args, **kwargs)
+  finally:
+    sys.settrace(trace)
+  return frame, result

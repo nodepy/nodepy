@@ -35,6 +35,7 @@ as additional built-ins for scripts loaded with Node.py
 | ------- | ----------- |
 | `if require.main == module:` | The Node.py way of saying `if __name__ == '__main__':`. |
 | `import <...> from '<module-name>'` | Syntactic sugar for the `require()` built-in function. |
+| `namespace <name>:` | Similar to a `class` declaration, but a module is created instead. |
 
 __Example script__
 
@@ -63,7 +64,6 @@ __Example `nodepy.json`__
   }
 }
 ```
-
 
 ## Installation
 
@@ -94,6 +94,11 @@ Alternatively, you can clone the repository and use the local install script.
 > with `--root` (system-wide).
 
 ## Changes
+
+### v2.1.6
+
+* Fix duplicate execution of code specified with the `-c` option
+* Add `namespace <name>:` declaration concept (`nodepy.extensions.NamespaceSyntax`)
 
 ### v2.1.5 (2018-08-18)
 

@@ -273,7 +273,7 @@ class Context(object):
     self._config = config
     self._maindir = maindir
     self.require = Require(self, self.maindir)
-    self.extensions = [extensions.ImportSyntax()]
+    self.extensions = [extensions.ImportSyntax(), extensions.NamespaceSyntax()]
     self.resolver = resolver.StdResolver([], [loader.PythonLoader()]) #, loader.PackageRootLoader()])
     self.resolvers = []
     self.pathaugmentors = [base.ZipPathAugmentor()]
