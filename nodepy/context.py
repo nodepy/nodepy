@@ -322,8 +322,24 @@ class Context(object):
       if isolated:
         self.localimport.__exit__()
 
+    # Add the pip prefix directory to the path from the first nodepy
+    # directory that can be found.
+    add_path = []
+    for path in utils.path.upiter(pathlib.Path.cwd()):
+      path = path.joinpath(self.pipprefix_directory)
+      if path.is_dir():
+        if os.name == 'nt':
+          path = path.joinpath('Lib')
+        else:
+          path = path.joinpath('lib', 'python' + sys.version[:3])
+        if path.is_dir():
+          add_path.append(str(path))
+          add_path.append(str(path.joinpath('site-packages')))
+        break
+
     with utils.context.ExitStack() as stack:
       stack.add(activate_localimport())
+      sys.path.extend(add_path)
       stack.add(reload_pkg_resources())
       sys.path_importer_cache.clear()
       yield
