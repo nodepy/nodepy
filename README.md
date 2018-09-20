@@ -6,18 +6,21 @@
 
 ## Node.py
 
-Node.py is a Python runtime compatible with CPython 2.7 and 3.3 &ndash; 3.6.
-It provides a separate but superior import mechanism for modules, bringing
-dependency management and ease of deployment for Python applications up to par
-with other languages, **without virtualenvs**.
+Node.py is a Python runtime and package manager compatible with CPython 2.7
+and 3.3 &ndash; 3.6. It provides a separate but superior import mechanism for
+modules, bringing dependency management and ease of deployment for Python
+applications up to par with other languages, **without virtualenvs**.
+
+Node.py comes with a built-in package manager that builds on Pip for standard
+Python dependencies but also adds the capability to install packages that are
+specifically developed for Node.py. To install the dependencies of the
+package manager you must specify the `[pm]` install extra.
 
 > Node.py is inspired by [Node.js](https://nodejs.org).
 
-**nppm** is Node.py's package manager that allows you to install and manage
-standard Python packages (using Pip under the hood) *as well* as Node.py
-packages without the hazzle of virtual environments. **nppm** is a powerful
-tool for deploying Node.py applications and command-line tools. You can find
-the nppm repository [here](https://github.com/nodepy/nppm).
+## Installation
+
+    pip3 install nodepy-runtime[pm]
 
 ## Usage Example
 
@@ -65,33 +68,15 @@ __Example `nodepy.json`__
 }
 ```
 
-## Installation
+## Troubleshooting
 
-Node.py is available from PyPI as `nodepy-runtime`. The Python version that
-you install it into will also be the Python version that you will use in your
-Node.py code.
+__FileNotFoundError: No such file or directory: '...\\installed-files.txt'__
 
-> Tip: Add the `--user` flag if you don't want to install Node.py system-wide.
+This is a bug [that will be fixed with Pip 9.0.2](https://github.com/pypa/pip/issues/373#issuecomment-302632300).
+In the meantime, to fix this issues, ensure that you have the `wheel` package
+installed.
 
-    $ pip install nodepy-runtime
-
-There are multiple ways of installing **nppm**. The suggested method is to
-use the remote install script. If you want to install a specific version,
-pass the Git ref as an argument (eg. `develop` or `v2.0.2`). If you don't
-specify a tag, the highest tagged version will be installed.
-
-    $ nodepy https://nodepy.org/get-nppm.py
-
-Alternatively, you can clone the repository and use the local install script.
-
-    $ git clone https://github.com/nodepy/nppm.git
-    $ nodepy nppm/scripts/install.py
-
-> Important: The installer is **not** able to automatically detect whether
-> Node.py was installed system-wide or with the `--user` option. If you
-> installed Node.py with the `--user` option, pass the `--global` option to
-> the install-script (global meaning user-location). The default is to install
-> with `--root` (system-wide).
+    pip3 install wheel [--user]
 
 ## Changes
 
@@ -99,6 +84,7 @@ Alternatively, you can clone the repository and use the local install script.
 
 * Fix duplicate execution of code specified with the `-c` option
 * Add `namespace <name>:` declaration concept (`nodepy.extensions.NamespaceSyntax`)
+* Merge `nppm` into the `nodepy` command-line
 
 ### v2.1.5 (2018-08-18)
 

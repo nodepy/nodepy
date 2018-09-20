@@ -26,9 +26,10 @@ The Node.py command-line interface.
 
 from nodepy.utils import path
 from nodepy.loader import PythonModule
-import argparse
+
 import code
 import functools
+import nr.cliparser
 import os
 import pathlib2 as pathlib
 import pdb
@@ -43,17 +44,6 @@ except ImportError:
 
 VERSION = 'nodepy {}\n[{} {}]'.format(
   nodepy.__version__, nodepy.runtime.implementation, sys.version.replace('\n', ''))
-
-parser = argparse.ArgumentParser()
-parser.add_argument('request', nargs='...')
-parser.add_argument('-c')
-parser.add_argument('--maindir')
-parser.add_argument('--version', action='store_true')
-parser.add_argument('--pymain', action='store_true')
-parser.add_argument('--pmd', action='store_true')
-parser.add_argument('--keep-arg0', action='store_true')
-parser.add_argument('--nodepy-path', action='append', default=[])
-parser.add_argument('--python-path', action='append', default=[])
 
 
 class EntryModule(nodepy.loader.PythonModule):
@@ -108,51 +98,78 @@ def enable_post_mortem_debugger(ctx):
   sys.excepthook = wrapper
 
 
-def main(argv=None):
-  args = parser.parse_args(argv)
-  args.nodepy_path.insert(0, '.')
-  if args.version:
+def get_argument_parser(prog):
+  parser = nr.cliparser.Parser(prog=prog)
+  parser.argument('-h', nargs=0, help='Show this help and exit.')
+  parser.argument('-c', nargs='...', help='A snippet of code and arguments to run.')
+  parser.argument('script', nargs='...', help='A script or module and arguments to run.')
+  parser.argument('--maindir', help='The Node.py context\'s main directory.')
+  parser.argument('--version', nargs=0, help='Print the version an exit.')
+  parser.argument('--pymain', nargs=0, help='Set __name__ to __main__ in the main module.')
+  parser.argument('--pmd', nargs=0, help='Enable the post-mortem debugger.')
+  parser.argument('--keep-arg0', nargs=0, help='Keep sys.argv[0] instead of overriding it with the module filename.')
+  parser.argument('--nodepy-path', multiple=True, help='Additional Node.py search path.')
+  parser.argument('--python-path', multiple=True, help='Additional Python search path.')
+
+  from . import nppm
+  nppm.extend_parser(parser)
+
+  return parser
+
+
+def main(argv=None, prog=None):
+  parser = get_argument_parser(prog)
+  args = parser.parse(argv)
+
+  if args['h']:
+    parser.print_help()
+    return 0
+  if args['version']:
     print(VERSION)
     return 0
 
-  args.pmd = check_pmd_envvar() or args.pmd
-  sys.argv = [sys.argv[0]] + args.request[1:]
+  args['nodepy-path'].insert(0, '.')
+  args['pmd'] = args['pmd'] or check_pmd_envvar()
 
-  maindir = pathlib.Path(args.maindir) if args.maindir else pathlib.Path.cwd()
-  ctx = nodepy.context.Context(maindir)
+  # Initialize the Node.py context.
+  ctx = nodepy.context.Context(pathlib.Path(args['maindir'] or '.'))
+  args['nodepy-path'].insert(0, ctx.modules_directory)  # TODO:  Use the nearest available .nodepy/modules directory?
+  ctx.resolver.paths.extend(x for x in map(pathlib.Path, args['nodepy-path']))
+  ctx.localimport.path.extend(args['python-path'])
 
-  # Update the module search path.
-  args.nodepy_path.insert(0, ctx.modules_directory)  # TODO:  Use the nearest available .nodepy/modules directory?
-  ctx.resolver.paths.extend(x for x in map(pathlib.Path, args.nodepy_path))
-  ctx.localimport.path.extend(args.python_path)
+  from . import nppm
+  if nppm.is_nppm_command(args):
+    args['__context'] = ctx
+    return nppm.main(args)
 
-  # This is the entry-point module. It will set up the Python sys.path
-  # for the current working directory when executed.
-  entry_module = EntryModule(
-    ctx, None, nodepy.utils.path.VoidPath('<entry>'), pathlib.Path.cwd()
-  )
+  sys.argv = [sys.argv[0]] + (args['script'] or args['c'])[1:]
+
+  # The entry module executes the script or code.
+  entry_module = EntryModule(ctx, None,
+    nodepy.utils.path.VoidPath('<entry>'), pathlib.Path.cwd())
   entry_module.init()
 
   with ctx.enter():
-    if args.pmd:
+    if args['pmd']:
       enable_post_mortem_debugger(ctx)
-    if args.c:
+    if args['c']:
       def exec_handler():
-        six.exec_(args.c, vars(entry_module.namespace))
-    if args.request:
+        six.exec_(args['c'][0], vars(entry_module.namespace))
+    elif args['script']:
       def exec_handler():
+        request = args['script'][0]
         try:
-          filename = path.urlpath.make(args.request[0])
+          filename = path.urlpath.make(request)
         except ValueError:
-          filename = args.request[0]
+          filename = request
         ctx.main_module = ctx.resolve(filename)
-        if not args.keep_arg0:
+        if not args['keep-arg0']:
           sys.argv[0] = str(ctx.main_module.filename)
         ctx.main_module.init()
-        if args.pymain:
+        if args['pymain']:
           ctx.main_module.namespace.__name__ = '__main__'
         ctx.load_module(ctx.main_module, do_init=False)
-    elif not args.c:
+    else:
       ctx.main_module = entry_module
       def exec_handler():
         code.interact('', local=vars(entry_module.namespace))
