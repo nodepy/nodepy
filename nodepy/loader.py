@@ -73,6 +73,8 @@ class PythonModule(base.Module):
       #       As this, it will only work for filesystem paths.
       if library_dir and library_dir not in sys.path:
         sys.path.insert(0, library_dir)
+      else:
+        library_dir = None
 
       self._init_extensions()
       code = self._preprocess_code(code)
