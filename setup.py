@@ -3,8 +3,8 @@ import setuptools
 import sys
 
 nodepy_reqs = [
-  'localimport>=1.5.2'
-  'pathlib2>=2.3.0'
+  'localimport>=1.5.2',
+  'pathlib2>=2.3.0',
   'six>=1.11.0',
   'nr.cliparser>=0.1.0'
 ]
