@@ -116,7 +116,7 @@ def _validate_dependencies(field):
 def _validate_pip_dependencies(field):
   for key, value in field.value.items():
     try:
-      PipRequirement.from_line(key + value)
+      PipRequirement.from_spec(key, value)
     except ValueError as exc:
       field.errors.append(str(exc))
 
@@ -314,6 +314,13 @@ class PipRequirement(pip_req.InstallRequirement):
         return obj
     except pip_exceptions.InstallationError:
       raise ValueError('invalid Pip requirement: {!r}'.format(line))
+
+  @classmethod
+  def from_spec(cls, key, value):
+    try:
+      return cls.from_line(value)
+    except ValueError:
+      return cls.from_line(key + value)
 
 
 class Requirement(object):

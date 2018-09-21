@@ -415,7 +415,7 @@ class Installer:
 
     install_modules = []
     for name, version in deps.items():
-      install_modules.append(name + version)
+      install_modules.append(str(manifest.PipRequirement.from_spec(name, version)))
 
     if not install_modules and not args:
       return True
