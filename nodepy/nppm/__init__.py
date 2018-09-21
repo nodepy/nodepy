@@ -296,7 +296,7 @@ def do_install(args):
     args['packagedir'] = '.'
 
   # --save and --save-dev are incompatible with each other.
-  if args['save'] and args['save_dev']:
+  if args['save'] and args['save-dev']:
     install_parser.error('incompatible flags --save and --save-dev')
     return 1
 
