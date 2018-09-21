@@ -111,7 +111,7 @@ def get_argument_parser(prog):
   parser.argument('--nodepy-path', multiple=True, help='Additional Node.py search path.')
   parser.argument('--python-path', multiple=True, help='Additional Python search path.')
 
-  from . import nppm
+  from nodepy import nppm
   nppm.extend_parser(parser)
 
   return parser
@@ -137,7 +137,7 @@ def main(argv=None, prog=None):
   ctx.resolver.paths.extend(x for x in map(pathlib.Path, args['nodepy-path']))
   ctx.localimport.path.extend(args['python-path'])
 
-  from . import nppm
+  from nodepy import nppm
   if nppm.is_nppm_command(args):
     args['__context'] = ctx
     return nppm.main(args)
