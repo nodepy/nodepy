@@ -1,14 +1,12 @@
 
+import io
 import setuptools
 import sys
 
-def readme():
-  with open('README.md') as fp:
-    return fp.read()
+aliases = ['nodepy{}'.format(v) for v in ('', sys.version[0], sys.version[:3])]
 
-def requirements():
-  with open('requirements.txt') as fp:
-    return fp.readlines()
+with io.open('README.md', encoding='utf8') as fp:
+  readme = fp.read()
 
 setuptools.setup(
   name = 'nodepy-runtime',
@@ -18,14 +16,16 @@ setuptools.setup(
   url = 'https://github.com/nodepy/nodepy',
   license = 'MIT',
   description = 'Python with a Node.js-like module system.',
-  long_description = readme(),
+  long_description = readme,
   long_description_content_type = 'text/markdown',
-  packages = setuptools.find_packages(),
-  install_requires = requirements(),
-  entry_points = dict(
-    console_scripts = [
-      'nodepy{}=nodepy.main:main'.format(v)
-        for v in ('', sys.version[0], sys.version[:3])
-    ]
-  )
+  packages = setuptools.find_packages('src'),
+  package_dir = {'': 'src'},
+  install_requires = [
+    'localimport>=1.5.2',
+    'pathlib2>=2.3.0',
+    'six>=1.11.0',
+  ],
+  entry_points = {
+    'console_scripts': ['{}=nodepy.main:main'.format(x) for x in aliases]
+  }
 )
