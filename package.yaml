@@ -5,12 +5,17 @@ package:
   url: https://github.com/nodepy/nodepy
   author: 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
   description: 'Python with a Node.js-like module system.'
-  entry_file: 'nodepy/__init__.py'
-  source_directory: '.'
+  entry_file: 'src/nodepy/__init__.py'
 
 requirements:
+  - appdirs ^1.4.2
+  - distlib ~0.2.4
+  - hammock ~0.2.4
   - localimport ^1.5.2
+  - nr.fs ^1.5.0
+  - nr.parsing.core ~0.1.0
   - pathlib2 ^2.3.0
+  - requests ^2.13.0
   - six ^1.11.0
 
 entrypoints:
