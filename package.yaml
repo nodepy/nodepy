@@ -1,0 +1,20 @@
+package:
+  name: nodepy-runtime
+  version: 2.1.5
+  license: MIT
+  url: https://github.com/nodepy/nodepy
+  author: 'Niklas Rosenstein <rosensteinniklas@gmail.com>'
+  description: 'Python with a Node.js-like module system.'
+  entry_file: 'nodepy/__init__.py'
+  source_directory: '.'
+
+requirements:
+  - localimport ^1.5.2
+  - pathlib2 ^2.3.0
+  - six ^1.11.0
+
+entrypoints:
+  console_scripts:
+    - nodepy = nodepy.main:main
+    - nodepy{{python-major-version}} = nodepy.main:main
+    - nodepy{{python-major-minor-version}} = nodepy.main:main

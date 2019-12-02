@@ -1,42 +1,38 @@
 
 import io
+import re
 import setuptools
 import sys
 
-aliases = ['nodepy{}'.format(v) for v in ('', sys.version[0], sys.version[:3])]
+with io.open('nodepy/__init__.py', encoding='utf8') as fp:
+  version = re.search(r"__version__\s*=\s*'(.*)'", fp.read()).group(1)
 
 with io.open('README.md', encoding='utf8') as fp:
-  readme = fp.read()
+  long_description = fp.read()
+
+requirements = ['localimport >=1.5.2,<2.0.0', 'pathlib2 >=2.3.0,<3.0.0', 'six >=1.11.0,<2.0.0']
 
 setuptools.setup(
   name = 'nodepy-runtime',
-  version = '2.1.5',
+  version = version,
   author = 'Niklas Rosenstein',
   author_email = 'rosensteinniklas@gmail.com',
+  description = 'Python with a Node.js-like module system.',
+  long_description = long_description,
+  long_description_content_type = 'text/markdown',
   url = 'https://github.com/nodepy/nodepy',
   license = 'MIT',
-  description = 'Python with a Node.js-like module system.',
-  long_description = readme,
-  long_description_content_type = 'text/markdown',
-  packages = setuptools.find_packages('src'),
-  package_dir = {'': 'src'},
-  install_requires = [
-    'localimport>=1.5.2',
-    'pathlib2>=2.3.0',
-    'nr.cliparser>=0.1.0',
-    'six>=1.11.0',
-  ],
-  extra_requires = {
-    'pm': [
-      'appdirs>=1.4.2',
-      'distlib>=0.2.4',
-      'hammock>=0.2.4',
-      'requests>=2.13.0',
-      'nr.fs>=1.0.3',
-      'nr.parse>=1.0.0'
-    ]
-  },
+  packages = setuptools.find_packages('.'),
+  package_dir = {'': '.'},
+  include_package_data = False,
+  install_requires = requirements,
+  tests_require = [],
+  python_requires = None, # TODO: None,
   entry_points = {
-    'console_scripts': ['{}=nodepy.main:main'.format(x) for x in aliases]
+    'console_scripts': [
+      'nodepy = nodepy.main:main',
+      'nodepy{0} = nodepy.main:main'.format(sys.version[0]),
+      'nodepy{0} = nodepy.main:main'.format(sys.version[:3]),
+    ],
   }
 )
