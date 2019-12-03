@@ -104,7 +104,7 @@ def get_stdlib_path():
   if develop:
     return src_dir
   else:
-    return os.path.join(sys.prefix, 'data',' nodepy-runtime', 'stdlib')
+    return os.path.join(sys.prefix, 'data', 'nodepy-runtime', 'stdlib')
 
 
 def get_argument_parser(prog):
