@@ -164,7 +164,7 @@ def get_argument_parser(prog):
       - <archive>.tar[.<compression>]
       - <package_directory>
     ''')
-  install.add_argument('ref', nargs='?', help='''
+  install.add_argument('ref', nargs='*', default=[], help='''
     A list of one or more package specifiers to install. If no packages\
     are specified (together with -e), the dependencies of the\
     current package are installed (--upgrade will be implied in that case).
