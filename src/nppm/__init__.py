@@ -120,7 +120,7 @@ def create_installer(args):
 
   location = get_install_location(args.g, args.root)
   installer = _install.Installer(
-    context=args.__context,
+    context=require.context,
     upgrade=args.upgrade,
     install_location=get_install_location(args.g, args.root),
     pip_use_target_option=args.pip_use_target_option,
@@ -155,9 +155,8 @@ def get_argument_parser(prog):
 
   init = subparsers.add_parser('init')
   init.add_argument('directory', nargs='?', help='The directory to save the nodepy.json file to.')
-  return parser
 
-  install = parser.subparser('--install', help='''
+  install = subparsers.add_parser('install', description='''
     Install Node.py and Python packages.
     Accepted formats:
       - [@<scope>/]<package>[@<version>]
@@ -165,134 +164,130 @@ def get_argument_parser(prog):
       - <archive>.tar[.<compression>]
       - <package_directory>
     ''')
-  install.argument('ref', nargs='?', multiple=True, help='''
+  install.add_argument('ref', nargs='?', help='''
     A list of one or more package specifiers to install. If no packages\
     are specified (together with -e), the dependencies of the\
     current package are installed (--upgrade will be implied in that case).
     ''')
-  install.argument('-e', metavar='ref', multiple=True, help='''
+  install.add_argument('-e', metavar='ref', action='append', default=[], help='''
       Install a Node.py package in development mode. This will create a\
       plain-test link file instead of installing the package contents to the\
       modules directory. This only works for packages existing on the\
       filesystem.
       ''')
-  install.argument('--pip', nargs='*', help='''
+  install.add_argument('--pip', nargs='*', default=[], help='''
     Consider all following arguments to be Pip requirements.
     ''')
-  install.argument('--upgrade', nargs=0, help='''
+  install.add_argument('--upgrade', action='store_true', help='''
     Don't skip installing packages that already exist but instead install\
     the newer version, if available.
     ''')
-  install.argument('-g', nargs=0, help='''
+  install.add_argument('-g', action='store_true', help='''
     Install packages globally (per-user). Node.py packages will be\
     installed near site-packages/ under a nodepy-modules/ directory. Pip\
     packages will be installed as `pip install --user`. This option implies\
     the --internal option for Node.py packages.
     ''')
-  install.argument('--root', nargs=0, help='''
+  install.add_argument('--root', action='store_true', help='''
     Install packages system-wide. Node.py pakcages will be installed\
     near site-packages/ under a nodepy-modules/ directory. Pip packages\
     will be installed as `pip install`. This option implies the --internal\
     option for Node.py packages.
     ''')
-  install.argument('--system', nargs=0, help='Alias for --root.')
-  install.argument('--isolate', nargs=0, help='''
+  install.add_argument('--system', action='store_true', help='Alias for --root.')
+  install.add_argument('--isolate', action='store_true', help='''
     Pass the --ignore-installed option to Pip.
     ''')
-  install.argument('--pip-use-target-option', nargs=0, help='''
+  install.add_argument('--pip-use-target-option', action='store_true', help='''
     Use Pip's --target option instead of --prefix. Note that Pip will not\
     install scripts with --target. Try this option only when Pip\
     installations fail.
     ''')
-  install.argument('--packagedir', help='''
+  install.add_argument('--packagedir', help='''
     The package directory. Defaults to the current working directory.\
     Used to install the current package\'s (dev-)dependencies and to save\
     package information when using the --save, --save-dev or --save-ext\
     options.
     ''')
-  install.argument('--recursive', nargs=0, help='''
+  install.add_argument('--recursive', action='store_true', help='''
     Ensure that dependencies are satisfied recursively. This can be\
     used when packages where uninstall that may still be required by\
     other packages. Attempts to dependencies of already satisfied\
     dependencies.
     ''')
-  install.argument('--dev', nargs=0, help='''
+  install.add_argument('--dev', action='store_true', help='''
     Install development dependencies or not. By default, development\
     dependencies are only installed for the current package.
     ''')
-  install.argument('--production', nargs=0, help='''
+  install.add_argument('--production', action='store_true', help='''
     Do not install development dependencies.
     ''')
-  install.argument('--save', nargs=0, help='''
+  install.add_argument('--save', action='store_true', help='''
     Add the installed packages as dependencies to the current project.\
     Requires a nodepy.json manifest in the current working directory or the\
     directory specified with --packagedir.
     ''')
-  install.argument('--save-dev', nargs=0, help='''
+  install.add_argument('--save-dev', action='store_true', help='''
     Add the installed packages as development dependencies.
     ''')
-  install.argument('--save-ext', nargs=0, help='''
+  install.add_argument('--save-ext', action='store_true', help='''
     Add the installed Node.py packages to the "extensions" field.\
     This option implies --save.
     ''')
-  install.argument('-v', nargs=0, help='''
+  install.add_argument('-v', action='store_true', help='''
     Enable verbose output for nppm and Pip.
     ''')
-  install.argument('--internal', nargs=0, help='''
+  install.add_argument('--internal', action='store_true', help='''
     Install the specified Node.py packages as internal dependencies.\
     This flag has no immediate effect on local install, but the --internal\
     flag will be added when using --save or --save-dev, causing the\
     dependencies of your package to be installed for your package only.
     ''')
-  install.argument('--no-internal', nargs=0, help='''
+  install.add_argument('--no-internal', action='store_true', help='''
     Use this flag to disable the implicit --internal flag on --root\
     and --global installations.
     ''')
-  install.argument('--pure', nargs=0, help='''
+  install.add_argument('--pure', action='store_true', help='''
     Install Node.py packages without their command-line scripts.
     ''')
 
-  uninstall = parser.subparser('--uninstall')
-  uninstall.argument('packages', nargs='+', help='''
+  uninstall = subparsers.add_parser('uninstall')
+  uninstall.add_argument('packages', nargs='+', help='''
     Full names of packages to uninstall.
     ''')
-  uninstall.argument('-g', nargs=0, help='''
+  uninstall.add_argument('-g', action='store_true', help='''
     Uninstall the package(s) from the global package directory.
     ''')
-  uninstall.argument('--root', nargs=0, help='''
+  uninstall.add_argument('--root', action='store_true', help='''
     Uninstall the package(s) from the system-wide package directory.
     ''')
-  uninstall.argument('--system', nargs=0, help='Alias for --root.')
+  uninstall.add_argument('--system', action='store_true', help='Alias for --root.')
 
-  dist = parser.subparser('--dist')
+  dist = subparsers.add_parser('dist')
 
-  bin = parser.subparser('--bin')
-  bin.argument('-g', nargs=0,)
-  bin.argument('--root', nargs=0)
-  bin.argument('--system', nargs=0)
-  bin.argument('--pip', nargs=0)
+  bin = subparsers.add_parser('bin')
+  bin.add_argument('-g', action='store_true',)
+  bin.add_argument('--root', action='store_true')
+  bin.add_argument('--system', action='store_true')
+  bin.add_argument('--pip', action='store_true')
 
-  dirs = parser.subparser('--dirs')
-  dirs.argument('-g', nargs=0)
-  dirs.argument('--root', nargs=0)
-  dirs.argument('--system', nargs=0)
-  dirs.argument('--bin', nargs=0)
-  dirs.argument('--packages', nargs=0)
-  dirs.argument('--pip-prefix', nargs=0)
-  dirs.argument('--pip-bin', nargs=0)
-  dirs.argument('--pip-lib', nargs=0)
+  dirs = subparsers.add_parser('dirs')
+  dirs.add_argument('-g', action='store_true')
+  dirs.add_argument('--root', action='store_true')
+  dirs.add_argument('--system', action='store_true')
+  dirs.add_argument('--bin', action='store_true')
+  dirs.add_argument('--packages', action='store_true')
+  dirs.add_argument('--pip-prefix', action='store_true')
+  dirs.add_argument('--pip-bin', action='store_true')
+  dirs.add_argument('--pip-lib', action='store_true')
 
-  run = parser.subparser('--run')
-  run.argument('script', nargs='...', help='''
+  run = subparsers.add_parser('run')
+  run.add_argument('script', nargs='...', help='''
     The script or program to run plus arguments. Scripts executed with\
     this command have the .nodepy/bin directory in their PATH.
     ''')
 
-
-commands = ['run', 'dirs', 'bin', 'dist', 'uninstall', 'install']
-
-def is_nppm_command(args):
-  return any(args[k] for k in commands)
+  return parser
 
 
 def main(argv=None, prog=None):
@@ -475,7 +470,7 @@ def do_uninstall(args):
 
 
 def do_dist(args):
-  PackageLifecycle(args.__context).dist()
+  PackageLifecycle(require.context).dist()
 
 
 def do_init(args):
@@ -553,7 +548,7 @@ def do_dirs(args):
 
 
 def do_run(args):
-  if not PackageLifecycle(args.__context, allow_no_manifest=True).run(args.script[0], args.script[1:]):
+  if not PackageLifecycle(require.context, allow_no_manifest=True).run(args.script[0], args.script[1:]):
     fatal("no script '{}'".format(args.script[0]))
 
 

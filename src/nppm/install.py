@@ -49,11 +49,14 @@ import refstring from './refstring'
 import env from './env'
 import semver from './semver'
 import brewfix from './brewfix'
+import manifest from './manifest'
 import _download from './util/download'
 import _script from './util/script'
 import decorators from './util/decorators'
 import {PackageLifecycle} from './package_lifecycle'
 import {PACKAGE_MANIFEST} from './env'
+
+_manifest = manifest  # alias for later use
 
 default_exclude_patterns = [
     '.DS_Store', '.svn/*', '.git*', env.MODULES_DIRECTORY + '/*',
