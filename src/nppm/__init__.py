@@ -23,6 +23,7 @@ from nodepy.utils import json
 from operator import itemgetter
 from six.moves import input
 
+import argparse
 import collections
 import functools
 import getpass
@@ -32,6 +33,23 @@ import six
 import sys
 import textwrap
 
+import env from './env'
+import manifest from './manifest'
+import refstring from './refstring'
+import semver from './semver'
+import _install from './install'
+import logger from './logger'
+import {RegistryClient} from './registry'
+import {PackageLifecycle} from './package_lifecycle'
+import {PACKAGE_MANIFEST} from './env'
+
+#  global env, manifest, refstring, semver, _install
+#  from . import env, manifest, refstring, semver, install as _install
+#  global logger, RegistryClient, PackageLifecycle, PACKAGE_MANIFEST
+#  from .logger import logger
+#  from .registry import RegistryClient
+#  from .package_lifecycle import PackageLifecycle
+#  from .env import PACKAGE_MANIFEST
 
 def fatal(*message, **kwargs):
   """
@@ -100,16 +118,16 @@ def create_installer(args):
   This function is used in the #install() function.
   """
 
-  location = get_install_location(args['g'], args['root'])
+  location = get_install_location(args.g, args.root)
   installer = _install.Installer(
-    context=args['__context'],
-    upgrade=args['upgrade'],
-    install_location=get_install_location(args['g'], args['root']),
-    pip_use_target_option=args['pip-use-target-option'],
-    recursive=args['recursive'],
-    verbose=args['v']
+    context=args.__context,
+    upgrade=args.upgrade,
+    install_location=get_install_location(args.g, args.root),
+    pip_use_target_option=args.pip_use_target_option,
+    recursive=args.recursive,
+    verbose=args.v
   )
-  installer.ignore_installed = args['isolate']
+  installer.ignore_installed = args.isolate
   return installer
 
 
@@ -131,9 +149,13 @@ def load_manifest(filename):
   return data
 
 
-def extend_parser(parser):
-  init = parser.subparser('--init-package')
-  init.argument('directory', nargs='?', help='The directory to save the nodepy.json file to.')
+def get_argument_parser(prog):
+  parser = argparse.ArgumentParser(prog=prog)
+  subparsers = parser.add_subparsers(dest='command')
+
+  init = subparsers.add_parser('init')
+  init.add_argument('directory', nargs='?', help='The directory to save the nodepy.json file to.')
+  return parser
 
   install = parser.subparser('--install', help='''
     Install Node.py and Python packages.
@@ -273,68 +295,60 @@ def is_nppm_command(args):
   return any(args[k] for k in commands)
 
 
-def main(args):
-
-  global env, manifest, refstring, semver, _install
-  from . import env, manifest, refstring, semver, install as _install
-  global logger, RegistryClient, PackageLifecycle, PACKAGE_MANIFEST
-  from .logger import logger
-  from .registry import RegistryClient
-  from .package_lifecycle import PackageLifecycle
-  from .env import PACKAGE_MANIFEST
-
-  for k in args:
-    if args[k]:
-      args[k]['__context'] = args['__context']
-      return globals()['do_' + k](args[k])
-  assert False
+def main(argv=None, prog=None):
+  parser = get_argument_parser(prog)
+  args = parser.parse_args(argv)
+  if not args.command:
+    parser.print_help()
+    return
+  return globals()['do_' + args.command](args)
 
 
 def do_install(args):
-  args['root'] = args['root'] or args['system']
-  if not args['packagedir']:
-    args['packagedir'] = '.'
+  args.root = args.root or args.system
+  if not args.packagedir:
+    args.packagedir = '.'
 
   # --save and --save-dev are incompatible with each other.
-  if args['save'] and args['save-dev']:
+  if args.save and args.save_dev:
     install_parser.error('incompatible flags --save and --save-dev')
     return 1
 
   # Can't have both --dev and --production.
-  if args['dev'] and args['production']:
+  if args.dev and args.production:
     install_parser.error('incompatible flags --dev and --production')
 
   # --save-ext should not be combined with --save-dev. Imply --save otherwise.
-  if args['save-ext']:
-    if args['save-dev']:
+  if args.save_ext:
+    if args.save_dev:
       print('warning: --save-ext should not be combined with --save-dev.')
       print('         Extensions must be available during runtime.')
     else:
-      args['save'] = True
+      args.save = True
 
   # Imply --internal with --root or --global, unless --no-internal is passed.
-  if (args['g'] or args['root']) and not args['internal'] and not args['no-internal']:
-    args['internal'] = True
-    flag = ('--global' if args['g'] else '--root')
+  if (args.g or args.root) and not args.internal and not args.no_internal:
+    args.internal = True
+    flag = ('--global' if args.g else '--root')
     print('Note: implying --internal due to {}.'.format(flag))
 
   # Read in the manifest, if it exists.
-  manifest_filename = os.path.join(args['packagedir'], PACKAGE_MANIFEST)
+  manifest_filename = os.path.join(args.packagedir, PACKAGE_MANIFEST)
   manifest_data = None
   if os.path.isfile(manifest_filename):
     manifest_data = load_manifest(manifest_filename)
 
   # Can't do any saving when there's no manifest.
-  if (args['save'] or args['save-dev'] or args['save-ext']) and manifest_data is None:
+  if (args.save or args.save_dev or args.save_ext) and manifest_data is None:
     fatal('can not --save, --save-dev or --save-ext without nodepy.json')
     return 1
 
-  pure_install = (not args['ref'] and not args['e'] and not args['pip'])
+  pure_install = (not args.ref and not args.e and not args.pip)
 
   # Default to --dev if no packages are specified.
-  if (not args['dev'] and not args['production']):
-    args['dev'] = pure_install
-    args['production'] = not args['dev']
+  if (not args.dev and not args.production):
+    args.dev = pure_install
+    args.production = not args.dev
 
   installer = create_installer(args)
 
@@ -343,7 +357,7 @@ def do_install(args):
   if pure_install:
     installer.upgrade = True
     success, _manifest = installer.install_from_directory(
-        args['packagedir'], develop=True, dev=args['dev'])
+        args.packagedir, develop=True, dev=args.dev)
     if not success:
       return 1
     installer.relink_pip_scripts()
@@ -359,13 +373,13 @@ def do_install(args):
       pip_packages.append(manifest.PipRequirement.from_line(spec[4:]))
     else:
       req = manifest.Requirement.from_line(spec, expect_name=True)
-      req.inherit_values(link=develop, internal=args['internal'], pure=args['pure'])
+      req.inherit_values(link=develop, internal=args.internal, pure=args.pure)
       npy_packages.append(req)
-  for pkg in args['ref']:
+  for pkg in args.ref:
     handle_spec(pkg, False)
-  for pkg in args['e']:
+  for pkg in args.e:
     handle_spec(pkg, True)
-  for pkg in args['pip']:
+  for pkg in args.pip:
     handle_spec('pip+' + pkg, False)
 
   # Install Python dependencies.
@@ -374,7 +388,7 @@ def do_install(args):
   for spec in pip_packages:
     if spec.link:
       python_additional.append(str(spec.link))
-    elif (args['save'] or args['save-dev']) and not spec.req:
+    elif (args.save or args.save_dev) and not spec.req:
       fatal("'{}' is not something we can install via nppm with --save/--save-dev".format(spec.spec))
     if spec.req:
       python_deps[spec.name] = str(spec.specifier)
@@ -399,7 +413,7 @@ def do_install(args):
   installer.relink_pip_scripts()
 
   # Insert extensions.
-  if args['save-ext'] and npy_packages:
+  if args.save_ext and npy_packages:
     print('Saving extensions:')
     extensions = manifest_data.setdefault('extensions', [])
     for req_name in sorted(req_names.values()):
@@ -407,26 +421,26 @@ def do_install(args):
         extensions.append(req_name)
 
   # Choose the keys that the dependencies will be saved to.
-  if args['save-dev']:
+  if args.save_dev:
     if 'cfg(dev)' in manifest_data:
       deps = lambda: manifest_data['cfg(dev)'].setdefault('dependencies', {})
       pip_deps = lambda: manifest_data['cfg(dev)'].setdefault('pip_dependencies', {})
     else:
       deps = lambda: manifest_data.setdefault('cfg(dev).dependencies', {})
       pip_deps = lambda: manifest_data.setdefault('cfg(dev).pip_dependencies', {})
-  elif args['save']:
+  elif args.save:
     deps = lambda: manifest_data.setdefault('dependencies', {})
     pip_deps = lambda: manifest_data.setdefault('pip_dependencies', {})
 
   # Insert Node.py packages into the manifest.
-  if (args['save'] or args['save-dev']) and npy_packages:
+  if (args.save or args.save_dev) and npy_packages:
     print('Saving dependencies:')
     for req in npy_packages:
       deps()[req_names[req]] = str(req)
       print("  {}: {}".format(req_names[req], str(req)))
 
   # Insert Python packages into the manifest.
-  if (args['save'] or args['save-dev']) and python_deps:
+  if (args.save or args.save_dev) and python_deps:
     print('Saving Pip dependencies:')
     for pkg_name, dist_info in installer.installed_python_libs.items():
       if not dist_info:
@@ -438,7 +452,7 @@ def do_install(args):
         print('  "{}": "{}"'.format(dist_info['name'], dist_info['version']))
 
   # Write the changes to the manifest.
-  if (args['save'] or args['save-dev'] or args['save-ext']) and (npy_packages or python_deps):
+  if (args.save or args.save_dev or args.save_ext) and (npy_packages or python_deps):
     with open(manifest_filename, 'w') as fp:
       json.dump(manifest_data, fp, indent=2)
 
@@ -447,25 +461,26 @@ def do_install(args):
 
 def do_uninstall(args):
   packages = []
-  for pkg in args['ref']:
+  for pkg in args.ref:
     if pkg == '.' or os.path.exists(pkg):
       filename = os.path.join(pkg, PACKAGE_MANIFEST)
       manifest = load_manifest(filename)
       pkg = manifest['name']
     packages.append(pkg)
 
-  location = get_install_location(args['g'], args['root'])
+  location = get_install_location(args.g, args.root)
   installer = _install.Installer(install_location=location)
   for pkg in packages:
     installer.uninstall(pkg)
 
 
 def do_dist(args):
-  PackageLifecycle(args['__context']).dist()
+  PackageLifecycle(args.__context).dist()
 
 
 def do_init(args):
-  filename = os.path.join(args['directory'] or '.', PACKAGE_MANIFEST)
+  filename = os.path.join(args.directory or '.', PACKAGE_MANIFEST)
+  print(filename)
   if os.path.isfile(filename):
     print('error: "{}" already exists'.format(filename))
     return 1
@@ -508,26 +523,26 @@ def do_init(args):
 
 
 def do_bin(args):
-  location = get_install_location(args['g'], args['root'])
+  location = get_install_location(args.g, args.root)
   dirs = env.get_directories(location)
-  if args['pip']:
+  if args.pip:
     print(dirs['pip_bin'])
   else:
     print(dirs['bin'])
 
 
 def do_dirs(args):
-  location = get_install_location(args['g'], args['root'])
+  location = get_install_location(args.g, args.root)
   dirs = env.get_directories(location)
-  if args['ref']:
+  if args.ref:
     print(dirs['packages'])
-  elif args['bin']:
+  elif args.bin:
     print(dirs['bin'])
-  elif args['pip-prefix']:
+  elif args.pip_prefix:
     print(dirs['pip_prefix'])
-  elif args['pip-bin']:
+  elif args.pip_bin:
     print(dirs['pip_bin'])
-  elif args['pip-lib']:
+  elif args.pip_lib:
     print(dirs['pip_lib'])
   else:
     print('Packages:\t', dirs['packages'])
@@ -538,5 +553,9 @@ def do_dirs(args):
 
 
 def do_run(args):
-  if not PackageLifecycle(args['__context'], allow_no_manifest=True).run(args.script[0], args.script[1:]):
+  if not PackageLifecycle(args.__context, allow_no_manifest=True).run(args.script[0], args.script[1:]):
     fatal("no script '{}'".format(args.script[0]))
+
+
+if require.main:
+  main()

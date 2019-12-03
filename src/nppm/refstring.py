@@ -22,8 +22,8 @@
 
 import collections
 import re
-
-from . import argschema, semver, manifest
+import argschema from './argschema'
+import semver from './semver'
 
 spec = '[[@<scope>/]<name>[@<version>]][/<module>][:<member>]'
 

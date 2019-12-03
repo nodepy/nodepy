@@ -33,10 +33,12 @@ import json
 import os
 import requests
 import six
-
-from . import argschema, manifest, semver, refstring
-from .util import text, json
-from nodepy.context import Context
+import argschema from './argschema'
+import manifest from './manifest'
+import semver from './semver'
+import refstring from './refstring'
+import text from './util/text'
+import json from './util/json'
 
 
 def get_config_registry(config, name):

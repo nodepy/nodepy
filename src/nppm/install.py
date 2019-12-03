@@ -22,6 +22,7 @@
 
 from __future__ import print_function
 from fnmatch import fnmatch
+from nodepy.context import Context
 from nodepy.utils import pathlib
 from nr.fs import issub
 
@@ -43,14 +44,16 @@ import tarfile
 import tempfile
 import traceback
 
-from . import registry as _registry, refstring, env, manifest, semver
-from .brewfix import brewfix
-from .util import download as _download, script as _script, decorators
-from .package_lifecycle import PackageLifecycle
-from .env import PACKAGE_MANIFEST
-from nodepy.context import Context
-
-_manifest = manifest
+import _registry from './registry'
+import refstring from './refstring'
+import env from './env'
+import semver from './semver'
+import brewfix from './brewfix'
+import _download from './util/download'
+import _script from './util/script'
+import decorators from './util/decorators'
+import {PackageLifecycle} from './package_lifecycle'
+import {PACKAGE_MANIFEST} from './env'
 
 default_exclude_patterns = [
     '.DS_Store', '.svn/*', '.git*', env.MODULES_DIRECTORY + '/*',

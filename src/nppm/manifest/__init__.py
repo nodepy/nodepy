@@ -26,12 +26,12 @@ manifest and means to validate its content.
 """
 
 from nodepy.utils import as_text, json
-from . import cfgparser
-from .. import semver, refstring
-
 import collections
 import os
 import six
+import cfgparser from './cfgparser'
+import semver from '../semver'
+import refstring from '../refstring'
 
 try:
   import pip._internal.req as pip_req

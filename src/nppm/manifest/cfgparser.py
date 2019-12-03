@@ -26,11 +26,7 @@ Parser and evaluator for configuration filter strings.
 
 import io
 import string
-
-try:
-  import nr.strex as strex
-except ImportError:
-  import nr.parse as strex
+import nr.parsing.core as strex
 
 
 class _AstNode(object):

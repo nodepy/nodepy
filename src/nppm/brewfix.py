@@ -31,11 +31,10 @@ the `~/.pydistutils.cfg` file, and then undo that change.
 """
 
 from six.moves import configparser
-from .env import is_virtualenv
-
 import contextlib
 import os
 import sys
+import {is_virtualenv} from './env'
 
 
 @contextlib.contextmanager

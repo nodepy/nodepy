@@ -40,10 +40,11 @@ except ImportError:
   from pipes import quote as shlex_quote
 
 import nodepy
-
-from .logger import logger
-from . import env, install as _install, manifest as _manifest
-from .registry import RegistryClient, get_package_archive_name
+import env from './env'
+import _install from './install'
+import _manifest from './manifest'
+import {logger} from './logger'
+import {RegistryClient, get_package_archive_name} from './registry'
 
 
 def find_nearest_bin_directory(path):
