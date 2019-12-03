@@ -9,15 +9,17 @@ package:
   exclude_packages: [test, nppm]
 
 requirements:
-  - appdirs ^1.4.2
-  - distlib ~0.2.4
-  - hammock ~0.2.4
   - localimport ^1.5.2
-  - nr.fs ^1.5.0
-  - nr.parsing.core ~0.1.0
   - pathlib2 ^2.3.0
-  - requests ^2.13.0
   - six ^1.11.0
+  - extra:
+      nppm:
+        - pip
+        - distlib ~0.2.4
+        - hammock ~0.2.4
+        - nr.fs ^1.5.0
+        - nr.parsing.core ~0.1.0
+        - requests ^2.13.0
 
 entrypoints:
   console_scripts:

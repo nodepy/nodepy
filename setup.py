@@ -10,7 +10,9 @@ with io.open('src/nodepy/__init__.py', encoding='utf8') as fp:
 with io.open('README.md', encoding='utf8') as fp:
   long_description = fp.read()
 
-requirements = ['appdirs >=1.4.2,<2.0.0', 'distlib >=0.2.4,<0.3.0', 'hammock >=0.2.4,<0.3.0', 'localimport >=1.5.2,<2.0.0', 'nr.fs >=1.5.0,<2.0.0', 'nr.parsing.core >=0.1.0,<0.2.0', 'pathlib2 >=2.3.0,<3.0.0', 'requests >=2.13.0,<3.0.0', 'six >=1.11.0,<2.0.0']
+requirements = ['localimport >=1.5.2,<2.0.0', 'pathlib2 >=2.3.0,<3.0.0', 'six >=1.11.0,<2.0.0']
+extras_require = {}
+extras_require['nppm'] = ['pip', 'distlib >=0.2.4,<0.3.0', 'hammock >=0.2.4,<0.3.0', 'nr.fs >=1.5.0,<2.0.0', 'nr.parsing.core >=0.1.0,<0.2.0', 'requests >=2.13.0,<3.0.0']
 
 import os, fnmatch
 def _collect_data_files(data_files, target, path, include, exclude):
@@ -44,6 +46,7 @@ setuptools.setup(
   package_dir = {'': 'src'},
   include_package_data = False,
   install_requires = requirements,
+  extras_require = extras_require,
   tests_require = [],
   python_requires = None, # TODO: None,
   data_files = data_files,

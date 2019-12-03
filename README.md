@@ -7,9 +7,10 @@
 ## Node.py
 
 Node.py is a Python runtime and package manager compatible with CPython 2.7
-and 3.3 &ndash; 3.6. It provides a separate but superior import mechanism for
-modules, bringing dependency management and ease of deployment for Python
-applications up to par with other languages, **without virtualenvs**.
+and 3.3 &ndash; 3.6. It provides a separate import mechanism for modules
+inspired by *Node.js*, bringing dependency management and ease of deployment
+for Python applications up to par with other languages without virtual
+environments.
 
 Node.py comes with a built-in package manager that builds on Pip for standard
 Python dependencies but also adds the capability to install packages that are
@@ -20,7 +21,7 @@ package manager you must specify the `[pm]` install extra.
 
 ## Installation
 
-    pip3 install nodepy-runtime[pm]
+    $ pip install nodepy-runtime[nppm]
 
 ## Usage Example
 
@@ -80,11 +81,14 @@ installed.
 
 ## Changes
 
+  [Pliz]: https://git.niklasrosenstein.com/NiklasRosenstein/pliz
+
 ### v2.1.6
 
 * Fix duplicate execution of code specified with the `-c` option
 * Add `namespace <name>:` declaration concept (`nodepy.extensions.NamespaceSyntax`)
-* Merge `nppm` into the `nodepy` command-line
+* Create a `package.yaml` file for the [Pliz][] setupfiles renderer
+* Deliver NPPM as part of Node.py
 
 ### v2.1.5 (2018-08-18)
 
