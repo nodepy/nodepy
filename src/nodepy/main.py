@@ -117,7 +117,7 @@ def get_argument_parser(prog):
   parser.add_argument('-R', '--nodepy-path', action='append', default=[], help='Additional Node.py search path.')
   parser.add_argument('-c', '--eval', nargs='...', default=[], help='A snippet of code and arguments to run.')
   parser.add_argument('script', nargs='...', default=[], help='A script or module and arguments to run.')
-  #parser.add_argument('--keep-arg0', nargs=0, help='Keep sys.argv[0] instead of overriding it with the module filename.')
+  parser.add_argument('--no-override-argv0', action='store_true', help='Keep sys.argv[0] instead of overriding it with the module filename.')
   return parser
 
 
@@ -156,8 +156,8 @@ def main(argv=None, prog=None):
         except ValueError:
           filename = request
         ctx.main_module = ctx.resolve(filename)
-        #if not args['keep-arg0']:
-        #  sys.argv[0] = str(ctx.main_module.filename)
+        if not args.no_override_argv0:
+          sys.argv[0] = str(ctx.main_module.filename)
         ctx.main_module.init()
         if args.py_main:
           ctx.main_module.namespace.__name__ = '__main__'

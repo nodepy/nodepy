@@ -229,7 +229,7 @@ class ScriptMaker:
     Node.py runtime to run the Node.py module specified by *filename*.
     """
 
-    args = ['--keep-arg0']
+    args = ['--no-override-argv0']
     args.append(filename)
 
     code = (
